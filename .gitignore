@@ -1,0 +1,7 @@
+.DS_Store
+scratch/
+__pycache__/
+*.pyc
+
+# Asegurar que los videos inversos necesarios en Transitions/.cache se incluyan
+!Transitions/.cache/
