@@ -40,6 +40,7 @@ def reverse_video(src_path, dst_path):
         '-pix_fmt', 'yuv420p',
         '-c:a', 'aac',
         '-b:a', '192k',
+        '-movflags', '+faststart',
         dst_path
     ]
     t0 = time.time()

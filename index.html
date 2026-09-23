@@ -655,7 +655,7 @@
 
     <!-- PASO 2: Video de Transición -->
     <div id="layer-step2" class="stage-layer">
-      <video id="video-element" class="media-cover" playsinline preload="auto"></video>
+      <video id="video-element" class="media-cover" playsinline muted preload="auto"></video>
     </div>
 
     <!-- PASO 3: Imagen 16x9 con Presentación (Aparece inmediatamente dentro del marco) -->
@@ -1314,6 +1314,7 @@
     let hasTriggeredReverseFade = false;
     let videoStartTimeout = null;
     let videoEndTimeout = null;
+    let videoWatchdogTimer = null;
     let hasTriggeredEndHold = false;
     let isTransitionLocked = false;
     let isInitialLoad = true;
@@ -1495,6 +1496,10 @@
     }
 
     function stopVideos() {
+      if (videoWatchdogTimer) {
+        clearTimeout(videoWatchdogTimer);
+        videoWatchdogTimer = null;
+      }
       if (videoStartTimeout) {
         clearTimeout(videoStartTimeout);
         videoStartTimeout = null;
@@ -1729,9 +1734,10 @@
         hasTriggeredEndHold = false;
         if (videoStartTimeout) { clearTimeout(videoStartTimeout); videoStartTimeout = null; }
         if (videoEndTimeout) { clearTimeout(videoEndTimeout); videoEndTimeout = null; }
+        if (videoWatchdogTimer) { clearTimeout(videoWatchdogTimer); videoWatchdogTimer = null; }
         if (videoReverseEl) videoReverseEl.pause();
         const rawVideoSrc = step.src || 'Transitions/3x4_to_16x9.mp4';
-        const videoSrc = rawVideoSrc.includes('?') ? rawVideoSrc : (rawVideoSrc + '?v=20260922_1745');
+        const videoSrc = rawVideoSrc;
         const currentSrc = videoEl.getAttribute('data-active-src');
 
         // Función que asegura que el fotograma 0 está renderizado, lo congela 0.5s y luego inicia play()
@@ -1765,11 +1771,29 @@
           videoStartTimeout = setTimeout(() => {
             const currentStep = STEPS[currentStepIndex];
             if (currentStep && currentStep.type === 'video') {
+              // Watchdog de seguridad dinámico: calcula la duración del vídeo + margen de 1.5s
+              if (videoWatchdogTimer) clearTimeout(videoWatchdogTimer);
+              const maxAllowedMs = (videoEl.duration && videoEl.duration > 0.5)
+                ? Math.round(videoEl.duration * 1000 + 1500)
+                : 10000;
+              videoWatchdogTimer = setTimeout(() => {
+                const s = STEPS[currentStepIndex];
+                if (s && s.type === 'video' && !hasTriggeredEndHold) {
+                  console.warn('[Video Watchdog] El vídeo excedió el tiempo máximo esperado. Auto-avanzando...');
+                  triggerEndHold();
+                }
+              }, maxAllowedMs);
+
+              videoEl.muted = true;
               const playPromise = videoEl.play();
               if (playPromise !== undefined) {
-                playPromise.catch(() => {
+                playPromise.catch((err) => {
+                  console.warn('[videoEl.play catch]', err);
                   videoEl.muted = true;
-                  videoEl.play().catch(() => {});
+                  videoEl.play().catch(() => {
+                    // Si el navegador bloquea la reproducción de vídeo, avanzar limpiamente
+                    triggerEndHold();
+                  });
                 });
               }
             }
@@ -1793,14 +1817,20 @@
           videoEl.addEventListener('seeked', onReadyToHold, { once: true });
 
           try { videoEl.pause(); } catch(e) {}
+          videoEl.muted = true;
           videoEl.src = videoSrc;
           videoEl.load();
           try { videoEl.currentTime = 0; } catch(e) {}
 
-          // Fallback de seguridad en caso de demora de eventos (tiempo generoso para evitar saltos prematuros a negro)
-          setTimeout(() => {
-            if (!holdStarted) beginHoldAndPlay();
-          }, 1500);
+          // Si el vídeo ya tiene datos listos de inmediato gracias a faststart
+          if (videoEl.readyState >= 2) {
+            onReadyToHold();
+          } else {
+            // Fallback de seguridad: 2.5 segundos con la diapositiva previa siempre visible
+            setTimeout(() => {
+              if (!holdStarted) beginHoldAndPlay();
+            }, 2500);
+          }
 
         } else {
           // Mismo vídeo (ej. bucle o replay directo): rebobinar estrictamente a 0
@@ -1819,7 +1849,7 @@
             // Fallback de seguridad
             setTimeout(() => {
               if (!holdStarted) beginHoldAndPlay();
-            }, 1000);
+            }, 1500);
           }
         }
 
@@ -1959,6 +1989,10 @@
     function triggerEndHold() {
       if (hasTriggeredEndHold) return;
       hasTriggeredEndHold = true;
+      if (videoWatchdogTimer) {
+        clearTimeout(videoWatchdogTimer);
+        videoWatchdogTimer = null;
+      }
       try { videoEl.pause(); } catch(e) {}
       if (videoEndTimeout) clearTimeout(videoEndTimeout);
       // Pausa de 0.5 segundos en el último fotograma antes de entrar a la siguiente diapositiva
@@ -1981,11 +2015,20 @@
 
     videoEl.addEventListener('timeupdate', () => {
       const step = STEPS[currentStepIndex];
-      // Fallback de seguridad: solo si el vídeo ya ha avanzado más de 1s y alcanza prácticamente el final
-      if (step && step.type === 'video' && videoEl.duration > 1.0) {
-        if (!hasTriggeredEndHold && videoEl.currentTime > 1.0 && videoEl.currentTime >= videoEl.duration - 0.05) {
+      if (step && step.type === 'video' && videoEl.duration > 0.5) {
+        // Disparar hold de final si el vídeo alcanza los últimos 150ms
+        if (!hasTriggeredEndHold && videoEl.currentTime >= (videoEl.duration - 0.15)) {
           triggerEndHold();
         }
+      }
+    });
+
+    videoEl.addEventListener('error', (e) => {
+      console.error('[videoEl Error]', e);
+      const step = STEPS[currentStepIndex];
+      if (step && step.type === 'video') {
+        isTransitionLocked = false;
+        advanceToNextStep();
       }
     });
 
