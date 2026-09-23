@@ -1,0 +1,2670 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Decoding Media - Presentación</title>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Supabase Cloud SDK y Cliente -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    :root {
+      --neon-pink: #ec4899;
+      --pink-gradient: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
+      --neon-pink-glow: rgba(236, 72, 153, 0.28);
+      --purple-accent: #a855f7;
+      --cyan-accent: #38bdf8;
+      --electric-blue: #3b82f6;
+      --bg-dark: #090a0f;
+      --card-dark: rgba(18, 21, 31, 0.95);
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(ellipse 65% 50% at 15% 0%, rgba(236, 72, 153, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 65% 50% at 85% 10%, rgba(168, 85, 247, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 50% 95%, rgba(56, 189, 248, 0.05) 0%, transparent 60%);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: -0.01em;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Escenario central que mantiene la proporción fija 16:9 (3840x2160) */
+    #stage-container {
+      position: relative;
+      width: min(100vw, calc(100vh * 16 / 9));
+      height: min(100vh, calc(100vw * 9 / 16));
+      background: #000;
+      box-shadow: 0 0 100px rgba(0, 0, 0, 0.95), 0 0 40px rgba(255, 0, 127, 0.15);
+      overflow: hidden;
+    }
+
+    /* Capas de cada paso con fundido suave de 1 segundo */
+    .stage-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 1s ease-in-out, visibility 1s ease-in-out;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .stage-layer.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      z-index: 10;
+    }
+
+    /* La capa entrante activa se posiciona en z-index: 20 por encima de la anterior para que su fundido de 1s sea visible */
+    .stage-layer.active.incoming-layer {
+      z-index: 20;
+    }
+
+    /* Capa de vídeo de transición: cambio limpio e instantáneo sobre el fotograma de la escena anterior */
+    #layer-step2 {
+      transition: none !important;
+    }
+
+    #layer-step2.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      z-index: 15;
+      transition: none !important;
+    }
+
+
+
+    .media-cover {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+
+    /* Marco superpuesto transparente */
+    .frame-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Logos en esquinas superiores (Izquierda: Making Science, Derecha: Decoding Media) */
+    .stage-corner-logo {
+      position: absolute;
+      z-index: 25;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.6));
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.5s ease-in-out, visibility 0s linear 0s;
+    }
+
+    /* Ocultar logos siempre que esté el stage title o cualquier transición que involucre a title con fundido de 0,5s */
+    #stage-container.hide-corner-logos .stage-corner-logo {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.5s ease-in-out, visibility 0s linear 0.5s;
+    }
+
+    .stage-corner-logo-left {
+      top: 3.2%;
+      left: 3.2%;
+      height: 4.2%;
+      min-height: 20px;
+    }
+
+    .stage-corner-logo-left img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* Logo Decoding Media x1.3 más grande (7.2% * 1.3 = 9.36%) */
+    .stage-corner-logo-right {
+      top: 2.5%;
+      right: 3.2%;
+      height: 9.36%;
+      min-height: 42px;
+    }
+
+    .stage-corner-logo-right img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* --- HUECO DE LA PANTALLA DEL MÓVIL (Paso 1) --- */
+    #phone-screen-slot {
+      position: absolute;
+      left: var(--phone-left, 28.55%);
+      top: var(--phone-top, -2.85%);
+      width: var(--phone-width, 47.7%);
+      height: var(--phone-height, 111.45%);
+      z-index: 5;
+      background: #000;
+      overflow: hidden;
+      transform-origin: center center;
+      transform: rotate(var(--phone-rot, -0.8deg));
+      border-radius: var(--phone-radius, 0 0 45px 45px);
+    }
+
+    /* --- HUECO DE LA PANTALLA EN IMAGEN 2 (Paso 3 - 16:9) --- */
+    #frame2-screen-slot {
+      position: absolute;
+      left: var(--frame2-left, 7.2%);
+      top: var(--frame2-top, 15.45%);
+      width: var(--frame2-width, 85.85%);
+      height: var(--frame2-height, 66.7%);
+      z-index: 5;
+      background: #000;
+      overflow: hidden;
+      border-radius: var(--frame2-radius, 12px);
+      transform-origin: center center;
+      transform: rotate(var(--frame2-rot, 0deg));
+    }
+
+    /* --- HUECO DE LA PANTALLA EN IMAGEN 9x16 (Formato 9:16) --- */
+    #frame916-screen-slot {
+      position: absolute;
+      left: var(--frame916-left, 41.88%);
+      top: var(--frame916-top, 8.45%);
+      width: var(--frame916-width, 19.17%);
+      height: var(--frame916-height, 95.15%);
+      z-index: 5;
+      background: #000;
+      overflow: hidden;
+      border-radius: var(--frame916-radius, 40px);
+      transform-origin: center center;
+      transform: rotate(var(--frame916-rot, 0deg));
+    }
+
+    /* Iframes incrustados con fundido suave de 1s */
+    .screen-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #000;
+      display: block;
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 1s ease-in-out;
+    }
+
+    #phone-screen-slot .screen-iframe {
+      transform: scale(var(--phone-zoom, 1));
+      transform-origin: center center;
+    }
+
+    #frame2-screen-slot .screen-iframe {
+      transform: scale(var(--frame2-zoom, 1.41));
+      transform-origin: center center;
+    }
+
+    #frame916-screen-slot .screen-iframe {
+      transform: scale(var(--frame916-zoom, 1.19));
+      transform-origin: center center;
+    }
+
+    /* Presentación Interactiva Nativa (Fallback / Modo Autónomo) con fundido de 1s */
+    .native-deck {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 15%, #181c2e 0%, #0a0c14 100%);
+      color: #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px;
+      box-sizing: border-box;
+      z-index: 2;
+      overflow: hidden;
+      user-select: none;
+      pointer-events: auto;
+      opacity: 1;
+      transition: opacity 1s ease-in-out;
+    }
+
+    .native-deck.hidden {
+      display: none !important;
+    }
+
+    .deck-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .deck-brand-pill {
+      background: var(--neon-pink);
+      color: #000;
+      font-weight: 900;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .deck-counter-pill {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--neon-pink);
+      font-weight: 800;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: monospace;
+    }
+
+    .deck-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 12px;
+      transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
+    }
+
+    .deck-slide-category {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #38bdf8;
+      text-transform: uppercase;
+    }
+
+    .deck-slide-title {
+      font-size: 26px;
+      font-weight: 900;
+      line-height: 1.15;
+      color: #ffffff;
+      margin: 0;
+      letter-spacing: -0.5px;
+    }
+
+    .native-deck-169 .deck-slide-title {
+      font-size: 34px;
+    }
+
+    .deck-slide-desc {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.45;
+      margin: 0 0 4px 0;
+    }
+
+    .deck-slide-bullets {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .deck-bullet {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .deck-bullet-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--neon-pink);
+      flex-shrink: 0;
+    }
+
+    .deck-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .deck-speaker-tag {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .deck-progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .deck-progress-fill {
+      height: 100%;
+      background: var(--neon-pink);
+      border-radius: 2px;
+      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Botón flotante discreto de Pantalla Completa estilo cápsula glass */
+    .minimal-fs-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(14, 17, 26, 0.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 9999px;
+      color: rgba(255, 255, 255, 0.75);
+      cursor: pointer;
+      opacity: 0.25;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      padding: 0;
+    }
+
+    .minimal-fs-btn:hover {
+      opacity: 1 !important;
+      background: rgba(20, 24, 38, 0.9);
+      color: #f472b6;
+      border-color: rgba(236, 72, 153, 0.4);
+      transform: scale(1.08);
+      box-shadow: 0 0 20px rgba(236, 72, 153, 0.35);
+    }
+
+    .minimal-fs-btn .fs-icon-svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+
+    .key-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      letter-spacing: 0.05em;
+    }
+
+    /* Modal estilo dark glassmorphism */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(5, 7, 11, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-card {
+      background: rgba(17, 20, 31, 0.95);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      width: 90%;
+      max-width: 620px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      transform: translateY(20px);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-backdrop.open .modal-card {
+      transform: translateY(0);
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+    }
+
+    .form-input {
+      width: 100%;
+      background: #141724;
+      border: 1px solid #282f45;
+      color: #f1f5f9;
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      border-color: var(--neon-pink);
+      box-shadow: 0 0 12px var(--neon-pink-glow);
+    }
+
+    .form-helper {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 5px;
+      line-height: 1.4;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .slider-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--neon-pink);
+    }
+
+    .slider-val {
+      font-size: 12px;
+      font-family: monospace;
+      color: var(--neon-pink);
+      font-weight: 700;
+      width: 50px;
+      text-align: right;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-primary {
+      background: var(--neon-pink);
+      color: #000;
+      font-weight: 800;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      background: #ff1f8f;
+      box-shadow: 0 0 20px var(--neon-pink-glow);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid #475569;
+      color: #cbd5e1;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+  </style>
+</head>
+<body tabindex="-1" style="outline: none;">
+
+  <!-- Escenario Principal 16:9 -->
+  <div id="stage-container" class="hide-corner-logos">
+
+    <!-- Logos de Esquinas Superiores (Izquierda: Making Science, Derecha: Decoding Media) -->
+    <div class="stage-corner-logo stage-corner-logo-left">
+      <img src="logo_izquierda.png" alt="Making Science" />
+    </div>
+    <div class="stage-corner-logo stage-corner-logo-right">
+      <img src="logo_derecha.png" alt="Decoding Media - El Nuevo Branding" />
+    </div>
+
+    <!-- PASO 1: Móvil con Presentación (Aparece inmediatamente dentro del marco) -->
+    <div id="layer-step1" class="stage-layer active">
+      <!-- Hueco de la pantalla (detrás del marco) -->
+      <div id="phone-screen-slot">
+        <!-- Presentación Dinámica Nativa (Modo visual interactivo o fallback si no hay URL externa) -->
+        <div id="native-deck-1" class="native-deck">
+          <div class="deck-header">
+            <span class="deck-brand-pill">DECODING MEDIA</span>
+            <span class="deck-counter-pill" id="deck1-counter">ESCENA 01 / 10</span>
+          </div>
+          <div class="deck-body" id="deck1-body">
+            <div class="deck-slide-category" id="deck1-category">KEYNOTE DE APERTURA</div>
+            <h2 class="deck-slide-title" id="deck1-title">El Nuevo Branding</h2>
+            <p class="deck-slide-desc" id="deck1-desc">Transformación audiovisual interactiva de formato vertical a gran pantalla.</p>
+            <div class="deck-slide-bullets" id="deck1-bullets">
+              <div class="deck-bullet"><span class="deck-bullet-dot"></span> Formato adaptativo 3:4 con marco ergonómico</div>
+              <div class="deck-bullet"><span class="deck-bullet-dot"></span> Transiciones cinematográficas en video 4K a 60fps</div>
+              <div class="deck-bullet"><span class="deck-bullet-dot"></span> Sincronización en tiempo real para ponentes</div>
+            </div>
+          </div>
+          <div class="deck-footer">
+            <span class="deck-speaker-tag" id="deck1-speaker">Formato Móvil</span>
+            <div class="deck-progress-bar"><div class="deck-progress-fill" id="deck1-progress" style="width: 10%;"></div></div>
+          </div>
+        </div>
+        <iframe
+          id="iframe-slides1"
+          class="screen-iframe"
+          src=""
+          allowfullscreen="true"
+          style="display: none;"
+        ></iframe>
+      </div>
+      <!-- 3x4.png como Marco frontal con dedos y bordes naturales -->
+      <img class="frame-overlay" src="Frame%20fijos/3x4.png?v=20260922_1143" alt="Marco Móvil" />
+    </div>
+
+    <!-- PASO TITLE: Portada / Pantalla Estática (title.jpeg) -->
+    <div id="layer-title" class="stage-layer">
+      <img class="frame-overlay" src="Frame%20fijos/title.jpeg?v=20260922_1143" alt="Portada" style="width:100%; height:100%; object-fit:cover;" />
+    </div>
+
+    <!-- PASO 2: Video de Transición -->
+    <div id="layer-step2" class="stage-layer">
+      <video id="video-element" class="media-cover" playsinline muted preload="auto"></video>
+    </div>
+
+    <!-- PASO 3: Imagen 16x9 con Presentación (Aparece inmediatamente dentro del marco) -->
+    <div id="layer-step3" class="stage-layer">
+      <!-- Hueco de pantalla dentro de Imagen 16x9 -->
+      <div id="frame2-screen-slot">
+        <!-- Presentación Dinámica Nativa 16:9 -->
+        <div id="native-deck-2" class="native-deck native-deck-169">
+          <div class="deck-header">
+            <span class="deck-brand-pill">DECODING MEDIA</span>
+            <span class="deck-counter-pill" id="deck2-counter">ESCENA 01 / 08</span>
+          </div>
+          <div class="deck-body" id="deck2-body">
+            <div class="deck-slide-category" id="deck2-category">ESCENARIO PRINCIPAL</div>
+            <h2 class="deck-slide-title" id="deck2-title">Innovación en Gran Formato</h2>
+            <p class="deck-slide-desc" id="deck2-desc">Experiencia inmersiva en formato 16:9 con control y teleprompter en directo.</p>
+            <div class="deck-slide-bullets" id="deck2-bullets">
+              <div class="deck-bullet"><span class="deck-bullet-dot"></span> Renderizado fluido de alta resolución</div>
+              <div class="deck-bullet"><span class="deck-bullet-dot"></span> Teleprompter y cronómetro inteligente sincronizado</div>
+              <div class="deck-bullet"><span class="deck-bullet-dot"></span> Bucle bidireccional con video de retorno invertido</div>
+            </div>
+          </div>
+          <div class="deck-footer">
+            <span class="deck-speaker-tag" id="deck2-speaker">Formato Escenario</span>
+            <div class="deck-progress-bar"><div class="deck-progress-fill" id="deck2-progress" style="width: 12.5%;"></div></div>
+          </div>
+        </div>
+        <iframe
+          id="iframe-slides2"
+          class="screen-iframe"
+          src=""
+          allowfullscreen="true"
+          style="display: none;"
+        ></iframe>
+      </div>
+      <!-- 16x9.png como Marco frontal -->
+      <img class="frame-overlay" src="Frame%20fijos/16x9.png?v=20260922_1143" alt="Marco 2" />
+    </div>
+
+    <!-- PASO 9:16: Imagen 9x16 con Presentación (Aparece inmediatamente dentro del marco) -->
+    <div id="layer-format-916" class="stage-layer">
+      <!-- Hueco de pantalla dentro de Imagen 9x16 -->
+      <div id="frame916-screen-slot">
+        <!-- Presentación Dinámica Nativa 9:16 -->
+        <div id="native-deck-916" class="native-deck">
+          <div class="deck-header">
+            <span class="deck-brand-pill">DECODING MEDIA</span>
+            <span class="deck-counter-pill" id="deck916-counter">ESCENA 01 / 06</span>
+          </div>
+          <div class="deck-body" id="deck916-body">
+            <div class="deck-slide-category" id="deck916-category">FORMATO 9:16</div>
+            <h2 class="deck-slide-title" id="deck916-title" style="font-size: 20px;">Pantalla Vertical 9:16</h2>
+            <p class="deck-slide-desc" id="deck916-desc" style="font-size: 12px;">Adaptación ergonómica vertical para contenidos móviles y streaming.</p>
+            <div class="deck-slide-bullets" id="deck916-bullets">
+              <div class="deck-bullet" style="padding: 5px 8px; font-size: 11px;"><span class="deck-bullet-dot"></span> Formato panorámico 9:16</div>
+              <div class="deck-bullet" style="padding: 5px 8px; font-size: 11px;"><span class="deck-bullet-dot"></span> Transiciones fluidas a 16:9 y 3:4</div>
+              <div class="deck-bullet" style="padding: 5px 8px; font-size: 11px;"><span class="deck-bullet-dot"></span> Sincronización en directo</div>
+            </div>
+          </div>
+          <div class="deck-footer">
+            <span class="deck-speaker-tag" id="deck916-speaker">Formato 9:16</span>
+            <div class="deck-progress-bar"><div class="deck-progress-fill" id="deck916-progress" style="width: 16.6%;"></div></div>
+          </div>
+        </div>
+        <iframe
+          id="iframe-slides916"
+          class="screen-iframe"
+          src=""
+          allowfullscreen="true"
+          style="display: none;"
+        ></iframe>
+      </div>
+      <!-- 9x16.png como Marco frontal -->
+      <img class="frame-overlay" src="Frame%20fijos/9x16.png?v=20260922_1143" alt="Marco 9x16" />
+    </div>
+
+    <!-- PASO 4: Video de Transición Inversa al Móvil -->
+    <div id="layer-step4" class="stage-layer">
+      <video id="video-reverse-element" class="media-cover" playsinline preload="auto">
+        <source src="Transitions/3x4_to_16x9_reverse.mp4" type="video/mp4" />
+      </video>
+    </div>
+
+  </div>
+
+  <!-- Controles flotantes discretos -->
+  <button id="btn-fullscreen" class="minimal-fs-btn" title="Pantalla Completa (F)">
+    <svg class="fs-icon-svg" viewBox="0 0 24 24">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+    </svg>
+  </button>
+
+  <!-- Modal de Configuración y Calibración del Marco -->
+  <div class="modal-backdrop" id="config-modal">
+    <div class="modal-card">
+      <h3 class="modal-title">
+        <span>Decoding Media</span>
+        <span class="brand-sticker-tag" style="font-size: 11px; padding: 4px 8px;">Configuración de Escenario</span>
+      </h3>
+      
+      <div class="form-group" style="background: rgba(255, 255, 255, 0.03); border: 1px solid #282f45; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+        <label class="form-label" style="color: var(--neon-pink);">
+          Plaza / Diapositiva a Calibrar
+        </label>
+        <select id="modal-slot-select" class="form-input" onchange="onModalSlotChanged()" style="background: #10131f; font-weight: 600; cursor: pointer;">
+        </select>
+        <div id="modal-slot-info-badge" style="margin-top: 8px; font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 8px;"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" style="color: #38bdf8;">
+          URL de Presentación (Google Slides Embed)
+        </label>
+        <div style="display: flex; gap: 10px;">
+          <input
+            type="text"
+            id="modal-slot-url"
+            class="form-input"
+            placeholder="https://docs.google.com/presentation/d/.../embed"
+            style="flex: 1;"
+          />
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-size: 11px; color: #94a3b8; white-space: nowrap;">Nº Slides:</label>
+            <input type="number" id="modal-slot-slides" min="1" max="100" value="10" style="width: 60px; background: #141724; border: 1px solid #282f45; color: #fff; padding: 10px 8px; border-radius: 8px; font-size: 13px; text-align: center;">
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0 10px 0;">
+        <h4 style="font-size: 13px; color: #38bdf8; text-transform: uppercase; margin: 0;" id="modal-calib-title">
+          Calibración de la Diapositiva
+        </h4>
+        <button type="button" class="btn-secondary" id="btn-modal-jump-slot" onclick="jumpToModalSlot()" style="font-size: 11px; padding: 4px 10px; font-weight: 700; color: #38bdf8; border-color: #38bdf8;">
+          Ver en Escenario
+        </button>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Posición Horizontal (X %)</label>
+          <div class="slider-row">
+            <input type="range" id="adj-left" min="0" max="70" step="0.05" value="28.55">
+            <span class="slider-val" id="val-left">28.55%</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ancho Pantalla (Width %)</label>
+          <div class="slider-row">
+            <input type="range" id="adj-width" min="5" max="100" step="0.05" value="47.7">
+            <span class="slider-val" id="val-width">47.7%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Posición Vertical (Y %)</label>
+          <div class="slider-row">
+            <input type="range" id="adj-top" min="-20" max="50" step="0.05" value="-2.85">
+            <span class="slider-val" id="val-top">-2.85%</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Alto Pantalla (Height %)</label>
+          <div class="slider-row">
+            <input type="range" id="adj-height" min="20" max="140" step="0.05" value="111.45">
+            <span class="slider-val" id="val-height">111.45%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Borde Redondeado (px)</label>
+          <div class="slider-row">
+            <input type="range" id="adj-radius" min="0" max="80" step="1" value="45">
+            <span class="slider-val" id="val-radius">45px</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rotación (° grados)</label>
+          <div class="slider-row">
+            <input type="range" id="adj-rot" min="-10" max="10" step="0.1" value="-0.8">
+            <span class="slider-val" id="val-rot">-0.8°</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Zoom de la Diapositiva (%)</label>
+        <div class="slider-row">
+          <input type="range" id="adj-zoom" min="50" max="250" step="1" value="100">
+          <span class="slider-val" id="val-zoom">100%</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-modal-reset-calib" onclick="resetModalCalib()">Restaurar Medidas</button>
+        <button class="btn-secondary" id="btn-modal-cancel">Cerrar</button>
+        <button class="btn-primary" id="btn-modal-save" onclick="saveModalConfig()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Limpieza de URL: oculta 'presentation.html' de la barra de direcciones dejando '/presentation'
+    try {
+      if (window.location.pathname.endsWith('presentation.html')) {
+        const cleanPath = window.location.pathname.replace(/\/presentation\.html$/, '/presentation');
+        window.history.replaceState({}, document.title, cleanPath + window.location.search);
+      }
+    } catch (e) {}
+
+    // Modo estático: sin transiciones (para visor de calibración)
+    const IS_STATIC = new URLSearchParams(window.location.search).has('static');
+    if (IS_STATIC) {
+      const s = document.createElement('style');
+      s.textContent = `
+        .stage-layer { transition: none !important; }
+        .controls-hint, #step-hud { display: none !important; }
+      `;
+      document.head.appendChild(s);
+    }
+
+    // Bus de comunicación bidireccional
+    const bus = new BroadcastChannel('dm_presentation_bus');
+
+    // --- PARÁMETROS Y MEDIDAS POR DEFECTO PARA LOS 3 FORMATOS ---
+    const DEFAULT_COORDS_34 = {
+      left: 28.55,
+      width: 47.7,
+      top: -2.85,
+      height: 111.45,
+      radius: 45,
+      rot: -0.8,
+      zoom: 100
+    };
+
+    const DEFAULT_COORDS_169 = {
+      left: 7.2,
+      width: 85.85,
+      top: 15.45,
+      height: 66.7,
+      radius: 12,
+      rot: 0,
+      zoom: 141
+    };
+
+    const DEFAULT_COORDS_916 = {
+      left: 41.88,
+      width: 19.17,
+      top: 8.45,
+      height: 95.15,
+      radius: 40,
+      rot: 0,
+      zoom: 119
+    };
+
+    function getDefaultCoords(format) {
+      if (format === '16:9') return { ...DEFAULT_COORDS_169 };
+      if (format === '9:16') return { ...DEFAULT_COORDS_916 };
+      return { ...DEFAULT_COORDS_34 };
+    }
+
+    // Plazas de diapositivas por defecto (sincronizadas con editor.html y ponentes.html)
+    const DEFAULT_SLOTS = [
+      {
+        id: 'slot-title',
+        name: 'Portada / Inicio',
+        format: 'title',
+        speaker: '',
+        url: '',
+        slidesCount: 1,
+        calib: { ...DEFAULT_COORDS_34 }
+      },
+      {
+        id: 'slot-1',
+        name: 'Presentación 1 (Móvil)',
+        format: '3:4',
+        speaker: 'Ponente 1',
+        url: 'https://docs.google.com/presentation/d/e/2PACX-1vRPlaceholder1/embed?start=false&loop=false&delayms=3000',
+        slidesCount: 10,
+        calib: { ...DEFAULT_COORDS_34 }
+      },
+      {
+        id: 'slot-2',
+        name: 'Presentación 2 (Escenario)',
+        format: '16:9',
+        speaker: 'Ponente 2',
+        url: 'https://docs.google.com/presentation/d/e/2PACX-1vRPlaceholder2/embed?start=false&loop=false&delayms=3000',
+        slidesCount: 8,
+        calib: { ...DEFAULT_COORDS_169 }
+      }
+    ];
+
+    function cleanSlidesUrl(url) {
+      if (!url) return '';
+      let clean = String(url).trim();
+      // Si el usuario pega un bloque <iframe> completo, extraer el src
+      if (clean.includes('<iframe')) {
+        const m = clean.match(/src=["']([^"']+)["']/i);
+        if (m) clean = m[1].trim();
+      }
+
+      // Caso 1: Google Slides /edit o /view -> convertir a /embed
+      if (clean.includes('docs.google.com/presentation')) {
+        const mKey = clean.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        if (mKey) {
+          return `https://docs.google.com/presentation/d/${mKey[1]}/embed?start=false&loop=false&delayms=3000`;
+        }
+      }
+
+      // Caso 2: URLs estándar de Google
+      const mStd = clean.match(/https:\/\/docs\.google\.com\/presentation\/d\/([a-zA-Z0-9_-]+)/);
+      if (mStd) {
+        return `https://docs.google.com/presentation/d/${mStd[1]}/embed?start=false&loop=false&delayms=3000`;
+      }
+
+      // Caso 3: OneDrive / Office Online / Otros
+      if (clean.includes('/edit') || clean.includes('/view')) {
+        return clean.replace(/\/edit.*|\/view.*/, '/embed?start=false&loop=false&delayms=3000');
+      }
+      return clean;
+    }
+
+    function getSlideUrl(url, slideNum = 1) {
+      if (!url) return '';
+      let clean = cleanSlidesUrl(url);
+      clean = clean.replace(/#slide=[^&]*/i, '').replace(/[?&]slide=[^&]*/i, '');
+
+      if (clean.includes('docs.google.com/presentation')) {
+        const sep = clean.includes('?') ? '&' : '?';
+        return `${clean}${sep}slide=${slideNum}`;
+      }
+      if (clean.includes('onedrive.live.com') || clean.includes('officeapps.live.com')) {
+        const sep = clean.includes('?') ? '&' : '?';
+        return `${clean}${sep}wdSlideId=${slideNum}`;
+      }
+      return `${clean}#slide=${slideNum}`;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function getStoredSlots() {
+      try {
+        const raw = localStorage.getItem('dm_deck_slots');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            let migrated = false;
+            const CALIB_VERSION = '20260923_def_v2';
+            const storedVersion = localStorage.getItem('dm_calib_version');
+            parsed.forEach(s => {
+              if (s.url) s.url = cleanSlidesUrl(s.url);
+              if (storedVersion !== CALIB_VERSION) {
+                if (s.format === '3:4') {
+                  if (!s.calib || Math.abs(s.calib.left - 31.15) < 0.2 || Math.abs(s.calib.width - 41.82) < 0.2 || Math.abs(s.calib.height - 100) < 0.2) {
+                    s.calib = { ...DEFAULT_COORDS_34 };
+                    migrated = true;
+                  }
+                } else if (s.format === '16:9') {
+                  if (!s.calib || Math.abs(s.calib.left - 11.8) < 0.2 || Math.abs(s.calib.width - 74.84) < 0.2 || Math.abs(s.calib.height - 62.5) < 0.2) {
+                    s.calib = { ...DEFAULT_COORDS_169 };
+                    migrated = true;
+                  }
+                } else if (s.format === '9:16') {
+                  if (!s.calib || Math.abs(s.calib.top - 15.28) < 0.2 || Math.abs(s.calib.top - 18.35) < 0.2 || Math.abs(s.calib.height - 71.85) < 0.2 || Math.abs(s.calib.height - 67.5) < 0.2) {
+                    s.calib = { ...DEFAULT_COORDS_916 };
+                    migrated = true;
+                  }
+                }
+              }
+            });
+            if (storedVersion !== CALIB_VERSION) {
+              try { localStorage.setItem('dm_calib_version', CALIB_VERSION); } catch (e) { }
+            }
+            if (migrated) {
+              try { localStorage.setItem('dm_deck_slots', JSON.stringify(parsed)); } catch(e) {}
+            }
+            return parsed;
+          }
+        }
+      } catch(e) {}
+      return JSON.parse(JSON.stringify(DEFAULT_SLOTS));
+    }
+
+    let deckSlots = getStoredSlots();
+
+    // ASIGNADOR DINÁMICO DE TRANSICIÓN SEGÚN PAR DE FORMATOS
+    function getTransitionForPair(fromFmt, toFmt) {
+      // 1. title <-> 3:4
+      if (fromFmt === 'title' && toFmt === '3:4') {
+        return {
+          src: 'Transitions/title_to_3x4.mp4',
+          name: 'Transición Title ➔ 3:4',
+          shortName: 'Video ➔ 3:4'
+        };
+      }
+      if (fromFmt === '3:4' && toFmt === 'title') {
+        return {
+          src: 'Transitions/title_to_3x4_reverse.mp4',
+          name: 'Transición 3:4 ➔ Title (Inversa)',
+          shortName: 'Video ➔ Title'
+        };
+      }
+
+      // 2. title <-> 9:16
+      if (fromFmt === 'title' && toFmt === '9:16') {
+        return {
+          src: 'Transitions/title_to_9x16.mp4',
+          name: 'Transición Title ➔ 9:16',
+          shortName: 'Video ➔ 9:16'
+        };
+      }
+      if (fromFmt === '9:16' && toFmt === 'title') {
+        return {
+          src: 'Transitions/title_to_9x16_reverse.mp4',
+          name: 'Transición 9:16 ➔ Title (Inversa)',
+          shortName: 'Video ➔ Title'
+        };
+      }
+
+      // 3. title <-> 16:9
+      if (fromFmt === 'title' && toFmt === '16:9') {
+        return {
+          src: 'Transitions/title_to_16x9.mp4',
+          name: 'Transición Title ➔ 16:9',
+          shortName: 'Video ➔ 16:9'
+        };
+      }
+      if (fromFmt === '16:9' && toFmt === 'title') {
+        return {
+          src: 'Transitions/title_to_16x9_reverse.mp4',
+          name: 'Transición 16:9 ➔ Title (Inversa)',
+          shortName: 'Video ➔ Title'
+        };
+      }
+
+      // 4. 3:4 <-> 16:9
+      if (fromFmt === '3:4' && toFmt === '16:9') {
+        return {
+          src: 'Transitions/3x4_to_16x9.mp4',
+          name: 'Transición 3:4 ➔ 16:9',
+          shortName: 'Video ➔ 16:9'
+        };
+      }
+      if (fromFmt === '16:9' && toFmt === '3:4') {
+        return {
+          src: 'Transitions/3x4_to_16x9_reverse.mp4',
+          name: 'Transición 16:9 ➔ 3:4 (Inversa)',
+          shortName: 'Video ➔ 3:4'
+        };
+      }
+
+      // 5. 9:16 <-> 16:9
+      if (fromFmt === '9:16' && toFmt === '16:9') {
+        return {
+          src: 'Transitions/9x16_to_16x9.mp4',
+          name: 'Transición 9:16 ➔ 16:9',
+          shortName: 'Video ➔ 16:9'
+        };
+      }
+      if (fromFmt === '16:9' && toFmt === '9:16') {
+        return {
+          src: 'Transitions/9x16_to_16x9_reverse.mp4',
+          name: 'Transición 16:9 ➔ 9:16 (Inversa)',
+          shortName: 'Video ➔ 9:16'
+        };
+      }
+
+      // 6. 9:16 <-> 3:4
+      if (fromFmt === '9:16' && toFmt === '3:4') {
+        return {
+          src: 'Transitions/9x16_to_3x4.mp4',
+          name: 'Transición 9:16 ➔ 3:4',
+          shortName: 'Video ➔ 3:4'
+        };
+      }
+      if (fromFmt === '3:4' && toFmt === '9:16') {
+        return {
+          src: 'Transitions/9x16_to_3x4_reverse.mp4',
+          name: 'Transición 3:4 ➔ 9:16 (Inversa)',
+          shortName: 'Video ➔ 9:16'
+        };
+      }
+
+      return null;
+    }
+
+    // COMPILADOR DE LÍNEA DE TIEMPO CON AUTO-INSERCIÓN DE TRANSICIONES
+    function buildTimeline(slotsArr) {
+      const timeline = [];
+      if (!slotsArr || slotsArr.length === 0) return timeline;
+
+      const formatLabel = (fmt) => (fmt === 'title' ? 'Portada' : (fmt === '3:4' ? 'Móvil' : (fmt === '9:16' ? '9:16' : '16:9')));
+
+      if (slotsArr.length === 1) {
+        const slot = slotsArr[0];
+        const calibDefault = getDefaultCoords(slot.format);
+        timeline.push({
+          id: 'step_slide_' + slot.id,
+          slotId: slot.id,
+          type: 'slide',
+          name: `1. ${slot.name || (slot.format === 'title' ? 'Portada' : 'Diapositiva 1')} (${formatLabel(slot.format)})`,
+          shortName: `1. ${formatLabel(slot.format)}`,
+          format: slot.format || '3:4',
+          speaker: slot.speaker || '',
+          url: slot.url || '',
+          slidesCount: slot.format === 'title' ? 1 : (parseInt(slot.slidesCount) || 1),
+          calib: slot.calib ? { ...calibDefault, ...slot.calib } : calibDefault
+        });
+
+        if (slot.format === 'title') {
+          timeline.push({
+            id: `step_trans_${slot.id}_out`,
+            type: 'video',
+            videoType: 'forward',
+            name: 'Transición Title ➔ 16:9',
+            shortName: 'Video ➔ 16:9',
+            src: 'Transitions/title_to_16x9.mp4'
+          });
+          timeline.push({
+            id: `step_trans_${slot.id}_in`,
+            type: 'video',
+            videoType: 'reverse',
+            name: 'Transición 16:9 ➔ Title (Inversa)',
+            shortName: 'Video ➔ Title',
+            src: 'Transitions/title_to_16x9_reverse.mp4'
+          });
+        } else if (slot.format === '3:4') {
+          timeline.push({
+            id: `step_trans_${slot.id}_out`,
+            type: 'video',
+            videoType: 'forward',
+            name: 'Transición 3:4 ➔ 16:9',
+            shortName: 'Video ➔ 16:9',
+            src: 'Transitions/3x4_to_16x9.mp4'
+          });
+          timeline.push({
+            id: `step_trans_${slot.id}_in`,
+            type: 'video',
+            videoType: 'reverse',
+            name: 'Transición Inversa ➔ 3:4',
+            shortName: 'Video ➔ 3:4',
+            src: 'Transitions/3x4_to_16x9_reverse.mp4'
+          });
+        } else if (slot.format === '9:16') {
+          timeline.push({
+            id: `step_trans_${slot.id}_out`,
+            type: 'video',
+            videoType: 'forward',
+            name: 'Transición 9:16 ➔ 16:9',
+            shortName: 'Video ➔ 16:9',
+            src: 'Transitions/9x16_to_16x9.mp4'
+          });
+          timeline.push({
+            id: `step_trans_${slot.id}_in`,
+            type: 'video',
+            videoType: 'reverse',
+            name: 'Transición 16:9 ➔ 9:16 (Inversa)',
+            shortName: 'Video ➔ 9:16',
+            src: 'Transitions/9x16_to_16x9_reverse.mp4'
+          });
+        } else {
+          timeline.push({
+            id: `step_trans_${slot.id}_out`,
+            type: 'video',
+            videoType: 'reverse',
+            name: 'Transición Inversa ➔ 3:4',
+            shortName: 'Video ➔ 3:4',
+            src: 'Transitions/3x4_to_16x9_reverse.mp4'
+          });
+          timeline.push({
+            id: `step_trans_${slot.id}_in`,
+            type: 'video',
+            videoType: 'forward',
+            name: 'Transición 3:4 ➔ 16:9',
+            shortName: 'Video ➔ 16:9',
+            src: 'Transitions/3x4_to_16x9.mp4'
+          });
+        }
+        return timeline;
+      }
+
+      slotsArr.forEach((slot, idx) => {
+        const calibDefault = getDefaultCoords(slot.format);
+        timeline.push({
+          id: 'step_slide_' + slot.id,
+          slotId: slot.id,
+          type: 'slide',
+          name: `${idx + 1}. ${slot.name || `Diapositiva ${idx + 1}`} (${formatLabel(slot.format)})`,
+          shortName: `${idx + 1}. ${formatLabel(slot.format)}`,
+          format: slot.format || '3:4',
+          speaker: slot.speaker || '',
+          url: slot.url || '',
+          slidesCount: slot.format === 'title' ? 1 : (parseInt(slot.slidesCount) || 1),
+          calib: slot.calib ? { ...calibDefault, ...slot.calib } : calibDefault
+        });
+
+        const nextSlot = slotsArr[(idx + 1) % slotsArr.length];
+        if (slot.format !== nextSlot.format) {
+          const trans = getTransitionForPair(slot.format, nextSlot.format);
+          if (trans) {
+            timeline.push({
+              id: `step_trans_${slot.id}_to_${nextSlot.id}`,
+              type: 'video',
+              videoType: (trans.src.includes('reverse') ? 'reverse' : 'forward'),
+              name: trans.name,
+              shortName: trans.shortName,
+              src: trans.src
+            });
+          }
+        } else if (idx === slotsArr.length - 1) {
+          if (slot.format === '3:4') {
+            timeline.push({
+              id: 'step_trans_loop_forward',
+              type: 'video',
+              videoType: 'forward',
+              name: 'Transición 3:4 ➔ 16:9',
+              shortName: 'Video ➔ 16:9',
+              src: 'Transitions/3x4_to_16x9.mp4'
+            });
+            timeline.push({
+              id: 'step_trans_loop_reverse',
+              type: 'video',
+              videoType: 'reverse',
+              name: 'Transición Inversa ➔ 3:4',
+              shortName: 'Video ➔ 3:4',
+              src: 'Transitions/3x4_to_16x9_reverse.mp4'
+            });
+          } else if (slot.format === '9:16') {
+            timeline.push({
+              id: 'step_trans_loop_forward',
+              type: 'video',
+              videoType: 'forward',
+              name: 'Transición 9:16 ➔ 16:9',
+              shortName: 'Video ➔ 16:9',
+              src: 'Transitions/9x16_to_16x9.mp4'
+            });
+            timeline.push({
+              id: 'step_trans_loop_reverse',
+              type: 'video',
+              videoType: 'reverse',
+              name: 'Transición 16:9 ➔ 9:16 (Inversa)',
+              shortName: 'Video ➔ 9:16',
+              src: 'Transitions/9x16_to_16x9_reverse.mp4'
+            });
+          } else if (slot.format === 'title') {
+            timeline.push({
+              id: 'step_trans_loop_forward',
+              type: 'video',
+              videoType: 'forward',
+              name: 'Transición Title ➔ 16:9',
+              shortName: 'Video ➔ 16:9',
+              src: 'Transitions/title_to_16x9.mp4'
+            });
+            timeline.push({
+              id: 'step_trans_loop_reverse',
+              type: 'video',
+              videoType: 'reverse',
+              name: 'Transición 16:9 ➔ Title (Inversa)',
+              shortName: 'Video ➔ Title',
+              src: 'Transitions/title_to_16x9_reverse.mp4'
+            });
+          }
+        }
+      });
+
+      return timeline;
+    }
+
+    let STEPS = buildTimeline(deckSlots);
+    let currentStepIndex = 0;
+    let currentSlide = 1;
+    let hintTimer = null;
+    let hasTriggeredEndFade = false;
+    let hasTriggeredReverseFade = false;
+    let videoStartTimeout = null;
+    let videoEndTimeout = null;
+    let videoWatchdogTimer = null;
+    let hasTriggeredEndHold = false;
+    let isTransitionLocked = false;
+    let isInitialLoad = true;
+
+    // Elementos DOM del Escenario
+    const layers = {
+      step1: document.getElementById('layer-step1'),
+      step2: document.getElementById('layer-step2'),
+      step3: document.getElementById('layer-step3'),
+      step4: document.getElementById('layer-step4'),
+      step916: document.getElementById('layer-format-916'),
+      stepTitle: document.getElementById('layer-title')
+    };
+
+    const iframe1 = document.getElementById('iframe-slides1');
+    const iframe2 = document.getElementById('iframe-slides2');
+    const iframe916 = document.getElementById('iframe-slides916');
+    const nativeDeck1 = document.getElementById('native-deck-1');
+    const nativeDeck2 = document.getElementById('native-deck-2');
+    const nativeDeck916 = document.getElementById('native-deck-916');
+    const videoEl = document.getElementById('video-element');
+    const videoReverseEl = document.getElementById('video-reverse-element');
+    const stepNameEl = document.getElementById('step-name');
+    const stepNumEl = document.getElementById('step-num');
+    const stepTotEl = document.getElementById('step-tot');
+    const controlsHint = document.getElementById('controls-hint');
+    const hintText = document.getElementById('hint-text');
+    const phoneScreenSlot = document.getElementById('phone-screen-slot');
+    const frame2ScreenSlot = document.getElementById('frame2-screen-slot');
+    const frame916ScreenSlot = document.getElementById('frame916-screen-slot');
+
+    // Plantillas de Contenido para Presentación Nativa (Visible si no hay URL externa)
+    const SLIDES_CONTENT_34 = [
+      { cat: 'Keynote de Apertura', title: 'Decoding Media', desc: 'Transformación audiovisual interactiva de móvil a gran pantalla.', b1: 'Formato vertical 3:4 ergonómico', b2: 'Transiciones de video 4K cinematográficas', b3: 'Sincronización en tiempo real para ponentes' },
+      { cat: 'Identidad Visual', title: 'Diseño Sin Límites', desc: 'Adaptación fluida de contenidos digitales a cualquier formato escénico.', b1: 'Estética futurista oscura y de alto contraste', b2: 'Calibración milimétrica por diapositiva', b3: 'Transición fluida a 60 fps' },
+      { cat: 'Arquitectura Técnica', title: 'Bucle Continuo', desc: 'Motor de reproducción con video inverso para transiciones sin saltos.', b1: 'Transición directa (3x4_to_16x9.mp4) de 3:4 a 16:9', b2: 'Transición inversa (3x4_to_16x9_reverse.mp4) de 16:9 a 3:4', b3: 'Fundido cruzado de 0.5s en cada cambio' },
+      { cat: 'Portal de Ponentes', title: 'Control en Directo', desc: 'Herramientas dedicadas para ponentes con teleprompter y cronómetro.', b1: 'Cálculo de ritmo por diapositiva', b2: 'Aviso visual del formato requerido (3:4 ó 16:9)', b3: 'Proyección directa al escenario con un clic' },
+      { cat: 'Métricas de Impacto', title: 'Resultados Clave', desc: 'Medición de la atención de la audiencia durante eventos híbridos.', b1: '+340% interacción con el escenario', b2: 'Cero interrupciones en cambios de ponente', b3: 'Baja latencia garantizada en red local' },
+      { cat: 'Casos de Éxito', title: 'Eventos Globales', desc: 'Aplicación en conferencias corporativas, streaming y eventos en vivo.', b1: 'Integración con Google Slides, Canva y Office', b2: 'Multi-pantalla coordinada por bus de datos', b3: 'Operación asistida desde la sala de control' },
+      { cat: 'Innovación en Escena', title: 'El Futuro es Hoy', desc: 'Tecnología creada para transformar la experiencia del espectador.', b1: 'Ecosistema abierto y configurable', b2: 'Renderizado acelerado por hardware', b3: 'Alta fidelidad de color y nitidez 4K' },
+      { cat: 'Conclusiones', title: 'Resumen & Preguntas', desc: '¡Gracias por acompañarnos en esta sesión de Decoding Media!', b1: 'Pulsa Espacio para avanzar al siguiente paso', b2: 'Salida automática a video de transición', b3: 'Equipo de soporte técnico en directo' }
+    ];
+
+    const SLIDES_CONTENT_169 = [
+      { cat: 'Escenario Panorámico', title: 'Gran Pantalla 16:9', desc: 'Presentación ampliada con máxima visibilidad para el auditorio.', b1: 'Resolución panorámica de alta definición', b2: 'Branding interactivo Decoding Media', b3: 'Ajuste dinámico de zoom y encuadre' },
+      { cat: 'Estrategia Digital', title: 'Impacto Audiovisual', desc: 'Cómo conectar con audiencias presenciales y remotas de forma simultánea.', b1: 'Contenido optimizado para pantallas gigantes', b2: 'Transiciones suaves de 0.5 segundos', b3: 'Control centralizado desde cabina' },
+      { cat: 'Rendimiento & Latencia', title: 'Velocidad Absoluta', desc: 'Comunicación instantánea entre ponente, sala de control y escenario.', b1: 'Protocolo BroadcastChannel de alta velocidad', b2: 'Soporte offline y compatibilidad total', b3: 'Memoria persistente de calibraciones' },
+      { cat: 'Bucle Cerrado', title: 'Retorno al Móvil', desc: 'Al terminar esta fase, la animación inversa cierra el bucle de forma natural.', b1: 'Zoom in suave volviendo a la perspectiva vertical', b2: 'Continuidad cinematográfica sin pausas', b3: 'Pulsa Espacio para activar el video inverso' }
+    ];
+
+    const SLIDES_CONTENT_916 = [
+      { cat: 'Móvil Vertical', title: 'Formato 9:16', desc: 'Narrativa vertical optimizada para contenidos ágiles y redes.', b1: 'Diseño ultra panorámico vertical', b2: 'Transiciones de video adaptadas', b3: 'Interacción ágil para ponentes' },
+      { cat: 'Engagement Móvil', title: 'Impacto Inmediato', desc: 'Captura la atención visual en proporciones estándar de smartphone.', b1: 'Resolución vertical 4K nativa', b2: 'Calibración precisa dentro de Imagen 9x16', b3: 'Navegación con barra espaciadora' },
+      { cat: 'Continuidad Dinámica', title: 'Flujo Audiovisual', desc: 'Conexión suave hacia gran pantalla o formato 3:4.', b1: 'Transición 9:16 a 16:9 con video cinematográfico', b2: 'Transición 9:16 a 3:4 integrada', b3: 'Sincronización multi-dispositivo' },
+      { cat: 'Resumen Vertical', title: 'Conclusiones', desc: 'Cierre de la presentación móvil con paso a la siguiente escena.', b1: 'Pase a la siguiente etapa automática', b2: 'Sincronización de teleprompter', b3: 'Control total desde la cabina' }
+    ];
+
+    function renderNativeSlide(targetNum, step, slideNum) {
+      let prefix = 'deck1';
+      let contentList = SLIDES_CONTENT_34;
+      if (step.format === '16:9') {
+        prefix = 'deck2';
+        contentList = SLIDES_CONTENT_169;
+      } else if (step.format === '9:16') {
+        prefix = 'deck916';
+        contentList = SLIDES_CONTENT_916;
+      }
+      const idx = (slideNum - 1) % contentList.length;
+      const item = contentList[idx];
+
+      const counterEl = document.getElementById(`${prefix}-counter`);
+      const categoryEl = document.getElementById(`${prefix}-category`);
+      const titleEl = document.getElementById(`${prefix}-title`);
+      const descEl = document.getElementById(`${prefix}-desc`);
+      const bulletsEl = document.getElementById(`${prefix}-bullets`);
+      const speakerEl = document.getElementById(`${prefix}-speaker`);
+      const progressEl = document.getElementById(`${prefix}-progress`);
+      const bodyEl = document.getElementById(`${prefix}-body`);
+
+      if (counterEl) counterEl.textContent = `ESCENA ${slideNum < 10 ? '0' + slideNum : slideNum} / ${step.slidesCount < 10 ? '0' + step.slidesCount : step.slidesCount}`;
+      if (categoryEl) categoryEl.textContent = `${step.name.toUpperCase()} · ${item.cat.toUpperCase()}`;
+      if (titleEl) titleEl.textContent = item.title;
+      if (descEl) descEl.textContent = item.desc;
+      if (speakerEl) speakerEl.textContent = step.speaker ? `Ponente: ${step.speaker}` : 'Decoding Media';
+      if (progressEl) progressEl.style.width = `${Math.min(100, Math.round((slideNum / step.slidesCount) * 100))}%`;
+
+      if (bulletsEl) {
+        bulletsEl.innerHTML = `
+          <div class="deck-bullet"><span class="deck-bullet-dot"></span> ${item.b1}</div>
+          <div class="deck-bullet"><span class="deck-bullet-dot"></span> ${item.b2}</div>
+          <div class="deck-bullet"><span class="deck-bullet-dot"></span> ${item.b3}</div>
+        `;
+      }
+
+      if (bodyEl) {
+        bodyEl.style.opacity = '1';
+        bodyEl.style.transform = 'none';
+      }
+    }
+
+    function applyPhoneCoords(c) {
+      if (!phoneScreenSlot || !c) return;
+      phoneScreenSlot.style.setProperty('--phone-left', `${c.left}%`);
+      phoneScreenSlot.style.setProperty('--phone-top', `${c.top}%`);
+      phoneScreenSlot.style.setProperty('--phone-width', `${c.width}%`);
+      phoneScreenSlot.style.setProperty('--phone-height', `${c.height}%`);
+      phoneScreenSlot.style.setProperty('--phone-radius', `0 0 ${c.radius}px ${c.radius}px`);
+      phoneScreenSlot.style.setProperty('--phone-rot', `${c.rot}deg`);
+      phoneScreenSlot.style.setProperty('--phone-zoom', `${(c.zoom !== undefined ? c.zoom : 100) / 100}`);
+    }
+
+    function applyFrame2Coords(c) {
+      if (!frame2ScreenSlot || !c) return;
+      frame2ScreenSlot.style.setProperty('--frame2-left', `${c.left}%`);
+      frame2ScreenSlot.style.setProperty('--frame2-top', `${c.top}%`);
+      frame2ScreenSlot.style.setProperty('--frame2-width', `${c.width}%`);
+      frame2ScreenSlot.style.setProperty('--frame2-height', `${c.height}%`);
+      frame2ScreenSlot.style.setProperty('--frame2-radius', `${c.radius}px`);
+      frame2ScreenSlot.style.setProperty('--frame2-rot', `${c.rot}deg`);
+      frame2ScreenSlot.style.setProperty('--frame2-zoom', `${(c.zoom !== undefined ? c.zoom : 100) / 100}`);
+    }
+
+    function applyFrame916Coords(c) {
+      if (!frame916ScreenSlot || !c) return;
+      frame916ScreenSlot.style.setProperty('--frame916-left', `${c.left}%`);
+      frame916ScreenSlot.style.setProperty('--frame916-top', `${c.top}%`);
+      frame916ScreenSlot.style.setProperty('--frame916-width', `${c.width}%`);
+      frame916ScreenSlot.style.setProperty('--frame916-height', `${c.height}%`);
+      frame916ScreenSlot.style.setProperty('--frame916-radius', `${c.radius}px`);
+      frame916ScreenSlot.style.setProperty('--frame916-rot', `${c.rot}deg`);
+      frame916ScreenSlot.style.setProperty('--frame916-zoom', `${(c.zoom !== undefined ? c.zoom : 100) / 100}`);
+    }
+
+
+
+    function navigateSlide(iframe, baseUrl, slideNum) {
+      if (!iframe || !baseUrl || baseUrl.includes('Placeholder')) return;
+      const targetUrl = getSlideUrl(baseUrl, slideNum);
+      if (!targetUrl) return;
+
+      const loadedUrl = iframe.getAttribute('data-loaded-url');
+      if (loadedUrl !== targetUrl) {
+        iframe.setAttribute('data-loaded-url', targetUrl);
+        iframe.src = targetUrl;
+        iframe.style.opacity = '1';
+      } else {
+        iframe.style.opacity = '1';
+      }
+
+      try {
+        if (iframe.contentWindow) {
+          iframe.contentWindow.postMessage(JSON.stringify({ method: 'next', slide: slideNum }), '*');
+        }
+      } catch(e) {}
+    }
+
+    function showHint(html, autoHideMs = 4000) {
+      if (!hintText || !controlsHint) return;
+      hintText.innerHTML = html;
+      controlsHint.classList.remove('hide');
+      if (hintTimer) clearTimeout(hintTimer);
+      if (autoHideMs > 0) {
+        hintTimer = setTimeout(() => {
+          if (controlsHint) controlsHint.classList.add('hide');
+        }, autoHideMs);
+      }
+    }
+
+    function ensureWindowFocus() {
+      try {
+        if (document.activeElement && document.activeElement !== document.body) {
+          document.activeElement.blur();
+        }
+        if (document.body) {
+          document.body.focus();
+        }
+        window.focus();
+      } catch(e) {}
+    }
+
+    function stopVideos() {
+      if (videoWatchdogTimer) {
+        clearTimeout(videoWatchdogTimer);
+        videoWatchdogTimer = null;
+      }
+      if (videoStartTimeout) {
+        clearTimeout(videoStartTimeout);
+        videoStartTimeout = null;
+      }
+      if (videoEndTimeout) {
+        clearTimeout(videoEndTimeout);
+        videoEndTimeout = null;
+      }
+      hasTriggeredEndHold = false;
+      hasTriggeredEndFade = false;
+      if (videoEl) {
+        try {
+          videoEl.pause();
+          videoEl.blur();
+        } catch(e) {}
+      }
+      if (videoReverseEl) {
+        try {
+          videoReverseEl.pause();
+          videoReverseEl.blur();
+        } catch(e) {}
+      }
+      ensureWindowFocus();
+      setTimeout(ensureWindowFocus, 50);
+      setTimeout(ensureWindowFocus, 250);
+    }
+
+    function updateSlideCounters() {
+      const hudSlidePill = document.getElementById('hud-slide-box');
+      const hudSlideCur = document.getElementById('hud-slide-cur');
+      const hudSlideTot = document.getElementById('hud-slide-tot');
+      const hudSlideSep = document.getElementById('hud-slide-sep');
+      const btnTextStep1 = document.getElementById('btn-text-step1');
+      const btnTextStep3 = document.getElementById('btn-text-step3');
+
+      const step = STEPS[currentStepIndex];
+      if (!step) return;
+
+      if (step.type === 'slide') {
+        if (step.format === 'title') {
+          if (hudSlidePill) hudSlidePill.style.display = 'none';
+          if (hudSlideSep) hudSlideSep.style.display = 'none';
+          if (btnTextStep1) btnTextStep1.textContent = 'Iniciar Presentación';
+          if (btnTextStep3) btnTextStep3.textContent = 'Iniciar Presentación';
+          broadcastState();
+          return;
+        }
+
+        if (hudSlidePill) hudSlidePill.style.display = 'inline-flex';
+        if (hudSlideSep) hudSlideSep.style.display = 'inline';
+        if (hudSlideCur) hudSlideCur.textContent = currentSlide;
+        if (hudSlideTot) hudSlideTot.textContent = step.slidesCount;
+
+        const btnText = (step.format === '3:4') ? btnTextStep1 : btnTextStep3;
+        if (btnText) {
+          if (currentSlide < step.slidesCount) {
+            btnText.textContent = `Siguiente Escena (${currentSlide}/${step.slidesCount})`;
+          } else {
+            const nextStepObj = STEPS[(currentStepIndex + 1) % STEPS.length];
+            const isReverse = (nextStepObj && nextStepObj.videoType === 'reverse');
+            btnText.textContent = isReverse ? `Terminar Slides ➔ Iniciar Bucle Inverso` : `Terminar Slides ➔ Transición en Video`;
+          }
+        }
+      } else {
+        if (hudSlidePill) hudSlidePill.style.display = 'none';
+        if (hudSlideSep) hudSlideSep.style.display = 'none';
+      }
+
+      broadcastState();
+    }
+
+    function isTitleStepOrTransition(step) {
+      if (!step) return false;
+      if (step.format === 'title') return true;
+      if (step.type === 'video') {
+        const src = (step.src || '').toLowerCase();
+        const name = (step.name || '').toLowerCase();
+        const shortName = (step.shortName || '').toLowerCase();
+        const id = (step.id || '').toLowerCase();
+        if (src.includes('title') || name.includes('title') || shortName.includes('title') || id.includes('title')) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function updateStepUI() {
+      if (!STEPS || STEPS.length === 0) return;
+      if (currentStepIndex >= STEPS.length) currentStepIndex = 0;
+      const step = STEPS[currentStepIndex];
+
+      // Ocultar los logos en esquina si estamos en stage title o cualquier transición que involucre a title
+      const stageContainer = document.getElementById('stage-container');
+      if (stageContainer) {
+        if (isTitleStepOrTransition(step)) {
+          stageContainer.classList.add('hide-corner-logos');
+        } else {
+          stageContainer.classList.remove('hide-corner-logos');
+        }
+      }
+
+      // Actualizar textos superiores del HUD si existen
+      if (stepNameEl) stepNameEl.textContent = step.name + (step.speaker ? ` · ${step.speaker}` : '');
+      if (stepNumEl) stepNumEl.textContent = (currentStepIndex + 1);
+      if (stepTotEl) stepTotEl.textContent = STEPS.length;
+
+      // Identificar la capa destino de este paso
+      let targetLayer = null;
+      if (step.type === 'slide') {
+        if (step.format === 'title') targetLayer = layers.stepTitle;
+        else if (step.format === '3:4') targetLayer = layers.step1;
+        else if (step.format === '9:16') targetLayer = layers.step916;
+        else targetLayer = layers.step3;
+      } else if (step.type === 'video') {
+        targetLayer = layers.step2;
+      }
+
+      // Transición secuencial:
+      // previousLayers contiene sólo las capas activas que no son la capa destino
+      const previousLayers = [];
+      Object.keys(layers).forEach(k => {
+        if (layers[k]) {
+          layers[k].classList.remove('incoming-layer');
+          if (layers[k] !== targetLayer && layers[k].classList.contains('active')) {
+            previousLayers.push(layers[k]);
+          }
+        }
+      });
+
+      const isFirstInit = isInitialLoad;
+      if (isInitialLoad) {
+        isInitialLoad = false;
+        Object.keys(layers).forEach(k => {
+          if (layers[k]) {
+            layers[k].classList.remove('active', 'incoming-layer');
+          }
+        });
+        if (targetLayer) {
+          targetLayer.classList.add('active');
+        }
+      } else if (step.type === 'slide') {
+        if (targetLayer) {
+          targetLayer.classList.add('active');
+          targetLayer.classList.add('incoming-layer');
+        }
+      }
+      // Nota: si step.type === 'video', targetLayer (#layer-step2) se activará en beginHoldAndPlay() cuando el fotograma 0 esté listo
+
+      if (step.type === 'slide') {
+        if (!isFirstInit) {
+          // Bloquear brevemente durante el fundido de 1s para asegurar una visualización limpia e ininterrumpida
+          isTransitionLocked = true;
+          setTimeout(() => {
+            isTransitionLocked = false;
+          }, 1000);
+        } else {
+          isTransitionLocked = false;
+        }
+
+        const hasExternalUrl = step.url && !step.url.includes('Placeholder') && step.url.trim().length > 10;
+
+        if (step.format === 'title') {
+          ensureWindowFocus();
+          showHint(`<b>${step.name}</b> (Portada Title). Pulsa <span class="key-badge">Espacio</span> para avanzar`, 3000);
+
+        } else if (step.format === '3:4') {
+          applyPhoneCoords(step.calib);
+
+          if (hasExternalUrl) {
+            if (nativeDeck1) nativeDeck1.style.display = 'none';
+            if (iframe1) {
+              iframe1.style.display = 'block';
+              iframe1.style.opacity = '1';
+              navigateSlide(iframe1, step.url, currentSlide);
+            }
+          } else {
+            if (iframe1) iframe1.style.display = 'none';
+            if (nativeDeck1) {
+              nativeDeck1.style.display = 'flex';
+              nativeDeck1.style.opacity = '1';
+              renderNativeSlide(1, step, currentSlide);
+            }
+          }
+          ensureWindowFocus();
+          showHint(`<b>${step.name}</b> (Escena ${currentSlide}/${step.slidesCount}). Pulsa <span class="key-badge">Espacio</span> para avanzar`, 3000);
+
+        } else if (step.format === '9:16') {
+          applyFrame916Coords(step.calib);
+
+          if (hasExternalUrl) {
+            if (nativeDeck916) nativeDeck916.style.display = 'none';
+            if (iframe916) {
+              iframe916.style.display = 'block';
+              iframe916.style.opacity = '1';
+              navigateSlide(iframe916, step.url, currentSlide);
+            }
+          } else {
+            if (iframe916) iframe916.style.display = 'none';
+            if (nativeDeck916) {
+              nativeDeck916.style.display = 'flex';
+              nativeDeck916.style.opacity = '1';
+              renderNativeSlide(3, step, currentSlide);
+            }
+          }
+          ensureWindowFocus();
+          showHint(`<b>${step.name}</b> (Escena ${currentSlide}/${step.slidesCount}). Pulsa <span class="key-badge">Espacio</span> para avanzar`, 3000);
+
+        } else {
+          applyFrame2Coords(step.calib);
+
+          if (hasExternalUrl) {
+            if (nativeDeck2) nativeDeck2.style.display = 'none';
+            if (iframe2) {
+              iframe2.style.display = 'block';
+              iframe2.style.opacity = '1';
+              navigateSlide(iframe2, step.url, currentSlide);
+            }
+          } else {
+            if (iframe2) iframe2.style.display = 'none';
+            if (nativeDeck2) {
+              nativeDeck2.style.display = 'flex';
+              nativeDeck2.style.opacity = '1';
+              renderNativeSlide(2, step, currentSlide);
+            }
+          }
+          ensureWindowFocus();
+          showHint(`<b>${step.name}</b> (Escena ${currentSlide}/${step.slidesCount}). Pulsa <span class="key-badge">Espacio</span> para avanzar`, 3000);
+        }
+      } else if (step.type === 'video') {
+        isTransitionLocked = true;
+        hasTriggeredEndFade = false;
+        hasTriggeredEndHold = false;
+        if (videoStartTimeout) { clearTimeout(videoStartTimeout); videoStartTimeout = null; }
+        if (videoEndTimeout) { clearTimeout(videoEndTimeout); videoEndTimeout = null; }
+        if (videoWatchdogTimer) { clearTimeout(videoWatchdogTimer); videoWatchdogTimer = null; }
+        if (videoReverseEl) videoReverseEl.pause();
+        const rawVideoSrc = step.src || 'Transitions/3x4_to_16x9.mp4';
+        const videoSrc = rawVideoSrc;
+        const currentSrc = videoEl.getAttribute('data-active-src');
+
+        // Función que asegura que el fotograma 0 está renderizado, lo congela 0.5s y luego inicia play()
+        let holdStarted = false;
+        const beginHoldAndPlay = () => {
+          if (holdStarted) return;
+          holdStarted = true;
+
+          // Asegurar pausa en fotograma 0
+          try { videoEl.pause(); } catch(e) {}
+          try { videoEl.currentTime = 0; } catch(e) {}
+
+          // Hacer visible el vídeo con su primer fotograma ya listo
+          videoEl.style.opacity = '1';
+
+          // Activar la capa de vídeo sobre la escena anterior exactamente cuando el fotograma 0 está listo
+          if (targetLayer) {
+            targetLayer.classList.add('active');
+          }
+
+          // Retirar limpiamente las capas anteriores ahora que el vídeo está visible y congelado en fotograma 0
+          if (previousLayers.length > 0) {
+            previousLayers.forEach(layer => {
+              layer.classList.remove('active');
+              layer.classList.remove('incoming-layer');
+            });
+          }
+
+          // Pausa de 0.5 segundos en el primer fotograma antes de arrancar la animación
+          if (videoStartTimeout) clearTimeout(videoStartTimeout);
+          videoStartTimeout = setTimeout(() => {
+            const currentStep = STEPS[currentStepIndex];
+            if (currentStep && currentStep.type === 'video') {
+              // Watchdog de seguridad dinámico: calcula la duración del vídeo + margen de 1.5s
+              if (videoWatchdogTimer) clearTimeout(videoWatchdogTimer);
+              const maxAllowedMs = (videoEl.duration && videoEl.duration > 0.5)
+                ? Math.round(videoEl.duration * 1000 + 1500)
+                : 10000;
+              videoWatchdogTimer = setTimeout(() => {
+                const s = STEPS[currentStepIndex];
+                if (s && s.type === 'video' && !hasTriggeredEndHold) {
+                  console.warn('[Video Watchdog] El vídeo excedió el tiempo máximo esperado. Auto-avanzando...');
+                  triggerEndHold();
+                }
+              }, maxAllowedMs);
+
+              videoEl.muted = true;
+              const playPromise = videoEl.play();
+              if (playPromise !== undefined) {
+                playPromise.catch((err) => {
+                  console.warn('[videoEl.play catch]', err);
+                  videoEl.muted = true;
+                  videoEl.play().catch(() => {
+                    // Si el navegador bloquea la reproducción de vídeo, avanzar limpiamente
+                    triggerEndHold();
+                  });
+                });
+              }
+            }
+          }, 500);
+        };
+
+        if (currentSrc !== rawVideoSrc) {
+          videoEl.setAttribute('data-active-src', rawVideoSrc);
+          videoEl.style.opacity = '0';
+
+          const onReadyToHold = () => {
+            videoEl.removeEventListener('loadeddata', onReadyToHold);
+            videoEl.removeEventListener('canplay', onReadyToHold);
+            videoEl.removeEventListener('seeked', onReadyToHold);
+            beginHoldAndPlay();
+          };
+
+          // Escuchar eventos ANTES de asignar el src y hacer load()
+          videoEl.addEventListener('loadeddata', onReadyToHold, { once: true });
+          videoEl.addEventListener('canplay', onReadyToHold, { once: true });
+          videoEl.addEventListener('seeked', onReadyToHold, { once: true });
+
+          try { videoEl.pause(); } catch(e) {}
+          videoEl.muted = true;
+          videoEl.src = videoSrc;
+          videoEl.load();
+          try { videoEl.currentTime = 0; } catch(e) {}
+
+          // Si el vídeo ya tiene datos listos de inmediato gracias a faststart
+          if (videoEl.readyState >= 2) {
+            onReadyToHold();
+          } else {
+            // Fallback de seguridad: 2.5 segundos con la diapositiva previa siempre visible
+            setTimeout(() => {
+              if (!holdStarted) beginHoldAndPlay();
+            }, 2500);
+          }
+
+        } else {
+          // Mismo vídeo (ej. bucle o replay directo): rebobinar estrictamente a 0
+          try { videoEl.pause(); } catch(e) {}
+          if (videoEl.currentTime <= 0.05 && videoEl.readyState >= 2) {
+            beginHoldAndPlay();
+          } else {
+            const onSeeked = () => {
+              videoEl.removeEventListener('seeked', onSeeked);
+              beginHoldAndPlay();
+            };
+            videoEl.addEventListener('seeked', onSeeked, { once: true });
+            try { videoEl.currentTime = 0; } catch(e) {
+              beginHoldAndPlay();
+            }
+            // Fallback de seguridad
+            setTimeout(() => {
+              if (!holdStarted) beginHoldAndPlay();
+            }, 1500);
+          }
+        }
+
+        showHint(`Reproduciendo ${step.name}...`, 1500);
+      }
+
+      // Desactivar capas anteriores de forma limpia al entrar a diapositivas
+      if (previousLayers.length > 0 && step.type !== 'video') {
+        if (IS_STATIC) {
+          previousLayers.forEach(layer => {
+            layer.classList.remove('active');
+            layer.classList.remove('incoming-layer');
+          });
+        } else {
+          // Al entrar a una diapositiva, la nueva capa realiza su fundido de 1s directamente sobre la anterior
+          setTimeout(() => {
+            previousLayers.forEach(layer => {
+              layer.classList.remove('active');
+              layer.classList.remove('incoming-layer');
+            });
+            if (targetLayer) {
+              targetLayer.classList.remove('incoming-layer');
+            }
+          }, 1000);
+        }
+      }
+
+      updateSlideCounters();
+    }
+
+    function handleNextAction() {
+      if (isTransitionLocked) return;
+      if (!STEPS || STEPS.length === 0) return;
+      const step = STEPS[currentStepIndex];
+
+      if (step.type === 'slide') {
+        if (step.format === 'title') {
+          currentSlide = 1;
+          nextStep();
+          return;
+        }
+        if (currentSlide < step.slidesCount) {
+          currentSlide++;
+          const hasExternalUrl = step.url && !step.url.includes('Placeholder') && step.url.trim().length > 10;
+          if (hasExternalUrl) {
+            let targetIfr = iframe1;
+            if (step.format === '16:9') targetIfr = iframe2;
+            else if (step.format === '9:16') targetIfr = iframe916;
+            navigateSlide(targetIfr, step.url, currentSlide);
+          } else {
+            renderNativeSlide(step.format === '3:4' ? 1 : (step.format === '9:16' ? 3 : 2), step, currentSlide);
+          }
+          updateSlideCounters();
+          showHint(`Diapositiva ${currentSlide} de ${step.slidesCount}`, 1500);
+        } else {
+          currentSlide = 1;
+          nextStep();
+        }
+      } else if (step.type === 'video') {
+        // Bloqueado: no se puede cortar ni saltar la animación de transición
+        return;
+      }
+    }
+
+    function handlePrevAction() {
+      if (isTransitionLocked) return;
+      if (!STEPS || STEPS.length === 0) return;
+      const step = STEPS[currentStepIndex];
+      if (step.type === 'video') return;
+
+      if (step.type === 'slide' && currentSlide > 1) {
+        currentSlide--;
+        const hasExternalUrl = step.url && !step.url.includes('Placeholder') && step.url.trim().length > 10;
+        if (hasExternalUrl) {
+          let targetIfr = iframe1;
+          if (step.format === '16:9') targetIfr = iframe2;
+          else if (step.format === '9:16') targetIfr = iframe916;
+          navigateSlide(targetIfr, step.url, currentSlide);
+        } else {
+          renderNativeSlide(step.format === '3:4' ? 1 : (step.format === '9:16' ? 3 : 2), step, currentSlide);
+        }
+        updateSlideCounters();
+        showHint(`Diapositiva ${currentSlide} de ${step.slidesCount}`, 2000);
+        ensureWindowFocus();
+      } else {
+        currentSlide = 1;
+        prevStep();
+      }
+    }
+
+    function advanceToNextStep() {
+      stopVideos();
+      currentStepIndex = (currentStepIndex + 1) % STEPS.length;
+      currentSlide = 1;
+      updateStepUI();
+      ensureWindowFocus();
+    }
+
+    function nextStep() {
+      if (isTransitionLocked) return;
+      advanceToNextStep();
+    }
+
+    function prevStep() {
+      if (isTransitionLocked) return;
+      stopVideos();
+      currentStepIndex = (currentStepIndex - 1 + STEPS.length) % STEPS.length;
+      currentSlide = 1;
+      updateStepUI();
+      ensureWindowFocus();
+    }
+
+    function goToStep(index) {
+      isTransitionLocked = false;
+      stopVideos();
+      currentStepIndex = (index >= 0 && index < STEPS.length) ? index : 0;
+      currentSlide = 1;
+      updateStepUI();
+      ensureWindowFocus();
+    }
+
+    function resetPresentation() {
+      isTransitionLocked = false;
+      stopVideos();
+      if (videoEl) {
+        try { videoEl.currentTime = 0; } catch(e) {}
+      }
+      if (videoReverseEl) {
+        try { videoReverseEl.currentTime = 0; } catch(e) {}
+      }
+      currentStepIndex = 0;
+      currentSlide = 1;
+      updateStepUI();
+      showHint('Presentación reiniciada desde el inicio', 2000);
+    }
+
+    function triggerEndHold() {
+      if (hasTriggeredEndHold) return;
+      hasTriggeredEndHold = true;
+      if (videoWatchdogTimer) {
+        clearTimeout(videoWatchdogTimer);
+        videoWatchdogTimer = null;
+      }
+      try { videoEl.pause(); } catch(e) {}
+      if (videoEndTimeout) clearTimeout(videoEndTimeout);
+      // Pausa de 0.5 segundos en el último fotograma antes de entrar a la siguiente diapositiva
+      videoEndTimeout = setTimeout(() => {
+        const step = STEPS[currentStepIndex];
+        if (step && step.type === 'video') {
+          isTransitionLocked = false;
+          advanceToNextStep();
+        }
+      }, 500);
+    }
+
+    // Eventos del video de transición unificado (videoEl)
+    videoEl.addEventListener('ended', () => {
+      const step = STEPS[currentStepIndex];
+      if (step && step.type === 'video') {
+        triggerEndHold();
+      }
+    });
+
+    videoEl.addEventListener('timeupdate', () => {
+      const step = STEPS[currentStepIndex];
+      if (step && step.type === 'video' && videoEl.duration > 0.5) {
+        // Disparar hold de final si el vídeo alcanza los últimos 150ms
+        if (!hasTriggeredEndHold && videoEl.currentTime >= (videoEl.duration - 0.15)) {
+          triggerEndHold();
+        }
+      }
+    });
+
+    videoEl.addEventListener('error', (e) => {
+      console.error('[videoEl Error]', e);
+      const step = STEPS[currentStepIndex];
+      if (step && step.type === 'video') {
+        isTransitionLocked = false;
+        advanceToNextStep();
+      }
+    });
+
+    // Teclado: Espacio pasa slides según conteo, Enter/N salta directo a la fase/vídeo siguiente
+    window.addEventListener('keydown', (e) => {
+      if (document.getElementById('config-modal') && document.getElementById('config-modal').classList.contains('open')) return;
+
+      // Bloquear teclas de avance y retroceso mientras la animación de transición esté en curso
+      if (isTransitionLocked || (STEPS && STEPS[currentStepIndex] && STEPS[currentStepIndex].type === 'video')) {
+        if (e.code === 'Space' || e.key === ' ' || e.code === 'ArrowRight' || e.code === 'PageDown' ||
+            e.code === 'Enter' || e.key === 'Enter' || e.code === 'KeyN' || e.key === 'n' || e.key === 'N' ||
+            e.code === 'Backspace' || e.code === 'KeyP' || e.key === 'p' || e.key === 'P' ||
+            e.code === 'ArrowLeft' || e.code === 'PageUp') {
+          e.preventDefault();
+          return;
+        }
+      }
+
+      if (e.code === 'Enter' || e.key === 'Enter' || e.code === 'KeyN' || e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        nextStep();
+      } else if (e.code === 'Backspace' || e.code === 'KeyP' || e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        prevStep();
+      } else if (e.code === 'Space' || e.key === ' ' || e.code === 'ArrowRight' || e.code === 'PageDown') {
+        e.preventDefault();
+        handleNextAction();
+      } else if (e.code === 'ArrowLeft' || e.code === 'PageUp') {
+        e.preventDefault();
+        handlePrevAction();
+      } else if (e.code === 'KeyR' || e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        resetPresentation();
+      } else if (e.code === 'KeyF' || e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        toggleFullScreen();
+      } else if (e.code === 'KeyC' || e.key === 'c' || e.key === 'C') {
+        e.preventDefault();
+        openConfigModal();
+      }
+    });
+
+    // Clic en la pantalla para avanzar slide o pasar video manteniendo foco en window
+    if (layers.step1) {
+      layers.step1.addEventListener('click', (e) => {
+        if (e && e.target && (e.target.closest('#btn-fullscreen') || e.target.closest('#config-modal'))) return;
+        handleNextAction();
+      });
+    }
+    if (layers.step916) {
+      layers.step916.addEventListener('click', (e) => {
+        if (e && e.target && (e.target.closest('#btn-fullscreen') || e.target.closest('#config-modal'))) return;
+        handleNextAction();
+      });
+    }
+    if (layers.step2) {
+      layers.step2.addEventListener('click', (e) => {
+        // Bloqueado: clic en el vídeo no salta ni cancela la animación
+        if (e) e.stopPropagation();
+      });
+    }
+    if (layers.step3) {
+      layers.step3.addEventListener('click', (e) => {
+        if (isTransitionLocked) return;
+        if (e && e.target && (e.target.closest('#btn-fullscreen') || e.target.closest('#config-modal'))) return;
+        handleNextAction();
+      });
+    }
+    if (layers.step4) {
+      layers.step4.addEventListener('click', (e) => {
+        // Bloqueado: clic en el vídeo no salta ni cancela la animación
+        if (e) e.stopPropagation();
+      });
+    }
+    if (layers.stepTitle) {
+      layers.stepTitle.addEventListener('click', (e) => {
+        if (e && e.target && (e.target.closest('#btn-fullscreen') || e.target.closest('#config-modal'))) return;
+        handleNextAction();
+      });
+    }
+
+    window.addEventListener('click', () => {
+      window.focus();
+    });
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    const btnFs = document.getElementById('btn-fullscreen');
+    if (btnFs) btnFs.addEventListener('click', toggleFullScreen);
+
+    let hudIdleTimer = setTimeout(() => {
+      if (btnFs && !btnFs.matches(':hover')) {
+        btnFs.style.opacity = '0';
+        btnFs.style.pointerEvents = 'none';
+      }
+    }, 3500);
+
+    window.addEventListener('mousemove', () => {
+      if (btnFs) {
+        btnFs.style.opacity = '0.35';
+        btnFs.style.pointerEvents = 'auto';
+      }
+      if (hudIdleTimer) clearTimeout(hudIdleTimer);
+      hudIdleTimer = setTimeout(() => {
+        if (btnFs && !btnFs.matches(':hover')) {
+          btnFs.style.opacity = '0';
+          btnFs.style.pointerEvents = 'none';
+        }
+      }, 3000);
+    });
+
+    // --- MODAL DE CALIBRACIÓN Y SELECCIÓN DE PLAZAS ---
+    const configModal = document.getElementById('config-modal');
+    const modalSlotSelect = document.getElementById('modal-slot-select');
+    const modalSlotInfoBadge = document.getElementById('modal-slot-info-badge');
+    const modalSlotUrl = document.getElementById('modal-slot-url');
+    const modalSlotSlides = document.getElementById('modal-slot-slides');
+    const modalCalibTitle = document.getElementById('modal-calib-title');
+
+    const adjLeft = document.getElementById('adj-left');
+    const adjWidth = document.getElementById('adj-width');
+    const adjTop = document.getElementById('adj-top');
+    const adjHeight = document.getElementById('adj-height');
+    const adjRadius = document.getElementById('adj-radius');
+    const adjRot = document.getElementById('adj-rot');
+    const adjZoom = document.getElementById('adj-zoom');
+
+    const valLeft = document.getElementById('val-left');
+    const valWidth = document.getElementById('val-width');
+    const valTop = document.getElementById('val-top');
+    const valHeight = document.getElementById('val-height');
+    const valRadius = document.getElementById('val-radius');
+    const valRot = document.getElementById('val-rot');
+    const valZoom = document.getElementById('val-zoom');
+
+    let activeModalSlotId = deckSlots[0] ? deckSlots[0].id : null;
+
+    function populateModalSlots() {
+      modalSlotSelect.innerHTML = '';
+      deckSlots.forEach((s, idx) => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = `[${idx + 1}] ${s.name} (${s.format})`;
+        if (s.id === activeModalSlotId) opt.selected = true;
+        modalSlotSelect.appendChild(opt);
+      });
+      onModalSlotChanged();
+    }
+
+    function onModalSlotChanged() {
+      activeModalSlotId = modalSlotSelect.value;
+      const slot = deckSlots.find(s => s.id === activeModalSlotId);
+      if (!slot) return;
+
+      const calib = slot.calib || getDefaultCoords(slot.format);
+      if (calib.zoom === undefined) calib.zoom = 100;
+
+      modalSlotUrl.value = slot.url || '';
+      modalSlotSlides.value = slot.slidesCount || 10;
+      const fmtColor = slot.format === '3:4' ? '#f472b6' : (slot.format === '9:16' ? '#38bdf8' : '#c084fc');
+      modalSlotInfoBadge.innerHTML = `
+        <span style="background: ${fmtColor}; color: #000; font-weight: 800; padding: 2px 6px; border-radius: 4px; font-size: 10px;">${slot.format}</span>
+        <span style="color: #94a3b8;">${escapeHtml(slot.name)}</span>
+      `;
+      modalCalibTitle.textContent = `Calibración: ${slot.name} (${slot.format})`;
+
+      adjLeft.value = calib.left;
+      valLeft.textContent = calib.left + '%';
+      adjWidth.value = calib.width;
+      valWidth.textContent = calib.width + '%';
+      adjTop.value = calib.top;
+      valTop.textContent = calib.top + '%';
+      adjHeight.value = calib.height;
+      valHeight.textContent = calib.height + '%';
+      adjRadius.value = calib.radius;
+      valRadius.textContent = calib.radius + 'px';
+      adjRot.value = calib.rot;
+      valRot.textContent = calib.rot + '°';
+      adjZoom.value = calib.zoom;
+      valZoom.textContent = calib.zoom + '%';
+    }
+
+    function readModalSlidersToLive() {
+      const slot = deckSlots.find(s => s.id === activeModalSlotId);
+      if (!slot) return;
+
+      const c = {
+        left: parseFloat(adjLeft.value),
+        width: parseFloat(adjWidth.value),
+        top: parseFloat(adjTop.value),
+        height: parseFloat(adjHeight.value),
+        radius: parseInt(adjRadius.value),
+        rot: parseFloat(adjRot.value),
+        zoom: parseFloat(adjZoom.value)
+      };
+
+      valLeft.textContent = c.left + '%';
+      valWidth.textContent = c.width + '%';
+      valTop.textContent = c.top + '%';
+      valHeight.textContent = c.height + '%';
+      valRadius.textContent = c.radius + 'px';
+      valRot.textContent = c.rot + '°';
+      valZoom.textContent = c.zoom + '%';
+
+      slot.calib = c;
+
+      // Si estamos visualizando este slot actualmente en el escenario, aplicar en vivo
+      const currentStep = STEPS[currentStepIndex];
+      if (currentStep && currentStep.slotId === slot.id) {
+        currentStep.calib = c;
+        if (slot.format === '3:4') applyPhoneCoords(c);
+        else if (slot.format === '9:16') applyFrame916Coords(c);
+        else applyFrame2Coords(c);
+      }
+    }
+
+    [adjLeft, adjWidth, adjTop, adjHeight, adjRadius, adjRot, adjZoom].forEach(slider => {
+      if (slider) slider.addEventListener('input', readModalSlidersToLive);
+    });
+
+    function jumpToModalSlot() {
+      const stepIdx = STEPS.findIndex(s => s.slotId === activeModalSlotId);
+      if (stepIdx >= 0) {
+        goToStep(stepIdx);
+        showHint(`Visualizando plaza seleccionada en el Escenario`, 2000);
+      }
+    }
+
+    function resetModalCalib() {
+      const slot = deckSlots.find(s => s.id === activeModalSlotId);
+      if (!slot) return;
+      slot.calib = getDefaultCoords(slot.format);
+      onModalSlotChanged();
+      readModalSlidersToLive();
+    }
+
+    function saveModalConfig() {
+      const slot = deckSlots.find(s => s.id === activeModalSlotId);
+      if (slot) {
+        slot.url = modalSlotUrl.value.trim();
+        slot.slidesCount = parseInt(modalSlotSlides.value) || 10;
+        slot.calib = {
+          left: parseFloat(adjLeft.value),
+          width: parseFloat(adjWidth.value),
+          top: parseFloat(adjTop.value),
+          height: parseFloat(adjHeight.value),
+          radius: parseInt(adjRadius.value),
+          rot: parseFloat(adjRot.value),
+          zoom: parseFloat(adjZoom.value)
+        };
+      }
+
+      localStorage.setItem('dm_deck_slots', JSON.stringify(deckSlots));
+      STEPS = buildTimeline(deckSlots);
+      updateStepUI();
+
+      const payload = {
+        type: 'DECK_SLOTS_UPDATED',
+        slots: deckSlots,
+        timeline: STEPS,
+        time: Date.now()
+      };
+      bus.postMessage(payload);
+      try {
+        localStorage.setItem('dm_deck_slots_sync', JSON.stringify(payload));
+      } catch(e) {}
+
+      // Sincronizar en Supabase si está disponible
+      if (window.DMCloud && DMCloud.isConfigured()) {
+        DMCloud.saveDeckConfig(deckSlots, '20260923_def_v2', 'stage_modal');
+      }
+
+      configModal.classList.remove('open');
+      showHint('¡Configuración de plazas y calibración guardada!', 3000);
+    }
+
+    function openConfigModal() {
+      deckSlots = getStoredSlots();
+      const currentStep = STEPS[currentStepIndex];
+      if (currentStep && currentStep.slotId) {
+        activeModalSlotId = currentStep.slotId;
+      }
+      populateModalSlots();
+      if (configModal) configModal.classList.add('open');
+    }
+
+    const btnConfig = document.getElementById('btn-config');
+    if (btnConfig) {
+      btnConfig.addEventListener('click', openConfigModal);
+    }
+
+    const btnModalCancel = document.getElementById('btn-modal-cancel');
+    if (btnModalCancel) {
+      btnModalCancel.addEventListener('click', () => {
+        if (configModal) configModal.classList.remove('open');
+      });
+    }
+
+    // Iniciar UI del escenario
+    updateStepUI();
+
+    // --- SISTEMA DE SINCRONIZACIÓN HÍBRIDO (BroadcastChannel + LocalStorage + StorageEvent) ---
+    function broadcastState() {
+      const step = STEPS[currentStepIndex] || {};
+      const stateObj = {
+        type: 'STAGE_STATE',
+        currentStepIndex: currentStepIndex,
+        totalSteps: STEPS.length,
+        stepName: step.name || '',
+        slotId: step.slotId || null,
+        format: step.format || null,
+        currentSlide: (step.type === 'slide') ? currentSlide : 0,
+        totalSlides: (step.type === 'slide') ? step.slidesCount : 0,
+        timestamp: Date.now()
+      };
+      bus.postMessage(stateObj);
+      try {
+        localStorage.setItem('dm_stage_current_state', JSON.stringify(stateObj));
+      } catch (e) {}
+    }
+
+    // Sincronización entrante por BroadcastChannel
+    bus.onmessage = (event) => {
+      handleIncomingData(event.data);
+    };
+
+    // Recibir postMessage del parent (para funcionar como iframe en el editor)
+    window.addEventListener('message', (event) => {
+      if (event.data && typeof event.data === 'object' && event.data.type) {
+        handleIncomingData(event.data);
+      }
+    });
+
+    // Sincronización instantánea por evento storage entre ventanas
+    window.addEventListener('storage', (e) => {
+      if (!e.newValue) return;
+      try {
+        if (e.key === 'dm_stage_command') {
+          const cmdData = JSON.parse(e.newValue);
+          if (cmdData && cmdData.time > lastProcessedCmdTime) {
+            lastProcessedCmdTime = cmdData.time;
+            if (cmdData.command === 'NEXT_STEP') nextStep();
+            else if (cmdData.command === 'PREV_STEP') prevStep();
+            else if (cmdData.command === 'NEXT_SLIDE') handleNextAction();
+            else if (cmdData.command === 'PREV_SLIDE') handlePrevAction();
+            else if (cmdData.command === 'RESET') resetPresentation();
+          }
+        } else if (e.key === 'dm_stage_set_step') {
+          const stepData = JSON.parse(e.newValue);
+          if (stepData && stepData.time > lastProcessedStepTime) {
+            lastProcessedStepTime = stepData.time;
+            if (typeof stepData.step === 'number') goToStep(stepData.step);
+          }
+        } else if (e.key === 'dm_deck_slots_sync') {
+          const syncData = JSON.parse(e.newValue);
+          if (syncData && syncData.time > lastProcessedSlotsTime) {
+            lastProcessedSlotsTime = syncData.time;
+            if (Array.isArray(syncData.slots)) {
+              reloadSlotsFromData(syncData.slots);
+            }
+          }
+        } else if (e.key === 'dm_deck_slots') {
+          const slots = JSON.parse(e.newValue);
+          if (Array.isArray(slots)) {
+            reloadSlotsFromData(slots);
+          }
+        } else if (e.key === 'dm_slot_calib_sync') {
+          const calibData = JSON.parse(e.newValue);
+          if (calibData && calibData.calib) {
+            const slot = deckSlots.find(s => s.id === calibData.slotId);
+            if (slot) slot.calib = calibData.calib;
+            STEPS.forEach(st => {
+              if (st.slotId === calibData.slotId) st.calib = calibData.calib;
+            });
+            const currentStep = STEPS[currentStepIndex];
+            const fmt = calibData.format || (slot && slot.format) || (currentStep && currentStep.format);
+            if (fmt === '3:4') applyPhoneCoords(calibData.calib);
+            else if (fmt === '9:16') applyFrame916Coords(calibData.calib);
+            else if (fmt === '16:9') applyFrame2Coords(calibData.calib);
+          }
+        }
+      } catch(err) {}
+    });
+
+    function reloadSlotsFromData(newSlots) {
+      if (!Array.isArray(newSlots) || newSlots.length === 0) return;
+      const CALIB_VERSION = '20260923_def_v2';
+      const storedVersion = localStorage.getItem('dm_calib_version');
+      newSlots.forEach(s => {
+        if (s.url) s.url = cleanSlidesUrl(s.url);
+        if (storedVersion !== CALIB_VERSION) {
+          if (s.format === '3:4') {
+            if (!s.calib || Math.abs(s.calib.left - 31.15) < 0.2 || Math.abs(s.calib.width - 41.82) < 0.2 || Math.abs(s.calib.height - 100) < 0.2) {
+              s.calib = { ...DEFAULT_COORDS_34 };
+            }
+          } else if (s.format === '16:9') {
+            if (!s.calib || Math.abs(s.calib.left - 11.8) < 0.2 || Math.abs(s.calib.width - 74.84) < 0.2 || Math.abs(s.calib.height - 62.5) < 0.2) {
+              s.calib = { ...DEFAULT_COORDS_169 };
+            }
+          } else if (s.format === '9:16') {
+            if (!s.calib || Math.abs(s.calib.top - 15.28) < 0.2 || Math.abs(s.calib.top - 18.35) < 0.2 || Math.abs(s.calib.height - 71.85) < 0.2 || Math.abs(s.calib.height - 67.5) < 0.2) {
+              s.calib = { ...DEFAULT_COORDS_916 };
+            }
+          }
+        }
+      });
+
+      // Remember the current step's slot id to try to preserve position after reorder
+      const prevStep = (STEPS && STEPS[currentStepIndex]) ? STEPS[currentStepIndex] : null;
+      const prevSlotId = prevStep ? prevStep.slotId : null;
+
+      deckSlots = newSlots;
+      STEPS = buildTimeline(deckSlots);
+
+      // Try to find the same slot in the new timeline
+      let found = false;
+      if (prevSlotId) {
+        const newIdx = STEPS.findIndex(s => s.slotId === prevSlotId && s.type === 'slide');
+        if (newIdx >= 0) {
+          currentStepIndex = newIdx;
+          found = true;
+        }
+      }
+      if (!found || currentStepIndex >= STEPS.length) {
+        currentStepIndex = 0;
+        currentSlide = 1;
+      }
+
+      const activeStep = STEPS[currentStepIndex];
+      if (activeStep && activeStep.calib) {
+        if (activeStep.format === '3:4') applyPhoneCoords(activeStep.calib);
+        else if (activeStep.format === '9:16') applyFrame916Coords(activeStep.calib);
+        else if (activeStep.format === '16:9') applyFrame2Coords(activeStep.calib);
+      }
+
+      updateStepUI();
+      updateSlideCounters();
+    }
+
+    function handleIncomingData(data) {
+      if (!data) return;
+
+      // Actualización de plazas desde editor.html o ponentes.html
+      if (data.type === 'DECK_SLOTS_UPDATED' && Array.isArray(data.slots)) {
+        reloadSlotsFromData(data.slots);
+      }
+      // Calibración individual en vivo
+      else if (data.type === 'SLOT_CALIB_UPDATE' && data.calib) {
+        const slot = data.slotId ? deckSlots.find(s => s.id === data.slotId) : null;
+        if (slot) slot.calib = data.calib;
+        STEPS.forEach(st => {
+          if (st.slotId === data.slotId) st.calib = data.calib;
+        });
+        const currentStep = STEPS[currentStepIndex];
+        const fmt = data.format || (slot && slot.format) || (currentStep && currentStep.format);
+        if (fmt === '3:4') applyPhoneCoords(data.calib);
+        else if (fmt === '9:16') applyFrame916Coords(data.calib);
+        else if (fmt === '16:9') applyFrame2Coords(data.calib);
+      }
+      // Compatibilidad con calibrador legado
+      else if (data.type === 'PHONE_COORDS_UPDATE' && data.coords) {
+        applyPhoneCoords(data.coords);
+      }
+      else if (data.type === 'FRAME2_COORDS_UPDATE' && data.coords) {
+        applyFrame2Coords(data.coords);
+      }
+      // Salto directo a un paso de la línea de tiempo
+      else if (data.type === 'SET_STEP' && typeof data.step === 'number') {
+        goToStep(data.step);
+      }
+      // Comandos remotos
+      else if (data.type === 'STAGE_COMMAND') {
+        if (data.command === 'NEXT_STEP') nextStep();
+        else if (data.command === 'PREV_STEP') prevStep();
+        else if (data.command === 'NEXT_SLIDE') handleNextAction();
+        else if (data.command === 'PREV_SLIDE') handlePrevAction();
+        else if (data.command === 'RESET') resetPresentation();
+      }
+      // Cambio de presentación/deck activa
+      else if (data.type === 'CHANGE_DECK' && data.deckId) {
+        if (window.DMCloud) {
+          DMCloud.setActiveDeckId(data.deckId);
+          DMCloud.fetchDeckConfig(data.deckId).then(cfg => {
+            if (cfg && Array.isArray(cfg.slots)) {
+              reloadSlotsFromData(cfg.slots);
+              showHint(`Cargando: ${data.deckName || data.deckId}`, 2000);
+            }
+          }).catch(e => console.warn(e));
+        }
+      }
+      else if (data.type === 'PING') {
+        broadcastState();
+      }
+    }
+
+    // Polling ultra-rápido de LocalStorage para garantizar sincronización en file:///
+    let lastProcessedCmdTime = 0;
+    let lastProcessedStepTime = 0;
+    let lastProcessedSlotsTime = 0;
+    let lastProcessedCalibTime = 0;
+
+    setInterval(() => {
+      try {
+        // Comando (Next, Prev, Slide, Reset)
+        const cmdRaw = localStorage.getItem('dm_stage_command');
+        if (cmdRaw) {
+          const cmdData = JSON.parse(cmdRaw);
+          if (cmdData && cmdData.time > lastProcessedCmdTime) {
+            lastProcessedCmdTime = cmdData.time;
+            if (cmdData.command === 'NEXT_STEP') nextStep();
+            else if (cmdData.command === 'PREV_STEP') prevStep();
+            else if (cmdData.command === 'NEXT_SLIDE') handleNextAction();
+            else if (cmdData.command === 'PREV_SLIDE') handlePrevAction();
+            else if (cmdData.command === 'RESET') resetPresentation();
+          }
+        }
+
+        // Salto a fase
+        const stepRaw = localStorage.getItem('dm_stage_set_step');
+        if (stepRaw) {
+          const stepData = JSON.parse(stepRaw);
+          if (stepData && stepData.time > lastProcessedStepTime) {
+            lastProcessedStepTime = stepData.time;
+            goToStep(stepData.step);
+          }
+        }
+
+        // Actualización de plazas compartidas
+        const syncRaw = localStorage.getItem('dm_deck_slots_sync');
+        if (syncRaw) {
+          const syncData = JSON.parse(syncRaw);
+          if (syncData && syncData.time > lastProcessedSlotsTime) {
+            lastProcessedSlotsTime = syncData.time;
+            if (Array.isArray(syncData.slots)) {
+              reloadSlotsFromData(syncData.slots);
+            }
+          }
+        }
+
+        // Calibración individual en tiempo real
+        const calibRaw = localStorage.getItem('dm_slot_calib_sync');
+        if (calibRaw) {
+          const calibData = JSON.parse(calibRaw);
+          if (calibData && calibData.time > lastProcessedCalibTime) {
+            lastProcessedCalibTime = calibData.time;
+            const slot = deckSlots.find(s => s.id === calibData.slotId);
+            if (slot && calibData.calib) slot.calib = calibData.calib;
+            STEPS.forEach(st => {
+              if (st.slotId === calibData.slotId) st.calib = calibData.calib;
+            });
+            const currentStep = STEPS[currentStepIndex];
+            const fmt = calibData.format || (slot && slot.format) || (currentStep && currentStep.format);
+            if (fmt === '3:4') applyPhoneCoords(calibData.calib);
+            else if (fmt === '9:16') applyFrame916Coords(calibData.calib);
+            else if (fmt === '16:9') applyFrame2Coords(calibData.calib);
+          }
+        }
+
+        // Emitir presencia periódica
+        localStorage.setItem('dm_stage_heartbeat', Date.now().toString());
+      } catch (e) {}
+    }, 120);
+
+    // =========================================================================
+    // CONEXIÓN CON SUPABASE CLOUD (Multi-Ordenador & Control Remoto)
+    // =========================================================================
+    if (window.DMCloud) {
+      // 1. Escuchar comandos remotos en tiempo real desde otro ordenador (editor.html)
+      DMCloud.subscribeToLiveCommands((cmdData) => {
+        if (!cmdData) return;
+        handleIncomingData(cmdData);
+      });
+
+      // 2. Escuchar cambios de configuración guardados desde otro ordenador
+      DMCloud.subscribeToDeckChanges((remoteData) => {
+        if (remoteData && Array.isArray(remoteData.slots)) {
+          console.log('[DMCloud] Recargando escenas actualizadas en la nube...');
+          reloadSlotsFromData(remoteData.slots);
+          showHint('☁️ Escenas sincronizadas desde la nube', 2500);
+        }
+      });
+
+      // 3. Sincronización inicial si hay conexión configurada
+      setTimeout(async () => {
+        if (DMCloud.isConfigured()) {
+          try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const deckToLoad = urlParams.get('deck') || DMCloud.getActiveDeckId();
+            const cloudData = await DMCloud.fetchDeckConfig(deckToLoad);
+            if (cloudData && Array.isArray(cloudData.slots) && cloudData.slots.length > 0) {
+              console.log('[DMCloud] Escenas inicializadas desde Supabase Cloud para deck:', deckToLoad);
+              reloadSlotsFromData(cloudData.slots);
+            }
+          } catch (e) {
+            console.warn('[DMCloud] Error al sincronizar con la nube:', e);
+          }
+        }
+      }, 350);
+    }
+
+    broadcastState();
+  </script>
+</body>
+</html>
