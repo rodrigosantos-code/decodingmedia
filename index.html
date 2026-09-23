@@ -1025,16 +1025,6 @@
         </button>
       </div>
 
-      <button id="btn-supabase-modal" class="status-badge" style="cursor: pointer; border: 1px solid var(--border-card); background: var(--bg-card); transition: all 0.2s;" onclick="openSupabaseModal()" title="Configuración de sincronización en la nube con Supabase">
-        <span class="status-dot" id="supabase-dot" style="background: #94a3b8;"></span>
-        <span id="supabase-text">Cloud: Verificando...</span>
-      </button>
-
-      <div class="status-badge" id="bus-status">
-        <span class="status-dot" id="bus-dot"></span>
-        <span id="bus-text">Buscando Escenario...</span>
-      </div>
-
       <a href="presentation.html" target="_blank" class="btn btn-secondary"
         style="padding: 7px 14px; font-size: 12px; text-decoration: none; font-weight: 700;">
         Abrir Escenario &nearr;
@@ -2825,8 +2815,8 @@
     };
 
     function setStageOnline(online) {
-      busDot.className = `status-dot ${online ? 'online' : ''}`;
-      busText.textContent = online ? 'Escenario Conectado' : 'Buscando Escenario...';
+      if (busDot) busDot.className = `status-dot ${online ? 'online' : ''}`;
+      if (busText) busText.textContent = online ? 'Escenario Conectado' : 'Buscando Escenario...';
     }
 
     // Polling de presencia y sincronización vía LocalStorage (garantía file://)
