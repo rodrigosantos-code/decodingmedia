@@ -1115,48 +1115,48 @@
           <div class="slider-group">
             <div class="slider-label-row">
               <span class="slider-label">Pos. Horizontal (X %)</span>
-              <span class="slider-val-tag" id="tag-left">31.15%</span>
+              <span class="slider-val-tag" id="tag-left">28.55%</span>
             </div>
             <div class="slider-control-row">
-              <input type="range" id="slide-left" min="0" max="70" step="0.05" value="31.15"
+              <input type="range" id="slide-left" min="0" max="70" step="0.05" value="28.55"
                 oninput="syncVal('left', this.value)">
-              <input type="number" id="num-left" step="0.05" value="31.15" onchange="syncVal('left', this.value)">
+              <input type="number" id="num-left" step="0.05" value="28.55" onchange="syncVal('left', this.value)">
             </div>
           </div>
 
           <div class="slider-group">
             <div class="slider-label-row">
               <span class="slider-label">Ancho Pantalla (Width %)</span>
-              <span class="slider-val-tag" id="tag-width">41.82%</span>
+              <span class="slider-val-tag" id="tag-width">47.7%</span>
             </div>
             <div class="slider-control-row">
-              <input type="range" id="slide-width" min="5" max="95" step="0.05" value="41.82"
+              <input type="range" id="slide-width" min="5" max="100" step="0.05" value="47.7"
                 oninput="syncVal('width', this.value)">
-              <input type="number" id="num-width" step="0.05" value="41.82" onchange="syncVal('width', this.value)">
+              <input type="number" id="num-width" step="0.05" value="47.7" onchange="syncVal('width', this.value)">
             </div>
           </div>
 
           <div class="slider-group">
             <div class="slider-label-row">
               <span class="slider-label">Pos. Vertical (Y %)</span>
-              <span class="slider-val-tag" id="tag-top">0.00%</span>
+              <span class="slider-val-tag" id="tag-top">-2.85%</span>
             </div>
             <div class="slider-control-row">
-              <input type="range" id="slide-top" min="-15" max="50" step="0.05" value="0"
+              <input type="range" id="slide-top" min="-20" max="50" step="0.05" value="-2.85"
                 oninput="syncVal('top', this.value)">
-              <input type="number" id="num-top" step="0.05" value="0" onchange="syncVal('top', this.value)">
+              <input type="number" id="num-top" step="0.05" value="-2.85" onchange="syncVal('top', this.value)">
             </div>
           </div>
 
           <div class="slider-group">
             <div class="slider-label-row">
               <span class="slider-label">Alto Pantalla (Height %)</span>
-              <span class="slider-val-tag" id="tag-height">100.00%</span>
+              <span class="slider-val-tag" id="tag-height">111.45%</span>
             </div>
             <div class="slider-control-row">
-              <input type="range" id="slide-height" min="20" max="120" step="0.05" value="100"
+              <input type="range" id="slide-height" min="20" max="140" step="0.05" value="111.45"
                 oninput="syncVal('height', this.value)">
-              <input type="number" id="num-height" step="0.05" value="100" onchange="syncVal('height', this.value)">
+              <input type="number" id="num-height" step="0.05" value="111.45" onchange="syncVal('height', this.value)">
             </div>
           </div>
 
@@ -1175,12 +1175,12 @@
           <div class="slider-group">
             <div class="slider-label-row">
               <span class="slider-label">Rotación (° grados)</span>
-              <span class="slider-val-tag" id="tag-rot">0.0°</span>
+              <span class="slider-val-tag" id="tag-rot">-0.8°</span>
             </div>
             <div class="slider-control-row">
-              <input type="range" id="slide-rot" min="-5" max="5" step="0.1" value="0"
+              <input type="range" id="slide-rot" min="-10" max="10" step="0.1" value="-0.8"
                 oninput="syncVal('rot', this.value)">
-              <input type="number" id="num-rot" step="0.1" value="0" onchange="syncVal('rot', this.value)">
+              <input type="number" id="num-rot" step="0.1" value="-0.8" onchange="syncVal('rot', this.value)">
             </div>
           </div>
 
@@ -1293,33 +1293,33 @@
     const bus = new BroadcastChannel(CHANNEL_NAME);
 
     const DEFAULT_COORDS = {
-      left: 31.15,
-      width: 41.82,
-      top: 0,
-      height: 100,
+      left: 28.55,
+      width: 47.7,
+      top: -2.85,
+      height: 111.45,
       radius: 45,
-      rot: 0,
+      rot: -0.8,
       zoom: 100
     };
 
     const DEFAULT_FRAME2_COORDS = {
-      left: 11.8,
-      width: 74.84,
-      top: 16.9,
-      height: 62.5,
+      left: 7.2,
+      width: 85.85,
+      top: 15.45,
+      height: 66.7,
       radius: 12,
       rot: 0,
-      zoom: 100
+      zoom: 141
     };
 
     const DEFAULT_FRAME916_COORDS = {
       left: 41.88,
       width: 19.17,
-      top: 15.28,
-      height: 71.85,
+      top: 8.45,
+      height: 95.15,
       radius: 40,
       rot: 0,
-      zoom: 100
+      zoom: 119
     };
 
     function getDefaultCoords(format) {
@@ -1494,16 +1494,32 @@
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed) && parsed.length > 0) {
             let migrated = false;
+            const CALIB_VERSION = '20260923_def_v2';
+            const storedVersion = localStorage.getItem('dm_calib_version');
             parsed.forEach(s => {
               if (s.url) s.url = cleanSlidesUrl(s.url);
-              // Migración de 9:16 a las medidas milimétricas exactas
-              if (s.format === '9:16') {
-                if (!s.calib || Math.abs(s.calib.top - 18.35) < 0.1 || Math.abs(s.calib.height - 67.5) < 0.1 || Math.abs(s.calib.left - 42.03) < 0.1) {
-                  s.calib = { ...DEFAULT_FRAME916_COORDS };
-                  migrated = true;
+              if (storedVersion !== CALIB_VERSION) {
+                if (s.format === '3:4') {
+                  if (!s.calib || Math.abs(s.calib.left - 31.15) < 0.2 || Math.abs(s.calib.width - 41.82) < 0.2 || Math.abs(s.calib.height - 100) < 0.2) {
+                    s.calib = { ...DEFAULT_COORDS };
+                    migrated = true;
+                  }
+                } else if (s.format === '16:9') {
+                  if (!s.calib || Math.abs(s.calib.left - 11.8) < 0.2 || Math.abs(s.calib.width - 74.84) < 0.2 || Math.abs(s.calib.height - 62.5) < 0.2) {
+                    s.calib = { ...DEFAULT_FRAME2_COORDS };
+                    migrated = true;
+                  }
+                } else if (s.format === '9:16') {
+                  if (!s.calib || Math.abs(s.calib.top - 15.28) < 0.2 || Math.abs(s.calib.top - 18.35) < 0.2 || Math.abs(s.calib.height - 71.85) < 0.2 || Math.abs(s.calib.height - 67.5) < 0.2) {
+                    s.calib = { ...DEFAULT_FRAME916_COORDS };
+                    migrated = true;
+                  }
                 }
               }
             });
+            if (storedVersion !== CALIB_VERSION) {
+              try { localStorage.setItem('dm_calib_version', CALIB_VERSION); } catch (e) { }
+            }
             if (migrated) {
               try { localStorage.setItem('dm_deck_slots', JSON.stringify(parsed)); } catch (e) { }
             }
@@ -2228,22 +2244,22 @@
       const slideRadius = document.getElementById('slide-radius');
 
       if (format === '3:4') {
-        if (slideLeft) { slideLeft.min = 10; slideLeft.max = 60; }
-        if (slideWidth) { slideWidth.min = 20; slideWidth.max = 80; }
+        if (slideLeft) { slideLeft.min = 0; slideLeft.max = 70; }
+        if (slideWidth) { slideWidth.min = 10; slideWidth.max = 90; }
         if (slideTop) { slideTop.min = -20; slideTop.max = 40; }
-        if (slideHeight) { slideHeight.min = 50; slideHeight.max = 130; }
+        if (slideHeight) { slideHeight.min = 50; slideHeight.max = 140; }
         if (slideRadius) { slideRadius.min = 0; slideRadius.max = 100; }
       } else if (format === '9:16') {
         if (slideLeft) { slideLeft.min = 0; slideLeft.max = 70; }
-        if (slideWidth) { slideWidth.min = 5; slideWidth.max = 50; }
+        if (slideWidth) { slideWidth.min = 5; slideWidth.max = 60; }
         if (slideTop) { slideTop.min = -15; slideTop.max = 45; }
-        if (slideHeight) { slideHeight.min = 30; slideHeight.max = 110; }
+        if (slideHeight) { slideHeight.min = 30; slideHeight.max = 130; }
         if (slideRadius) { slideRadius.min = 0; slideRadius.max = 80; }
       } else {
-        if (slideLeft) { slideLeft.min = 0; slideLeft.max = 60; }
+        if (slideLeft) { slideLeft.min = 0; slideLeft.max = 70; }
         if (slideWidth) { slideWidth.min = 20; slideWidth.max = 100; }
         if (slideTop) { slideTop.min = -10; slideTop.max = 60; }
-        if (slideHeight) { slideHeight.min = 20; slideHeight.max = 100; }
+        if (slideHeight) { slideHeight.min = 20; slideHeight.max = 110; }
         if (slideRadius) { slideRadius.min = 0; slideRadius.max = 100; }
       }
     }
