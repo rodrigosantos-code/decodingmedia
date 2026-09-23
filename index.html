@@ -735,7 +735,7 @@
     <!-- PASO 4: Video de Transición Inversa al Móvil -->
     <div id="layer-step4" class="stage-layer">
       <video id="video-reverse-element" class="media-cover" playsinline preload="auto">
-        <source src="Transitions/.cache/3x4_to_16x9_reverse.mp4" type="video/mp4" />
+        <source src="Transitions/3x4_to_16x9_reverse.mp4" type="video/mp4" />
       </video>
     </div>
 
@@ -1035,7 +1035,7 @@
       }
       if (fromFmt === '3:4' && toFmt === 'title') {
         return {
-          src: 'Transitions/.cache/title_to_3x4_reverse.mp4',
+          src: 'Transitions/title_to_3x4_reverse.mp4',
           name: 'Transición 3:4 ➔ Title (Inversa)',
           shortName: 'Video ➔ Title'
         };
@@ -1051,7 +1051,7 @@
       }
       if (fromFmt === '9:16' && toFmt === 'title') {
         return {
-          src: 'Transitions/.cache/title_to_9x16_reverse.mp4',
+          src: 'Transitions/title_to_9x16_reverse.mp4',
           name: 'Transición 9:16 ➔ Title (Inversa)',
           shortName: 'Video ➔ Title'
         };
@@ -1067,7 +1067,7 @@
       }
       if (fromFmt === '16:9' && toFmt === 'title') {
         return {
-          src: 'Transitions/.cache/title_to_16x9_reverse.mp4',
+          src: 'Transitions/title_to_16x9_reverse.mp4',
           name: 'Transición 16:9 ➔ Title (Inversa)',
           shortName: 'Video ➔ Title'
         };
@@ -1083,7 +1083,7 @@
       }
       if (fromFmt === '16:9' && toFmt === '3:4') {
         return {
-          src: 'Transitions/.cache/3x4_to_16x9_reverse.mp4',
+          src: 'Transitions/3x4_to_16x9_reverse.mp4',
           name: 'Transición 16:9 ➔ 3:4 (Inversa)',
           shortName: 'Video ➔ 3:4'
         };
@@ -1099,7 +1099,7 @@
       }
       if (fromFmt === '16:9' && toFmt === '9:16') {
         return {
-          src: 'Transitions/.cache/9x16_to_16x9_reverse.mp4',
+          src: 'Transitions/9x16_to_16x9_reverse.mp4',
           name: 'Transición 16:9 ➔ 9:16 (Inversa)',
           shortName: 'Video ➔ 9:16'
         };
@@ -1115,7 +1115,7 @@
       }
       if (fromFmt === '3:4' && toFmt === '9:16') {
         return {
-          src: 'Transitions/.cache/9x16_to_3x4_reverse.mp4',
+          src: 'Transitions/9x16_to_3x4_reverse.mp4',
           name: 'Transición 3:4 ➔ 9:16 (Inversa)',
           shortName: 'Video ➔ 9:16'
         };
@@ -1162,7 +1162,7 @@
             videoType: 'reverse',
             name: 'Transición 16:9 ➔ Title (Inversa)',
             shortName: 'Video ➔ Title',
-            src: 'Transitions/.cache/title_to_16x9_reverse.mp4'
+            src: 'Transitions/title_to_16x9_reverse.mp4'
           });
         } else if (slot.format === '3:4') {
           timeline.push({
@@ -1179,7 +1179,7 @@
             videoType: 'reverse',
             name: 'Transición Inversa ➔ 3:4',
             shortName: 'Video ➔ 3:4',
-            src: 'Transitions/.cache/3x4_to_16x9_reverse.mp4'
+            src: 'Transitions/3x4_to_16x9_reverse.mp4'
           });
         } else if (slot.format === '9:16') {
           timeline.push({
@@ -1196,7 +1196,7 @@
             videoType: 'reverse',
             name: 'Transición 16:9 ➔ 9:16 (Inversa)',
             shortName: 'Video ➔ 9:16',
-            src: 'Transitions/.cache/9x16_to_16x9_reverse.mp4'
+            src: 'Transitions/9x16_to_16x9_reverse.mp4'
           });
         } else {
           timeline.push({
@@ -1205,7 +1205,7 @@
             videoType: 'reverse',
             name: 'Transición Inversa ➔ 3:4',
             shortName: 'Video ➔ 3:4',
-            src: 'Transitions/.cache/3x4_to_16x9_reverse.mp4'
+            src: 'Transitions/3x4_to_16x9_reverse.mp4'
           });
           timeline.push({
             id: `step_trans_${slot.id}_in`,
@@ -1263,7 +1263,7 @@
               videoType: 'reverse',
               name: 'Transición Inversa ➔ 3:4',
               shortName: 'Video ➔ 3:4',
-              src: 'Transitions/.cache/3x4_to_16x9_reverse.mp4'
+              src: 'Transitions/3x4_to_16x9_reverse.mp4'
             });
           } else if (slot.format === '9:16') {
             timeline.push({
@@ -1280,7 +1280,7 @@
               videoType: 'reverse',
               name: 'Transición 16:9 ➔ 9:16 (Inversa)',
               shortName: 'Video ➔ 9:16',
-              src: 'Transitions/.cache/9x16_to_16x9_reverse.mp4'
+              src: 'Transitions/9x16_to_16x9_reverse.mp4'
             });
           } else if (slot.format === 'title') {
             timeline.push({
@@ -1297,7 +1297,7 @@
               videoType: 'reverse',
               name: 'Transición 16:9 ➔ Title (Inversa)',
               shortName: 'Video ➔ Title',
-              src: 'Transitions/.cache/title_to_16x9_reverse.mp4'
+              src: 'Transitions/title_to_16x9_reverse.mp4'
             });
           }
         }

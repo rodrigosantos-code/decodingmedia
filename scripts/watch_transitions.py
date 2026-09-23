@@ -6,7 +6,7 @@ import subprocess
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRANSITIONS_DIR = os.path.join(BASE_DIR, 'Transitions')
-CACHE_DIR = os.path.join(TRANSITIONS_DIR, '.cache')
+
 def find_ffmpeg():
     hitpaw = '/Applications/HitPaw VikPea.app/Contents/MacOS/ffmpeg'
     if os.path.isfile(hitpaw):
@@ -23,8 +23,6 @@ def find_ffmpeg():
     return 'ffmpeg'
 
 FFMPEG_BIN = find_ffmpeg()
-
-os.makedirs(CACHE_DIR, exist_ok=True)
 
 def reverse_video(src_path, dst_path):
     print(f"[REVERSE TRIGGER] Reversing: {os.path.basename(src_path)} -> {os.path.basename(dst_path)}")
@@ -59,7 +57,7 @@ def sync_transitions():
     
     files = os.listdir(TRANSITIONS_DIR)
     for f in files:
-        if f.startswith('.') or not f.endswith('.mp4'):
+        if f.startswith('.') or not f.endswith('.mp4') or f.endswith('_reverse.mp4'):
             continue
         
         src_path = os.path.join(TRANSITIONS_DIR, f)
@@ -67,7 +65,7 @@ def sync_transitions():
             continue
         
         base_name = os.path.splitext(f)[0]
-        dst_path = os.path.join(CACHE_DIR, f"{base_name}_reverse.mp4")
+        dst_path = os.path.join(TRANSITIONS_DIR, f"{base_name}_reverse.mp4")
         
         # Check if reverse needs to be generated
         needs_build = False
@@ -81,7 +79,6 @@ def sync_transitions():
 
 def main():
     print(f"[REVERSE TRIGGER] Watching directory: {TRANSITIONS_DIR}")
-    print(f"[REVERSE TRIGGER] Output cache: {CACHE_DIR}")
     
     # Run once initially
     sync_transitions()
