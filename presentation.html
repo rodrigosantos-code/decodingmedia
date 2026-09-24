@@ -1009,7 +1009,9 @@
 
     function getStoredSlots() {
       try {
-        const raw = localStorage.getItem('dm_deck_slots');
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetDeck = urlParams.get('deck') || (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
+        const raw = localStorage.getItem('dm_deck_slots_' + targetDeck) || localStorage.getItem('dm_deck_slots');
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -2631,18 +2633,30 @@
     // CONEXIÓN CON SUPABASE CLOUD (Multi-Ordenador & Control Remoto)
     // =========================================================================
     if (window.DMCloud) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const stageDeckId = urlParams.get('deck') || DMCloud.getActiveDeckId();
+      if (urlParams.get('deck')) {
+        DMCloud.setActiveDeckId(urlParams.get('deck'));
+      }
+
       // 1. Escuchar comandos remotos en tiempo real desde otro ordenador (editor.html)
       DMCloud.subscribeToLiveCommands((cmdData) => {
         if (!cmdData) return;
+        const currentStageDeck = new URLSearchParams(window.location.search).get('deck') || DMCloud.getActiveDeckId();
+        // Si el comando especifica un deck diferente, no interferir con este escenario
+        if (cmdData.deckId && cmdData.deckId !== currentStageDeck) return;
         handleIncomingData(cmdData);
       });
 
       // 2. Escuchar cambios de configuración guardados desde otro ordenador
       DMCloud.subscribeToDeckChanges((remoteData) => {
         if (remoteData && Array.isArray(remoteData.slots)) {
-          console.log('[DMCloud] Recargando escenas actualizadas en la nube...');
-          reloadSlotsFromData(remoteData.slots);
-          showHint('Escenas sincronizadas desde la nube', 2500);
+          const currentStageDeck = new URLSearchParams(window.location.search).get('deck') || DMCloud.getActiveDeckId();
+          if (!remoteData.id || remoteData.id === currentStageDeck) {
+            console.log('[DMCloud] Recargando escenas actualizadas en la nube para deck:', remoteData.id);
+            reloadSlotsFromData(remoteData.slots);
+            showHint('Escenas sincronizadas desde la nube', 2500);
+          }
         }
       });
 
@@ -2650,11 +2664,9 @@
       setTimeout(async () => {
         if (DMCloud.isConfigured()) {
           try {
-            const urlParams = new URLSearchParams(window.location.search);
-            const deckToLoad = urlParams.get('deck') || DMCloud.getActiveDeckId();
-            const cloudData = await DMCloud.fetchDeckConfig(deckToLoad);
+            const cloudData = await DMCloud.fetchDeckConfig(stageDeckId);
             if (cloudData && Array.isArray(cloudData.slots) && cloudData.slots.length > 0) {
-              console.log('[DMCloud] Escenas inicializadas desde Supabase Cloud para deck:', deckToLoad);
+              console.log('[DMCloud] Escenas inicializadas desde Supabase Cloud para deck:', stageDeckId);
               reloadSlotsFromData(cloudData.slots);
             }
           } catch (e) {

@@ -1030,7 +1030,13 @@
         </button>
       </div>
 
-      <a href="presentation.html" target="_blank" class="btn btn-secondary"
+      <button type="button" class="btn btn-secondary" onclick="openShareDeckModal()" title="Obtener enlace directo de presentación"
+        style="padding: 7px 12px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <span>Obtener link</span>
+      </button>
+
+      <a href="presentation.html" id="open-stage-btn" target="_blank" class="btn btn-secondary"
         style="padding: 7px 14px; font-size: 12px; text-decoration: none; font-weight: 700;">
         Abrir Escenario &nearr;
       </a>
@@ -1467,6 +1473,44 @@
       <div style="display: flex; justify-content: flex-end; gap: 8px;">
         <button type="button" class="btn btn-secondary" onclick="closeRenameDeckModal()">Cancelar</button>
         <button type="button" class="btn btn-primary" onclick="confirmRenameDeck()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Obtener Enlace de Presentación -->
+  <div class="modal-overlay" id="share-deck-modal"
+    style="display: none; position: fixed; inset: 0; background: rgba(5, 7, 11, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 1000; align-items: center; justify-content: center;">
+    <div
+      style="background: rgba(17, 20, 31, 0.98); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px; width: 92%; max-width: 480px; padding: 24px; box-shadow: 0 25px 70px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255, 255, 255, 0.1);">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 12px;">
+        <h3 id="share-deck-modal-title" style="font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -0.02em;">
+          Enlace de Presentación
+        </h3>
+        <button onclick="closeShareDeckModal()"
+          style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; font-size: 16px; cursor: pointer; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">&times;</button>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label class="form-label" style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;">
+          URL directa del Escenario
+        </label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="text" id="share-deck-url-input" class="form-input text-input" readonly
+            style="width: 100%; font-family: monospace; font-size: 11px; color: #a5f3fc; background: rgba(0,0,0,0.3); cursor: text;" onclick="this.select()" />
+          <button type="button" class="btn btn-primary" onclick="copyFromShareModal()"
+            style="white-space: nowrap; padding: 8px 14px; font-size: 12px;">Copiar</button>
+        </div>
+        <p style="font-size: 11px; color: #94a3b8; margin-top: 8px; line-height: 1.4;">
+          Usa este enlace para proyectar el escenario en pantalla o compartirlo con la realización técnica.
+        </p>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+        <a id="share-deck-open-btn" href="#" target="_blank" class="btn btn-secondary" style="font-size: 11px;">
+          Abrir en pestaña &nearr;
+        </a>
+        <button type="button" class="btn btn-secondary" onclick="closeShareDeckModal()">Cerrar</button>
       </div>
     </div>
   </div>
@@ -3138,6 +3182,107 @@
       const activeOpt = deckSelector ? deckSelector.querySelector(`option[value="${newDeckId}"]`) : null;
       const deckName = activeOpt ? activeOpt.textContent : newDeckId;
       showToast(`${deckName} activa`);
+      updateStageLink();
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname + '?deck=' + encodeURIComponent(newDeckId));
+      } catch (e) {}
+    }
+
+    // Gestión del enlace de presentación (Obtener Link)
+    function getPresentationUrl(deckId) {
+      const targetId = deckId || (typeof activeDeckId !== 'undefined' ? activeDeckId : 'default');
+      const loc = window.location;
+      let path = loc.pathname;
+      if (path.endsWith('editor.html') || path.endsWith('index.html')) {
+        path = path.replace(/\/(editor|index)\.html$/, '/presentation.html');
+      } else if (path.endsWith('/editor')) {
+        path = path.replace(/\/editor$/, '/presentation.html');
+      } else if (path.endsWith('/')) {
+        path = path + 'presentation.html';
+      } else {
+        const idx = path.lastIndexOf('/');
+        path = (idx >= 0 ? path.substring(0, idx + 1) : '/') + 'presentation.html';
+      }
+      try {
+        const url = new URL(path, loc.origin);
+        url.searchParams.set('deck', targetId);
+        return url.href;
+      } catch (e) {
+        return `${loc.origin}/presentation.html?deck=${encodeURIComponent(targetId)}`;
+      }
+    }
+
+    function updateStageLink() {
+      const openStageBtn = document.getElementById('open-stage-btn');
+      if (openStageBtn) {
+        openStageBtn.href = getPresentationUrl(activeDeckId);
+      }
+    }
+
+    async function copyCurrentPresentationLink() {
+      const url = getPresentationUrl(activeDeckId);
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(url);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = url;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        showToast('Link de presentación copiado al portapapeles');
+      } catch (err) {
+        openShareDeckModal();
+      }
+    }
+
+    function openShareDeckModal() {
+      const modal = document.getElementById('share-deck-modal');
+      const input = document.getElementById('share-deck-url-input');
+      const openBtn = document.getElementById('share-deck-open-btn');
+      const titleEl = document.getElementById('share-deck-modal-title');
+      const url = getPresentationUrl(activeDeckId);
+
+      const activeOpt = deckSelector ? deckSelector.querySelector(`option[value="${activeDeckId}"]`) : null;
+      const deckName = activeOpt ? activeOpt.textContent : activeDeckId;
+
+      if (titleEl) titleEl.textContent = `Enlace: ${deckName}`;
+      if (input) input.value = url;
+      if (openBtn) openBtn.href = url;
+      if (modal) modal.style.display = 'flex';
+
+      // Auto-copiar link de cortesía
+      copyCurrentPresentationLink();
+
+      if (input) {
+        setTimeout(() => {
+          input.focus();
+          input.select();
+        }, 50);
+      }
+    }
+
+    function closeShareDeckModal() {
+      const modal = document.getElementById('share-deck-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function copyFromShareModal() {
+      const input = document.getElementById('share-deck-url-input');
+      if (!input || !input.value) return;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(input.value);
+        } else {
+          input.select();
+          document.execCommand('copy');
+        }
+        showToast('Link de presentación copiado al portapapeles');
+      } catch (e) {
+        showToast('Copia manual: pulsa Cmd+C');
+      }
     }
 
     function openNewDeckModal() {
@@ -3230,6 +3375,11 @@
         previewIframe.src = `presentation.html?deck=${newId}&v=${Date.now()}`;
       }
 
+      updateStageLink();
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname + '?deck=' + encodeURIComponent(newId));
+      } catch (e) {}
+
       showToast(`${name} creada y guardada`);
     }
 
@@ -3306,6 +3456,7 @@
 
     // Inicializar todo
     refreshDeckSelectorUI();
+    updateStageLink();
     renderSlotList();
     renderStepGrid();
     selectSlotForCalib(activeCalibSlotId);
