@@ -345,17 +345,21 @@
     }
 
     .btn-live-remote.btn-live-lock {
-      padding: 8px 10px;
-      color: #8c95a6;
-      border-color: rgba(255,255,255,0.14);
+      padding: 8px 14px;
+      color: #ef4444;
+      border-color: rgba(239,68,68,0.35);
+      background: rgba(239,68,68,0.08);
       font-size: 11px;
+      font-weight: 700;
     }
 
     .btn-live-remote.btn-live-lock:hover {
       color: #fff;
+      border-color: rgba(239,68,68,0.6);
+      background: rgba(239,68,68,0.16);
     }
 
-    /* Estado: directo bloqueado (browsing) */
+    /* Estado: modo libre (editor desconectado del directo) */
     .live-remote-bar.live-locked .btn-live-next,
     .live-remote-bar.live-locked .btn-live-prev {
       opacity: 0.32;
@@ -363,9 +367,9 @@
     }
 
     .live-remote-bar.live-locked .btn-live-lock {
-      color: #fbbf24;
-      border-color: rgba(251,191,36,0.4);
-      background: rgba(251,191,36,0.08);
+      color: #8c95a6;
+      border-color: rgba(255,255,255,0.14);
+      background: transparent;
     }
 
     .live-locked-badge {
@@ -377,7 +381,6 @@
       color: #fbbf24;
       letter-spacing: 0.3px;
     }
-    .live-remote-bar.live-locked ~ * .live-locked-badge,
     .live-locked-badge.visible {
       display: flex;
     }
@@ -1477,9 +1480,10 @@
               <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
             </button>
 
-            <button type="button" class="btn-live-remote btn-live-lock" id="btn-live-lock" onclick="toggleLiveMode()" title="Desconectar editor del directo para navegar libremente">
-              <svg class="icon-svg" viewBox="0 0 24 24" id="lock-icon"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <span id="lock-label">Libre</span>
+            <button type="button" class="btn-live-remote btn-live-lock" id="btn-live-lock" onclick="toggleLiveMode()" title="Navegar libremente sin afectar al directo">
+              <span class="live-rec-dot" id="lock-dot"></span>
+              <svg class="icon-svg" viewBox="0 0 24 24" id="lock-icon" style="display:none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+              <span id="lock-label">En Directo</span>
             </button>
           </div>
           <span id="live-locked-badge" class="live-locked-badge">
@@ -3021,20 +3025,23 @@
       const lockLabel = document.getElementById('lock-label');
       const badge = document.getElementById('live-locked-badge');
       const lockIcon = document.getElementById('lock-icon');
+      const lockDot = document.getElementById('lock-dot');
       if (liveMode) {
+        // Conectado al directo: botón rojo con punto parpadeante
         bar && bar.classList.remove('live-locked');
-        if (lockLabel) lockLabel.textContent = 'Libre';
-        if (badge) badge.classList.remove('visible');
-        // Ícono de candado cerrado
-        if (lockIcon) lockIcon.innerHTML = '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>';
-        showToast('✅ Directo conectado — el editor controla la presentación');
-      } else {
-        bar && bar.classList.add('live-locked');
         if (lockLabel) lockLabel.textContent = 'En Directo';
+        if (lockDot) lockDot.style.display = 'inline-block';
+        if (lockIcon) lockIcon.style.display = 'none';
+        if (badge) badge.classList.remove('visible');
+        showToast('🟥 Directo conectado — el editor controla la presentación');
+      } else {
+        // Modo libre: botón gris con icono candado abierto
+        bar && bar.classList.add('live-locked');
+        if (lockLabel) lockLabel.textContent = 'Libre';
+        if (lockDot) lockDot.style.display = 'none';
+        if (lockIcon) lockIcon.style.display = 'inline-block';
         if (badge) badge.classList.add('visible');
-        // Ícono de candado abierto
-        if (lockIcon) lockIcon.innerHTML = '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>';
-        showToast('🔒 Modo libre — el editor NO afecta al directo');
+        showToast('🔓 Modo libre — el editor NO afecta al directo');
       }
     }
 
