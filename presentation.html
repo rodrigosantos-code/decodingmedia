@@ -3846,11 +3846,13 @@
           const cmdData = JSON.parse(e.newValue);
           if (cmdData && cmdData.time > lastProcessedCmdTime) {
             lastProcessedCmdTime = cmdData.time;
-            if (cmdData.command === 'NEXT_STEP') nextStep();
-            else if (cmdData.command === 'PREV_STEP') prevStep();
-            else if (cmdData.command === 'NEXT_SLIDE') handleNextAction();
-            else if (cmdData.command === 'PREV_SLIDE') handlePrevAction();
-            else if (cmdData.command === 'RESET') resetPresentation();
+            if (!cmdData.deckId || cmdData.deckId === stageDeckId) {
+              if (cmdData.command === 'NEXT_STEP') nextStep();
+              else if (cmdData.command === 'PREV_STEP') prevStep();
+              else if (cmdData.command === 'NEXT_SLIDE') handleNextAction();
+              else if (cmdData.command === 'PREV_SLIDE') handlePrevAction();
+              else if (cmdData.command === 'RESET') resetPresentation();
+            }
           }
         } else if (e.key === 'dm_stage_set_step') {
           const stepData = JSON.parse(e.newValue);
@@ -3979,11 +3981,13 @@
       }
       // Comandos remotos
       else if (data.type === 'STAGE_COMMAND') {
-        if (data.command === 'NEXT_STEP') nextStep();
-        else if (data.command === 'PREV_STEP') prevStep();
-        else if (data.command === 'NEXT_SLIDE') handleNextAction();
-        else if (data.command === 'PREV_SLIDE') handlePrevAction();
-        else if (data.command === 'RESET') resetPresentation();
+        if (!data.deckId || data.deckId === stageDeckId) {
+          if (data.command === 'NEXT_STEP') nextStep();
+          else if (data.command === 'PREV_STEP') prevStep();
+          else if (data.command === 'NEXT_SLIDE') handleNextAction();
+          else if (data.command === 'PREV_SLIDE') handlePrevAction();
+          else if (data.command === 'RESET') resetPresentation();
+        }
       }
       // Cambio de presentación/deck activa
       else if (data.type === 'CHANGE_DECK' && data.deckId) {
@@ -4016,11 +4020,13 @@
           const cmdData = JSON.parse(cmdRaw);
           if (cmdData && cmdData.time > lastProcessedCmdTime) {
             lastProcessedCmdTime = cmdData.time;
-            if (cmdData.command === 'NEXT_STEP') nextStep();
-            else if (cmdData.command === 'PREV_STEP') prevStep();
-            else if (cmdData.command === 'NEXT_SLIDE') handleNextAction();
-            else if (cmdData.command === 'PREV_SLIDE') handlePrevAction();
-            else if (cmdData.command === 'RESET') resetPresentation();
+            if (!cmdData.deckId || cmdData.deckId === stageDeckId) {
+              if (cmdData.command === 'NEXT_STEP') nextStep();
+              else if (cmdData.command === 'PREV_STEP') prevStep();
+              else if (cmdData.command === 'NEXT_SLIDE') handleNextAction();
+              else if (cmdData.command === 'PREV_SLIDE') handlePrevAction();
+              else if (cmdData.command === 'RESET') resetPresentation();
+            }
           }
         }
 

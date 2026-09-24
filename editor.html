@@ -248,6 +248,113 @@
       transform: translateY(0);
     }
 
+    .btn-header-live-next {
+      background: #141620;
+      border: 1px solid rgba(236, 72, 153, 0.45);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 9px 16px;
+      border-radius: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-header-live-next:hover {
+      background: rgba(236, 72, 153, 0.2);
+      border-color: #ec4899;
+      transform: translateY(-1px);
+      box-shadow: 0 0 12px rgba(236, 72, 153, 0.25);
+    }
+
+    .btn-header-live-next:active {
+      transform: translateY(0);
+    }
+
+    .live-remote-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      width: 100%;
+      max-width: 440px;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .btn-live-remote {
+      background: #141620;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #cbd5e1;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-live-remote:hover {
+      background: #1c1e2a;
+      border-color: rgba(255, 255, 255, 0.28);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .btn-live-remote:active {
+      transform: translateY(0);
+    }
+
+    .btn-live-remote.btn-live-next {
+      flex: 1;
+      background: #f9a9d4;
+      color: #000000 !important;
+      font-weight: 800;
+      border: none;
+      padding: 9px 18px;
+      font-size: 12.5px;
+      box-shadow: 0 2px 10px rgba(249, 169, 212, 0.28);
+    }
+
+    .btn-live-remote.btn-live-next:hover {
+      background: #f472b6;
+      box-shadow: 0 4px 14px rgba(244, 114, 182, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-live-remote.btn-live-reset {
+      padding: 8px 10px;
+      color: #8c95a6;
+    }
+
+    .btn-live-remote.btn-live-reset:hover {
+      color: #fff;
+    }
+
+    .live-rec-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+      animation: blink 1.4s infinite;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
     .status-badge {
       display: flex;
       align-items: center;
@@ -1247,7 +1354,12 @@
 
       <div class="header-v-sep"></div>
 
-      <!-- Obtener link y Abrir Escenario -->
+      <!-- Pasar Escena en Directo, Obtener link y Abrir Escenario -->
+      <button type="button" class="btn-header-live-next" onclick="sendCommand('NEXT_STEP')" title="Avanzar de escena en directo en la proyección">
+        <span class="live-rec-dot"></span>
+        <span>Siguiente Escena ▶</span>
+      </button>
+
       <button type="button" class="btn-header-box" onclick="openShareDeckModal()" title="Obtener enlace de presentación">
         Obtener link
       </button>
@@ -1311,7 +1423,24 @@
               style="position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; border: none; pointer-events: none; display: block; transform-origin: 0 0;"
             ></iframe>
           </div>
-          <span class="preview-hint">Haz clic en la pantalla o pulsa [Enter] para avanzar paso</span>
+          <!-- Barra de Control Remoto de Directo -->
+          <div class="live-remote-bar">
+            <button type="button" class="btn-live-remote btn-live-prev" onclick="sendCommand('PREV_STEP')" title="Retroceder a la escena anterior en directo">
+              <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+              <span>Anterior</span>
+            </button>
+
+            <button type="button" class="btn-live-remote btn-live-next" onclick="sendCommand('NEXT_STEP')" title="Avanzar de escena en directo en la proyección">
+              <span class="live-rec-dot"></span>
+              <span>Pasar Escena en Directo ▶</span>
+            </button>
+
+            <button type="button" class="btn-live-remote btn-live-reset" onclick="sendCommand('RESET')" title="Reiniciar presentación al principio">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
+            </button>
+          </div>
+
+          <span class="preview-hint" style="margin-top: 5px;">Haz clic en la pantalla o pulsa [Enter] para avanzar paso</span>
           <span id="preview-phase-text" style="display: none;"></span>
         </div>
       </div>
@@ -2865,11 +2994,12 @@
     }
 
     function sendCommand(cmd) {
-      const cmdPayload = { type: 'STAGE_COMMAND', command: cmd };
+      const dId = typeof activeDeckId !== 'undefined' ? activeDeckId : 'default';
+      const cmdPayload = { type: 'STAGE_COMMAND', command: cmd, deckId: dId, time: Date.now() };
       bus.postMessage(cmdPayload);
       postToStageIframe(cmdPayload);
       try {
-        localStorage.setItem('dm_stage_command', JSON.stringify({ command: cmd, time: Date.now() }));
+        localStorage.setItem('dm_stage_command', JSON.stringify({ command: cmd, deckId: dId, time: Date.now() }));
       } catch (e) { }
 
       // Emitir comando remoto a través de Supabase Realtime a otros ordenadores
@@ -2881,15 +3011,17 @@
       if (cmd === 'NEXT_STEP') {
         currentStep = (currentStep + 1) % totalSteps;
         syncPreviewToCurrentStep();
-        showToast('Avanzando al siguiente paso');
+        const cur = currentTimeline[currentStep];
+        showToast(`Escena en directo: ${cur ? cur.name : 'Paso ' + (currentStep + 1)}`);
       } else if (cmd === 'PREV_STEP') {
         currentStep = (currentStep - 1 + totalSteps) % totalSteps;
         syncPreviewToCurrentStep();
-        showToast('Retrocediendo al paso anterior');
+        const cur = currentTimeline[currentStep];
+        showToast(`Escena en directo: ${cur ? cur.name : 'Paso ' + (currentStep + 1)}`);
       } else if (cmd === 'RESET') {
         currentStep = 0;
         syncPreviewToCurrentStep();
-        showToast('Bucle reiniciado');
+        showToast('Directo reiniciado al inicio');
       }
     }
 
