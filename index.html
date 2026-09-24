@@ -678,7 +678,6 @@
                   <span class="card-id-tag">${escapeHtml(deck.id)}</span>
                 </div>
                 <div style="display: flex; gap: 4px; align-items: center;">
-                  <button class="btn-text-action" onclick="openShareDeckModal('${deck.id}', '${escapeHtml(deck.name)}')" title="Obtener enlace directo">Link</button>
                   <button class="btn-text-action" onclick="openRenameModal('${deck.id}', '${escapeHtml(deck.name)}')" title="Renombrar">Renombrar</button>
                   ${!isDefault ? `
                     <button class="btn-text-action danger" onclick="deleteProject('${deck.id}', '${escapeHtml(deck.name)}')" title="Eliminar">Eliminar</button>
@@ -698,8 +697,8 @@
               <a href="presentation.html?deck=${encodeURIComponent(deck.id)}" target="_blank" class="btn btn-secondary">
                 Escenario &nearr;
               </a>
-              <button class="btn btn-secondary" onclick="copyPresentationLink('${deck.id}')" title="Copiar link" style="flex: 0 0 auto; padding: 7px 11px;">
-                Copiar
+              <button class="btn btn-secondary" onclick="copyPresentationLink('${deck.id}')" title="Copiar enlace de presentación" style="flex: 0 0 auto; padding: 7px 11px; display: inline-flex; align-items: center; justify-content: center;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
               </button>
             </div>
           </div>
