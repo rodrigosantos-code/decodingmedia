@@ -2669,16 +2669,20 @@
           format: slot.format,
           calib: slot.calib
         };
-        bus.postMessage(calibPayload);
+        // Preview del editor: siempre
         postToStageIframe(calibPayload);
-        try {
-          localStorage.setItem('dm_slot_calib_sync', JSON.stringify({
-            slotId: slot.id,
-            format: slot.format,
-            calib: slot.calib,
-            time: Date.now()
-          }));
-        } catch (e) { }
+        // Escenario real: solo en directo
+        if (liveMode) {
+          bus.postMessage(calibPayload);
+          try {
+            localStorage.setItem('dm_slot_calib_sync', JSON.stringify({
+              slotId: slot.id,
+              format: slot.format,
+              calib: slot.calib,
+              time: Date.now()
+            }));
+          } catch (e) { }
+        }
       }
       updateStepButtons();
 
@@ -2956,23 +2960,25 @@
       // 1. Reflejar instantáneamente en la vista previa del editor
       renderPreview();
 
-      // 2. Emitir mensaje ligero inmediato para calibración en vivo en el escenario
+      // 2. Preview del editor: siempre. Escenario real: solo en directo
       const calibPayload = {
         type: 'SLOT_CALIB_UPDATE',
         slotId: activeSlot.id,
         format: activeSlot.format,
         calib: activeSlot.calib
       };
-      bus.postMessage(calibPayload);
       postToStageIframe(calibPayload);
-      try {
-        localStorage.setItem('dm_slot_calib_sync', JSON.stringify({
-          slotId: activeSlot.id,
-          format: activeSlot.format,
-          calib: activeSlot.calib,
-          time: Date.now()
-        }));
-      } catch (e) { }
+      if (liveMode) {
+        bus.postMessage(calibPayload);
+        try {
+          localStorage.setItem('dm_slot_calib_sync', JSON.stringify({
+            slotId: activeSlot.id,
+            format: activeSlot.format,
+            calib: activeSlot.calib,
+            time: Date.now()
+          }));
+        } catch (e) { }
+      }
 
       // 3. Persistir y regenerar lista con debounce para fluidez total
       clearTimeout(calibSaveTimeout);
@@ -2985,22 +2991,25 @@
       const activeSlot = slots.find(s => s.id === activeCalibSlotId);
       if (!activeSlot) return;
       activeSlot.calib = getDefaultCoords(activeSlot.format);
+      // Preview del editor: siempre. Escenario real: solo en directo
       const calibPayload = {
         type: 'SLOT_CALIB_UPDATE',
         slotId: activeSlot.id,
         format: activeSlot.format,
         calib: activeSlot.calib
       };
-      bus.postMessage(calibPayload);
       postToStageIframe(calibPayload);
-      try {
-        localStorage.setItem('dm_slot_calib_sync', JSON.stringify({
-          slotId: activeSlot.id,
-          format: activeSlot.format,
-          calib: activeSlot.calib,
-          time: Date.now()
-        }));
-      } catch (e) { }
+      if (liveMode) {
+        bus.postMessage(calibPayload);
+        try {
+          localStorage.setItem('dm_slot_calib_sync', JSON.stringify({
+            slotId: activeSlot.id,
+            format: activeSlot.format,
+            calib: activeSlot.calib,
+            time: Date.now()
+          }));
+        } catch (e) { }
+      }
       saveSlotsAndBroadcast();
       showToast(`Calibración de ${activeSlot.name} restablecida`);
     }
