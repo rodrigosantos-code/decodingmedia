@@ -1395,12 +1395,6 @@
 
       <div class="header-v-sep"></div>
 
-      <!-- Pasar Escena en Directo, Obtener link y Abrir Escenario -->
-      <button type="button" class="btn-header-live-next" onclick="sendCommand('NEXT_STEP')" title="Avanzar de escena en directo en la proyección">
-        <span class="live-rec-dot"></span>
-        <span>Siguiente Escena ▶</span>
-      </button>
-
       <button type="button" class="btn-header-box" onclick="openShareDeckModal()" title="Obtener enlace de presentación">
         Obtener link
       </button>
@@ -1450,11 +1444,6 @@
         <div class="card-header">
           <div class="card-title">
             <span>Previsualización (16:9)</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="status-badge" style="font-size: 10px; padding: 2px 7px;">
-              <span class="status-dot online"></span> EN VIVO
-            </span>
           </div>
         </div>
 
@@ -2655,8 +2644,8 @@
         titleEl.textContent = `Calibrador: ${slot.name} (${slot.format})`;
       }
 
-      // Sync timeline: find the first step that matches this slotId ONLY if explicitly requested
-      if (shouldBroadcastStep) {
+      // Sync timeline: find the first step that matches this slotId ONLY if explicitly requested AND live mode is on
+      if (shouldBroadcastStep && liveMode) {
         const stepIdx = currentTimeline.findIndex(s => s.type === 'slide' && s.slotId === slotId);
         if (stepIdx >= 0) {
           currentStep = stepIdx;
