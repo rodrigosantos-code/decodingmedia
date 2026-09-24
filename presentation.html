@@ -3282,7 +3282,18 @@
             layer.classList.remove('incoming-layer');
           });
         } else {
-          // Al entrar a una diapositiva, la nueva capa realiza su fundido de 1s directamente sobre la anterior
+          // La capa de vídeo (#layer-step2) tiene transition:none y z-index:25,
+          // por lo que debe quitarse INMEDIATAMENTE para que el fundido de la nueva
+          // escena (z-index:20 → opacity 0→1 en 1s) sea visible y no quede oculto bajo ella.
+          const videoLayerEl = document.getElementById('layer-step2');
+          previousLayers.forEach(layer => {
+            if (layer === videoLayerEl) {
+              layer.classList.remove('active');
+              layer.classList.remove('incoming-layer');
+            }
+          });
+
+          // El resto de capas slide-to-slide se retiran tras el fundido de 1s (cross-fade normal)
           setTimeout(() => {
             previousLayers.forEach(layer => {
               layer.classList.remove('active');
