@@ -409,6 +409,11 @@
     // Suscribirse a comandos de control en vivo
     subscribeToLiveCommands: function(callback) {
       onLiveCommandCallback = callback;
+    },
+
+    // Acceso directo al cliente Supabase (para admin panel y Storage)
+    _getClient: function() {
+      return client;
     }
   };
 
