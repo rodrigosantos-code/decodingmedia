@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Decoding Media - Control Hub</title>
+  <title>Decoding Media - Proyectos</title>
   
   <!-- Google Fonts: Montserrat (Weights: 300, 400, 500, 600, 700, 800, 900) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,406 +24,81 @@
     }
 
     :root {
-      --bg-ambient: #14151b;
-      --bg-canvas: #090a0f;
-      --bg-surface: #10121a;
-      --bg-surface-hover: #161824;
-      --border-subtle: rgba(255, 255, 255, 0.08);
-      --border-hover: rgba(255, 255, 255, 0.18);
+      --bg-base: #090a0f;
+      --bg-card: rgba(16, 19, 28, 0.85);
+      --bg-card-hover: rgba(22, 26, 38, 0.95);
+      --bg-input: rgba(13, 15, 24, 0.9);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --border-card-hover: rgba(255, 255, 255, 0.18);
       
-      --accent-pink: #f9a9d4;
-      --accent-pink-hover: #f472b6;
-      --accent-magenta: #ec4899;
+      --accent: #ec4899;
+      --accent-glow: rgba(236, 72, 153, 0.15);
       
-      --text-main: #ffffff;
-      --text-muted: #8c95a6;
-      --text-dim: #555e6f;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
       
       --danger: #f87171;
     }
 
     body {
-      background-color: var(--bg-ambient);
-      background-image: radial-gradient(circle at 50% 30%, #1c1e28 0%, #111218 60%, #0a0b0f 100%);
+      background-color: var(--bg-base);
       color: var(--text-main);
       font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-size: 13px;
       min-height: 100vh;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 32px 20px;
+      flex-direction: column;
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Floating Center Frame (Fons Mans Layout) */
-    .fons-canvas {
-      width: 100%;
-      max-width: 1220px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .fons-container {
-      width: 100%;
-      background: var(--bg-canvas);
-      border-radius: 28px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: row;
-      min-height: 690px;
-      box-shadow: 0 35px 90px -20px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.09);
-    }
-
-    /* Columna Izquierda: Hero con Silueta e Identidad */
-    .fons-hero {
-      flex: 0 0 340px;
-      position: relative;
-      background-color: #0b0c10;
-      background-image: url('hero_silhouette.jpg');
-      background-size: cover;
-      background-position: center top;
-      background-repeat: no-repeat;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 38px 32px;
-      border-radius: 28px 0 0 28px;
-      overflow: hidden;
-    }
-
-    /* Overlay degradado para asegurar perfecta legibilidad de texto */
-    .fons-hero::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.88) 100%);
-      pointer-events: none;
-    }
-
-    .fons-hero-top,
-    .fons-hero-bottom {
-      position: relative;
-      z-index: 2;
-    }
-
-    .fons-wordmark {
-      font-size: 19px;
-      font-weight: 900;
-      letter-spacing: -0.02em;
-      color: #ffffff;
-      text-transform: uppercase;
-      line-height: 1;
-    }
-
-    .fons-bio-title {
-      font-size: 14.5px;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 6px;
-      line-height: 1.3;
-    }
-
-    .fons-bio-desc {
-      font-size: 12px;
-      font-weight: 400;
-      color: rgba(255, 255, 255, 0.72);
-      line-height: 1.55;
-    }
-
-    /* Columna Derecha: Contenido y Navegación */
-    .fons-main {
-      flex: 1;
-      background: var(--bg-canvas);
-      padding: 40px 48px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 36px;
-    }
-
-    /* Fila Superior de Metadatos */
-    .fons-top-row {
-      display: flex;
-      gap: 52px;
-      align-items: flex-start;
-      flex-wrap: wrap;
-    }
-
-    .fons-meta-col {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .fons-meta-label {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text-muted);
-      letter-spacing: -0.01em;
-    }
-
-    .fons-meta-link {
-      font-size: 12.5px;
-      font-weight: 600;
-      color: #ffffff;
-      text-decoration: none;
-      transition: color 0.15s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .fons-meta-link:hover {
-      color: var(--accent-pink);
-    }
-
-    .fons-meta-status {
-      font-size: 12.5px;
-      font-weight: 600;
-      color: #ffffff;
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    .fons-status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #10b981;
-      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
-      display: inline-block;
-    }
-
-    /* Grid de Contenido en 3 Columnas */
-    .fons-grid {
-      display: grid;
-      grid-template-columns: 1.25fr 1fr 1fr;
-      gap: 36px;
-      flex: 1;
-    }
-
-    .fons-column {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-    }
-
-    .fons-column-cta {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .fons-sec-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 14px;
-    }
-
-    .fons-sec-title {
-      font-size: 13.5px;
-      font-weight: 700;
-      color: #ffffff;
-      letter-spacing: -0.01em;
-    }
-
-    .fons-sec-count {
-      font-size: 11.5px;
-      color: var(--text-dim);
-      font-weight: 500;
-    }
-
-    .fons-sub-section {
-      margin-top: 26px;
-    }
-
-    /* Buscador Sutil */
-    .fons-search-wrap {
-      margin-bottom: 12px;
-    }
-
-    .fons-search-input {
-      width: 100%;
-      background: #11131c;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: #ffffff;
-      padding: 7px 11px;
-      border-radius: 8px;
-      font-family: inherit;
-      font-size: 11.5px;
-      outline: none;
-      transition: all 0.15s ease;
-    }
-
-    .fons-search-input:focus {
-      border-color: rgba(255, 255, 255, 0.22);
-      background: #141624;
-    }
-
-    .fons-search-input::placeholder {
-      color: var(--text-dim);
-    }
-
-    /* Filas Editoriales */
-    .fons-list {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .fons-row {
-      position: relative;
+    /* Header */
+    header {
+      height: 60px;
+      background: rgba(9, 10, 15, 0.9);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-card);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 6px 8px;
-      border-radius: 6px;
-      transition: background 0.15s ease;
-      font-size: 12.5px;
-      user-select: none;
+      padding: 0 32px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
     }
 
-    .fons-row.static {
-      cursor: default;
-    }
-
-    .fons-row.static:hover {
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    .fons-row-name {
-      color: #d1d5db;
-      font-weight: 400;
-      transition: color 0.15s ease;
+    .brand-title {
       display: flex;
       align-items: center;
-      gap: 6px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      gap: 12px;
     }
 
-    .fons-row-meta {
-      color: var(--text-dim);
-      font-size: 12px;
-      font-weight: 400;
-      white-space: nowrap;
-      margin-left: 10px;
-    }
-
-    .editorial-badge {
-      background: rgba(255, 255, 255, 0.08);
-      color: #94a3b8;
-      font-size: 9px;
-      font-weight: 700;
-      padding: 1px 5px;
-      border-radius: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    /* Filas Interactivas de Proyectos */
-    .project-row {
-      cursor: pointer;
-    }
-
-    .project-row:hover {
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .project-row:hover .fons-row-name {
-      color: #ffffff;
-    }
-
-    /* Barra de acciones al pasar el ratón */
-    .row-hover-bar {
-      display: none;
-      position: absolute;
-      right: 6px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: #151722;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      border-radius: 7px;
-      padding: 2px 4px;
-      gap: 4px;
-      align-items: center;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-      z-index: 10;
-    }
-
-    .project-row:hover .row-hover-bar {
-      display: flex;
-    }
-
-    .row-action-link,
-    .row-action-btn {
-      background: transparent;
-      border: none;
-      color: #cbd5e1;
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 4px 7px;
-      border-radius: 5px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.12s ease;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      white-space: nowrap;
-    }
-
-    .row-action-link:hover,
-    .row-action-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: #ffffff;
-    }
-
-    .row-action-btn.danger:hover {
-      background: rgba(239, 68, 68, 0.2);
-      color: #f87171;
-    }
-
-    /* Botón CTA Fons Mans (Equivalente al botón "Book a session" en rosa pastel) */
-    .fons-cta-wrap {
-      display: flex;
-      justify-content: flex-end;
-      align-items: flex-end;
-      margin-top: 24px;
-    }
-
-    .btn-fons-cta {
-      background: var(--accent-pink);
-      color: #000000 !important;
-      font-family: inherit;
-      font-size: 13.5px;
+    .brand-logo-text {
+      font-size: 15px;
       font-weight: 800;
-      letter-spacing: -0.01em;
-      border: none;
-      border-radius: 22px;
-      padding: 12px 26px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      box-shadow: 0 4px 18px rgba(249, 169, 212, 0.28);
-      white-space: nowrap;
+      letter-spacing: -0.02em;
+      color: #fff;
+      text-transform: uppercase;
     }
 
-    .btn-fons-cta:hover {
-      background: var(--accent-pink-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 6px 22px rgba(244, 114, 182, 0.38);
+    .brand-tagline {
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      border-left: 1px solid rgba(255, 255, 255, 0.12);
+      padding-left: 12px;
     }
 
-    .btn-fons-cta:active {
-      transform: translateY(0);
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    /* Estilos de Botones Globales para Modales */
+    /* Buttons */
     .btn {
       font-family: inherit;
       display: inline-flex;
@@ -443,7 +118,7 @@
     }
 
     .btn-primary {
-      background: var(--accent-pink);
+      background: #f9a9d4;
       color: #000000 !important;
       font-weight: 800;
       border: none;
@@ -451,8 +126,14 @@
     }
 
     .btn-primary:hover {
-      background: var(--accent-pink-hover);
+      background: #f472b6;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(244, 114, 182, 0.35);
       color: #000000 !important;
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
     }
 
     .btn-secondary {
@@ -467,27 +148,265 @@
       color: #ffffff;
     }
 
-    /* Modales */
+    .btn-outline-danger {
+      background: transparent;
+      border: 1px solid rgba(248, 113, 113, 0.25);
+      color: var(--danger);
+    }
+
+    .btn-outline-danger:hover {
+      background: rgba(248, 113, 113, 0.08);
+      border-color: var(--danger);
+    }
+
+    .btn-text-action {
+      background: transparent;
+      border: none;
+      color: #8c95a6;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .btn-text-action:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-text-action.danger:hover {
+      color: #f87171;
+      background: rgba(248, 113, 113, 0.08);
+    }
+
+    /* Container */
+    .dashboard-container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 40px 32px 64px 32px;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* Welcome Hero */
+    .welcome-hero {
+      margin-bottom: 36px;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .hero-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+      margin-bottom: 10px;
+      line-height: 1.25;
+    }
+
+    .hero-subtitle {
+      font-size: 13.5px;
+      font-weight: 400;
+      color: var(--text-muted);
+      max-width: 580px;
+      line-height: 1.6;
+    }
+
+    /* Control Bar */
+    .control-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-card);
+      flex-wrap: wrap;
+    }
+
+    .projects-count {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .projects-count span {
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 12px;
+      margin-left: 6px;
+    }
+
+    .search-input-wrap {
+      position: relative;
+      width: 260px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .search-input:focus {
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Projects Grid */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 18px;
+    }
+
+    /* Project Card */
+    .project-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 6px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .project-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-card-hover);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .card-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .card-id-tag {
+      font-size: 10.5px;
+      font-family: ui-monospace, monospace;
+      color: var(--text-dim);
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-actions .btn {
+      flex: 1;
+      padding: 7px 12px;
+      font-size: 11px;
+    }
+
+    /* New Project Card Placeholder */
+    .new-project-card {
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.01);
+      border-radius: 6px;
+      padding: 28px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      min-height: 160px;
+    }
+
+    .new-project-card:hover {
+      border-color: var(--accent);
+      background: rgba(236, 72, 153, 0.02);
+    }
+
+    .new-project-icon {
+      font-size: 20px;
+      line-height: 1;
+      margin-bottom: 8px;
+      color: var(--text-dim);
+      font-weight: 300;
+    }
+
+    .new-project-card:hover .new-project-icon {
+      color: var(--accent);
+    }
+
+    .new-project-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+      letter-spacing: 0.02em;
+    }
+
+    .new-project-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Modal Overlay */
     .modal-overlay {
       display: none;
       position: fixed;
       inset: 0;
       background: rgba(5, 7, 11, 0.85);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       z-index: 1000;
       align-items: center;
       justify-content: center;
     }
 
     .modal-card {
-      background: #12141e;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 12px;
+      background: #11141e;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
       width: 92%;
       max-width: 440px;
       padding: 24px;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
     }
 
     .modal-header {
@@ -510,7 +429,7 @@
       background: transparent;
       border: none;
       color: var(--text-dim);
-      font-size: 20px;
+      font-size: 18px;
       cursor: pointer;
       width: 24px;
       height: 24px;
@@ -530,28 +449,28 @@
 
     .form-label {
       display: block;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
       margin-bottom: 6px;
     }
 
     .form-input {
       width: 100%;
       background: rgba(13, 15, 24, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: #fff;
-      padding: 9px 12px;
-      border-radius: 8px;
+      padding: 8px 12px;
+      border-radius: 4px;
       font-family: inherit;
-      font-size: 12.5px;
+      font-size: 12px;
       outline: none;
     }
 
     .form-input:focus {
-      border-color: var(--accent-magenta);
+      border-color: var(--accent);
     }
 
     /* Toast */
@@ -562,224 +481,61 @@
       background: #151824;
       border: 1px solid rgba(255, 255, 255, 0.15);
       padding: 9px 16px;
-      border-radius: 8px;
+      border-radius: 4px;
       font-size: 12px;
       font-weight: 600;
       color: #fff;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
       display: none;
       z-index: 2000;
-    }
-
-    /* Responsive */
-    @media (max-width: 980px) {
-      .fons-container {
-        flex-direction: column;
-        border-radius: 20px;
-        min-height: auto;
-      }
-
-      .fons-hero {
-        flex: 0 0 280px;
-        border-radius: 20px 20px 0 0;
-      }
-
-      .fons-main {
-        padding: 32px 24px;
-        gap: 28px;
-      }
-
-      .fons-grid {
-        grid-template-columns: 1fr;
-        gap: 28px;
-      }
-
-      .fons-cta-wrap {
-        justify-content: flex-start;
-      }
     }
   </style>
 </head>
 
 <body>
 
-  <div class="fons-canvas">
-    <div class="fons-container">
-      <!-- Columna Izquierda: Hero con Silueta e Identidad Editorial -->
-      <aside class="fons-hero">
-        <div class="fons-hero-top">
-          <div class="fons-wordmark">DECODING MEDIA</div>
-        </div>
-
-        <div class="fons-hero-bottom">
-          <h2 class="fons-bio-title">Bienvenido a Decoding Media</h2>
-          <p class="fons-bio-desc">
-            Centro de control, realización y proyección en tiempo real para eventos y conferencias.
-          </p>
-        </div>
-      </aside>
-
-      <!-- Panel Derecho: Navegación, Proyectos, Stack y Canales -->
-      <main class="fons-main">
-        <!-- Fila Superior de Metadatos y Accesos Rápidos -->
-        <header class="fons-top-row">
-          <div class="fons-meta-col">
-            <span class="fons-meta-label">Sala de Realización</span>
-            <a href="editor.html" class="fons-meta-link">Producer Room &nearr;</a>
-          </div>
-
-          <div class="fons-meta-col">
-            <span class="fons-meta-label">Proyección en Vivo</span>
-            <a href="presentation.html" target="_blank" class="fons-meta-link">Abrir Escenario &nearr;</a>
-          </div>
-
-          <div class="fons-meta-col">
-            <span class="fons-meta-label">Cloud Realtime</span>
-            <span class="fons-meta-status"><span class="fons-status-dot"></span> Sincronizado</span>
-          </div>
-        </header>
-
-        <!-- Columnas Editoriales Principales -->
-        <section class="fons-grid">
-          <!-- Columna 1: Projects y Features -->
-          <div class="fons-column">
-            <div class="fons-sec-header">
-              <span class="fons-sec-title">Projects</span>
-              <span class="fons-sec-count" id="projects-total-count">0</span>
-            </div>
-
-            <!-- Buscador sutil integrado -->
-            <div class="fons-search-wrap">
-              <input type="text" id="search-projects" class="fons-search-input" placeholder="Buscar proyecto..." oninput="filterProjects(this.value)" />
-            </div>
-
-            <div class="fons-list" id="fons-projects-list">
-              <!-- Renderizado dinámico desde Supabase / LocalStorage -->
-            </div>
-
-            <div class="fons-sub-section">
-              <div class="fons-sec-header">
-                <span class="fons-sec-title">Features</span>
-              </div>
-              <div class="fons-list">
-                <div class="fons-row static">
-                  <span class="fons-row-name">Sincronización Cloud</span>
-                  <span class="fons-row-meta">'24</span>
-                </div>
-                <div class="fons-row static">
-                  <span class="fons-row-name">Dual Screen (16:9 / 3:4)</span>
-                  <span class="fons-row-meta">'24</span>
-                </div>
-                <div class="fons-row static">
-                  <span class="fons-row-name">Transición Audio SFX</span>
-                  <span class="fons-row-meta">'24</span>
-                </div>
-                <div class="fons-row static">
-                  <span class="fons-row-name">Live Slide Remote</span>
-                  <span class="fons-row-meta">'24</span>
-                </div>
-                <div class="fons-row static">
-                  <span class="fons-row-name">Calibración LED</span>
-                  <span class="fons-row-meta">'24</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Columna 2: Stack y Evento -->
-          <div class="fons-column">
-            <div class="fons-sec-header">
-              <span class="fons-sec-title">Stack</span>
-            </div>
-            <div class="fons-list">
-              <div class="fons-row static">
-                <span class="fons-row-name">Móvil Vertical</span>
-                <span class="fons-row-meta">3:4 Screen</span>
-              </div>
-              <div class="fons-row static">
-                <span class="fons-row-name">Pantalla Escenario</span>
-                <span class="fons-row-meta">16:9 Stage</span>
-              </div>
-              <div class="fons-row static">
-                <span class="fons-row-name">Transición Audio</span>
-                <span class="fons-row-meta">SFX mp3</span>
-              </div>
-              <div class="fons-row static">
-                <span class="fons-row-name">Calibración LED</span>
-                <span class="fons-row-meta">def_v2</span>
-              </div>
-              <div class="fons-row static">
-                <span class="fons-row-name">Supabase Cloud</span>
-                <span class="fons-row-meta">PostgreSQL</span>
-              </div>
-              <div class="fons-row static">
-                <span class="fons-row-name">Hotkeys Producción</span>
-                <span class="fons-row-meta">[1..9], [ESP]</span>
-              </div>
-            </div>
-
-            <div class="fons-sub-section">
-              <div class="fons-sec-header">
-                <span class="fons-sec-title">Clients</span>
-              </div>
-              <div class="fons-list">
-                <div class="fons-row static">
-                  <span class="fons-row-name">La Casa Encendida</span>
-                  <span class="fons-row-meta">Madrid</span>
-                </div>
-                <div class="fons-row static">
-                  <span class="fons-row-name">13 Octubre 2026</span>
-                  <span class="fons-row-meta">Directo</span>
-                </div>
-                <div class="fons-row static">
-                  <span class="fons-row-name">Decoding Media</span>
-                  <span class="fons-row-meta">Keynote</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Columna 3: Channels y CTA -->
-          <div class="fons-column fons-column-cta">
-            <div>
-              <div class="fons-sec-header">
-                <span class="fons-sec-title">Channels</span>
-              </div>
-              <div class="fons-list">
-                <div class="fons-row static">
-                  <span class="fons-row-name">Escenario General</span>
-                  <span class="fons-row-meta">Proyección</span>
-                </div>
-                <div class="fons-row static">
-                  <span class="fons-row-name">Producer Room</span>
-                  <span class="fons-row-meta">Realización</span>
-                </div>
-                <div class="fons-row static">
-                  <span class="fons-row-name">Control Remoto</span>
-                  <span class="fons-row-meta">Web Mobile</span>
-                </div>
-                <div class="fons-row static">
-                  <span class="fons-row-name">Base de Datos</span>
-                  <span class="fons-row-meta">Supabase</span>
-                </div>
-                <div class="fons-row static">
-                  <span class="fons-row-name">Replicación Realtime</span>
-                  <span class="fons-row-meta">Activo</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Botón CTA tipo "Book a session" en rosa pastel -->
-            <div class="fons-cta-wrap">
-              <button type="button" class="btn-fons-cta" onclick="openNewDeckModal()">
-                + Nuevo Proyecto
-              </button>
-            </div>
-          </div>
-        </section>
-      </main>
+  <header>
+    <div class="brand-title">
+      <span class="brand-logo-text">Decoding Media</span>
+      <span class="brand-tagline">Control Hub</span>
     </div>
-  </div>
+
+    <div class="header-actions">
+      <button class="btn btn-primary" onclick="openNewDeckModal()">
+        + Nuevo Proyecto
+      </button>
+      <a href="presentation.html" target="_blank" class="btn btn-secondary" title="Abrir pantalla de proyección general">
+        Escenario &nearr;
+      </a>
+    </div>
+  </header>
+
+  <main class="dashboard-container">
+    <!-- Hero Bienvenida -->
+    <div class="welcome-hero">
+      <div class="hero-eyebrow">Decoding Media &middot; Control Hub</div>
+      <h1 class="hero-title">Bienvenido a Decoding Media</h1>
+      <p class="hero-subtitle">
+        Centro de control y gestión de presentaciones en directo. Selecciona un proyecto para abrir la sala de realización o crea uno nuevo.
+      </p>
+    </div>
+
+    <!-- Barra de Control y Búsqueda -->
+    <div class="control-bar">
+      <div class="projects-count">
+        Proyectos <span id="projects-total-count">0</span>
+      </div>
+
+      <div class="search-input-wrap">
+        <input type="text" id="search-projects" class="search-input" placeholder="Buscar proyecto..." oninput="filterProjects(this.value)" />
+      </div>
+    </div>
+
+    <!-- Rejilla de Proyectos -->
+    <div class="projects-grid" id="projects-grid">
+      <!-- Se genera dinámicamente -->
+    </div>
+  </main>
 
   <!-- Modal Nuevo Proyecto -->
   <div class="modal-overlay" id="new-deck-modal">
@@ -888,7 +644,18 @@
       }, 2500);
     }
 
+    function formatDate(isoStr) {
+      if (!isoStr) return 'Reciente';
+      try {
+        const d = new Date(isoStr);
+        return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        return 'Reciente';
+      }
+    }
+
     async function loadProjects() {
+      const grid = document.getElementById('projects-grid');
       const countEl = document.getElementById('projects-total-count');
 
       if (window.DMCloud) {
@@ -902,41 +669,61 @@
     }
 
     function renderProjects(decksToRender) {
-      const container = document.getElementById('fons-projects-list');
-      if (!container) return;
-
-      const countEl = document.getElementById('projects-total-count');
-      if (countEl) countEl.textContent = decksToRender.length;
+      const grid = document.getElementById('projects-grid');
+      if (!grid) return;
 
       let html = '';
 
       decksToRender.forEach(deck => {
         const isDefault = (deck.id === 'default');
-        const dateYear = "'24";
+        const formattedDate = formatDate(deck.updated_at);
 
         html += `
-          <div class="fons-row project-row" onclick="window.location.href='editor.html?deck=${encodeURIComponent(deck.id)}'" title="Abrir Producer Room">
-            <div class="fons-row-name">
-              <span>${escapeHtml(deck.name)}</span>
-              ${isDefault ? '<span class="editorial-badge">main</span>' : ''}
+          <div class="project-card">
+            <div>
+              <div class="card-top">
+                <div>
+                  <h2 class="card-name">${escapeHtml(deck.name)}</h2>
+                  <span class="card-id-tag">${escapeHtml(deck.id)}</span>
+                </div>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                  <button class="btn-text-action" onclick="openRenameModal('${deck.id}', '${escapeHtml(deck.name)}')" title="Renombrar">Renombrar</button>
+                  ${!isDefault ? `
+                    <button class="btn-text-action danger" onclick="deleteProject('${deck.id}', '${escapeHtml(deck.name)}')" title="Eliminar">Eliminar</button>
+                  ` : ''}
+                </div>
+              </div>
+
+              <div class="card-meta">
+                <span>Modificado: ${formattedDate}</span>
+              </div>
             </div>
-            <div class="fons-row-meta">${dateYear}</div>
-            <div class="row-hover-bar" onclick="event.stopPropagation()">
-              <a href="editor.html?deck=${encodeURIComponent(deck.id)}" class="row-action-link" title="Abrir Producer Room">Producer &nearr;</a>
-              <a href="presentation.html?deck=${encodeURIComponent(deck.id)}" target="_blank" class="row-action-link" title="Abrir Escenario">Escenario &nearr;</a>
-              <button type="button" class="row-action-btn" onclick="copyPresentationLink('${deck.id}')" title="Copiar enlace de presentación">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+
+            <div class="card-actions">
+              <a href="editor.html?deck=${encodeURIComponent(deck.id)}" class="btn btn-secondary" style="flex: 1.2;">
+                Producer Room
+              </a>
+              <a href="presentation.html?deck=${encodeURIComponent(deck.id)}" target="_blank" class="btn btn-primary">
+                Escenario &nearr;
+              </a>
+              <button class="btn btn-secondary" onclick="copyPresentationLink('${deck.id}')" title="Copiar enlace de presentación" style="flex: 0 0 auto; padding: 8px 13px; display: inline-flex; align-items: center; justify-content: center;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
               </button>
-              <button type="button" class="row-action-btn" onclick="openRenameModal('${deck.id}', '${escapeHtml(deck.name)}')" title="Renombrar">Renombrar</button>
-              ${!isDefault ? `
-                <button type="button" class="row-action-btn danger" onclick="deleteProject('${deck.id}', '${escapeHtml(deck.name)}')" title="Eliminar">✕</button>
-              ` : ''}
             </div>
           </div>
         `;
       });
 
-      container.innerHTML = html;
+      // Tarjeta adicional "+ Crear nuevo proyecto"
+      html += `
+        <div class="new-project-card" onclick="openNewDeckModal()">
+          <div class="new-project-icon">+</div>
+          <div class="new-project-title">Nuevo Proyecto</div>
+          <div class="new-project-desc">Crear una nueva presentación</div>
+        </div>
+      `;
+
+      grid.innerHTML = html;
     }
 
     function filterProjects(query) {
@@ -1023,6 +810,7 @@
         localStorage.setItem('dm_active_deck_id', newId);
       }
 
+      // Redirigir a la mesa de control del proyecto recién creado
       window.location.href = `editor.html?deck=${encodeURIComponent(newId)}`;
     }
 
@@ -1052,6 +840,7 @@
       showToast('Actualizando nombre...');
 
       if (window.DMCloud) {
+        // Obtener slots actuales de este deck para guardarlo con nuevo nombre
         const existingData = await DMCloud.fetchDeckConfig(renameTargetId);
         const slotsToKeep = (existingData && existingData.slots) || [];
         await DMCloud.saveDeckConfig(slotsToKeep, '20260923_def_v2', 'dashboard_rename', renameTargetId, newName);
