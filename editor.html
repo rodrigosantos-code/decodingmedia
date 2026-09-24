@@ -51,12 +51,17 @@
       --accent: var(--accent-500);
     }
 
+    html, body {
+      height: 100vh;
+      max-height: 100vh;
+      overflow: hidden;
+    }
+
     body {
       background-color: var(--bg-base);
       color: var(--text-main);
       font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-size: 13px;
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
       letter-spacing: -0.01em;
@@ -66,8 +71,10 @@
     header {
       background: #0e0f14;
       border-bottom: 1px solid var(--border-subtle);
-      padding: 10px 28px;
-      min-height: 56px;
+      padding: 8px 24px;
+      min-height: 50px;
+      height: 50px;
+      flex-shrink: 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -276,32 +283,53 @@
 
     main {
       flex: 1;
-      padding: 10px 20px 14px 20px;
-      max-width: 1580px;
+      min-height: 0;
+      height: calc(100vh - 50px);
+      padding: 10px 18px 12px 18px;
+      max-width: 1720px;
       margin: 0 auto;
       width: 100%;
-      display: grid;
-      grid-template-columns: 1fr 1.15fr;
-      gap: 14px;
-      align-items: start;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       box-sizing: border-box;
+      overflow: hidden;
     }
 
-    @media (max-width: 960px) {
+    .cockpit-grid {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 310px 1.22fr 355px;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 1100px) {
+      html, body {
+        height: auto;
+        max-height: none;
+        overflow: auto;
+      }
       main {
+        height: auto;
+        overflow: visible;
+      }
+      .cockpit-grid {
         grid-template-columns: 1fr;
-        padding: 12px 10px;
-        gap: 12px;
       }
     }
 
     .card {
       background: var(--bg-card);
       border: 1px solid var(--border-card);
-      border-radius: 18px;
-      padding: 16px 20px;
+      border-radius: 14px;
+      padding: 12px 16px;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
     }
 
     .card:hover {
@@ -313,28 +341,81 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      flex-shrink: 0;
     }
 
     .card-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       color: #fff;
       letter-spacing: -0.01em;
+    }
+
+    .timeline-card {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      border-radius: 12px;
+    }
+
+    .timeline-card .card-header {
+      margin-bottom: 4px;
+      padding-bottom: 4px;
+    }
+
+    .scenes-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border-radius: 14px;
+    }
+
+    .preview-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border-radius: 14px;
+    }
+
+    .preview-wrap {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .preview-hint {
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 8px;
+      font-weight: 500;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .calib-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border-radius: 14px;
+      overflow-y: auto;
     }
 
     /* Timeline Strip */
     .timeline-strip {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 0;
       overflow-x: auto;
-      padding: 6px 2px 8px;
+      padding: 2px 2px 4px;
       scrollbar-width: none;
     }
 
@@ -725,15 +806,16 @@
     /* Miniatura interactiva de previsualización con capas reales */
     .preview-box {
       width: 100%;
-      max-width: min(100%, 390px);
+      max-width: 100%;
+      max-height: calc(100% - 24px);
       aspect-ratio: 16 / 9;
       background: #000;
-      border-radius: 14px;
+      border-radius: 12px;
       overflow: hidden;
       position: relative;
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(236, 72, 153, 0.08);
-      margin: 0 auto 10px auto;
+      margin: 0;
     }
 
     .preview-phase-badge {
@@ -807,8 +889,8 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      margin-bottom: 4px;
-      max-height: calc(100vh - 275px);
+      flex: 1;
+      min-height: 0;
       overflow-y: auto;
       padding-right: 4px;
       scrollbar-width: thin;
@@ -827,11 +909,11 @@
     .slot-item {
       background: #111218;
       border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 14px;
-      padding: 11px 14px;
+      border-radius: 12px;
+      padding: 9px 12px;
       display: flex;
       flex-direction: column;
-      gap: 7px;
+      gap: 6px;
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       position: relative;
     }
@@ -1158,68 +1240,78 @@
   </header>
 
   <main>
-    <!-- Columna Izquierda: Control del Escenario y Presentación -->
-    <div style="display: flex; flex-direction: column; gap: 12px;">
-
-      <!-- Timeline del Escenario -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <span>Timeline</span>
-          </div>
-          <span style="font-size: 11px; color: var(--accent); font-weight: 700;" id="current-phase-label">Paso 1</span>
+    <!-- Barra Superior: Timeline Secuencial (Vista Panorámica) -->
+    <div class="card timeline-card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>Timeline</span>
         </div>
-
-        <div class="timeline-strip" id="dynamic-step-grid">
-          <!-- Nodos de timeline generados dinámicamente -->
-        </div>
-
-
-
+        <span style="font-size: 11px; color: var(--accent); font-weight: 700;" id="current-phase-label">Paso 1</span>
       </div>
+      <div class="timeline-strip" id="dynamic-step-grid">
+        <!-- Nodos de timeline generados dinámicamente -->
+      </div>
+    </div>
 
-      <!-- Gestor Dinámico de Diapositivas y Escenas -->
-      <div class="card">
+    <!-- Rejilla Cockpit de 3 Columnas: Escenas | Previsualización | Calibrador -->
+    <div class="cockpit-grid">
+
+      <!-- Columna 1: Escenas (Slots) -->
+      <div class="card scenes-card">
         <div class="card-header">
           <div class="card-title">
             <span>Escenas (<span id="slot-count-badge">2</span>)</span>
           </div>
-          <div style="display: flex; gap: 6px;">
-            <button class="btn btn-primary" style="padding: 5px 12px; font-size: 11px; font-weight: 700; flex: 0 0 auto;"
-              onclick="openAddSlotModal()">
-              Añadir Escena
-            </button>
-          </div>
-        <!-- Lista dinámica de diapositivas con miniatura de la 1ª diapo y conectores de transición -->
+          <button class="btn btn-primary" style="padding: 5px 12px; font-size: 11px; font-weight: 700; flex: 0 0 auto;"
+            onclick="openAddSlotModal()">
+            + Añadir Escena
+          </button>
+        </div>
+        <!-- Lista dinámica de diapositivas -->
         <div class="slot-list" id="slot-list-container">
           <!-- Renderizado dinámicamente -->
         </div>
       </div>
 
-    </div>
-
-    <!-- Columna Derecha: Calibrador Fino del Marco Móvil -->
-    <div style="display: flex; flex-direction: column; gap: 12px;">
-
-      <div class="card">
+      <!-- Columna 2: Previsualización 16:9 en Vivo -->
+      <div class="card preview-card">
         <div class="card-header">
           <div class="card-title">
-            <span id="calib-card-title">Calibrador de Pantalla</span>
+            <span>Previsualización (16:9)</span>
           </div>
-          <div style="display: flex; gap: 8px;">
-
-
-            <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; font-weight: 700;" onclick="resetCalibration()">
-              Restaurar Defecto
-            </button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="status-badge" style="font-size: 10px; padding: 2px 7px;">
+              <span class="status-dot online"></span> EN VIVO
+            </span>
           </div>
         </div>
 
+        <div class="preview-wrap">
+          <div class="preview-box" id="preview-box" style="cursor: pointer;" title="Haz clic para avanzar al siguiente paso">
+            <iframe id="preview-stage-iframe" src="presentation.html?v=20260924_1256"
+              style="position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; border: none; pointer-events: none; display: block; transform-origin: 0 0;"
+            ></iframe>
+          </div>
+          <span class="preview-hint">Haz clic en la pantalla o pulsa [Enter] para avanzar paso</span>
+          <span id="preview-phase-text" style="display: none;"></span>
+        </div>
+      </div>
+
+      <!-- Columna 3: Calibrador Fino del Marco Móvil -->
+      <div class="card calib-card">
+        <div class="card-header">
+          <div class="card-title">
+            <span id="calib-card-title">Calibrador</span>
+          </div>
+          <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 10.5px; font-weight: 700; flex: 0 0 auto;" onclick="resetCalibration()">
+            Restaurar Defecto
+          </button>
+        </div>
+
         <!-- Selector Dinámico de Diapositiva a Calibrar -->
-        <div style="margin-bottom: 8px;">
+        <div style="margin-bottom: 6px; flex-shrink: 0;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <span
-              style="font-size: 10px; text-transform: uppercase; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px;">
+            <span style="font-size: 9.5px; text-transform: uppercase; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px;">
               Escena en Calibrador
             </span>
             <span class="slot-format-tag format-34" id="calib-format-indicator">3:4 MÓVIL</span>
@@ -1229,25 +1321,11 @@
           </div>
         </div>
 
-        <!-- Previsualización: iframe directo de index.html a resolución nativa escalado -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span style="font-size: 10.5px; text-transform: uppercase; font-weight: 700; color: #8e95a5; letter-spacing: 0.5px;">
-            Previsualización (1:1)
-          </span>
-          <span id="preview-phase-text" style="display: none;"></span>
-        </div>
-
-        <div class="preview-box" id="preview-box" style="cursor: pointer;" title="Haz clic para avanzar al siguiente paso">
-          <iframe id="preview-stage-iframe" src="presentation.html?v=20260923_1010"
-            style="position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; border: none; pointer-events: none; display: block; transform-origin: 0 0;"
-          ></iframe>
-        </div>
-
         <!-- Sliders con doble input en rejilla compacta de 2 columnas -->
         <div class="sliders-grid" id="calibration-sliders">
           <div class="slider-group">
             <div class="slider-label-row">
-              <span class="slider-label">Pos. Horizontal (X %)</span>
+              <span class="slider-label">Pos. Horiz. (X %)</span>
               <span class="slider-val-tag" id="tag-left">28.55%</span>
             </div>
             <div class="slider-control-row">
@@ -1259,7 +1337,7 @@
 
           <div class="slider-group">
             <div class="slider-label-row">
-              <span class="slider-label">Ancho Pantalla (Width %)</span>
+              <span class="slider-label">Ancho (Width %)</span>
               <span class="slider-val-tag" id="tag-width">47.7%</span>
             </div>
             <div class="slider-control-row">
@@ -1271,7 +1349,7 @@
 
           <div class="slider-group">
             <div class="slider-label-row">
-              <span class="slider-label">Pos. Vertical (Y %)</span>
+              <span class="slider-label">Pos. Vert. (Y %)</span>
               <span class="slider-val-tag" id="tag-top">-2.85%</span>
             </div>
             <div class="slider-control-row">
@@ -1283,7 +1361,7 @@
 
           <div class="slider-group">
             <div class="slider-label-row">
-              <span class="slider-label">Alto Pantalla (Height %)</span>
+              <span class="slider-label">Alto (Height %)</span>
               <span class="slider-val-tag" id="tag-height">111.45%</span>
             </div>
             <div class="slider-control-row">
@@ -1295,7 +1373,7 @@
 
           <div class="slider-group">
             <div class="slider-label-row">
-              <span class="slider-label">Radio Esquinas (px)</span>
+              <span class="slider-label">Radio (px)</span>
               <span class="slider-val-tag" id="tag-radius">45px</span>
             </div>
             <div class="slider-control-row">
@@ -1307,7 +1385,7 @@
 
           <div class="slider-group">
             <div class="slider-label-row">
-              <span class="slider-label">Rotación (° grados)</span>
+              <span class="slider-label">Rotación (°)</span>
               <span class="slider-val-tag" id="tag-rot">-0.8°</span>
             </div>
             <div class="slider-control-row">
