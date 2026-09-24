@@ -2287,14 +2287,14 @@
       // 6. 9:16 <-> 3:4
       if (fromFmt === '9:16' && toFmt === '3:4') {
         return {
-          src: 'Transitions/9x16_to_3x4.mp4?v=20260924_1256',
+          src: 'Transitions/9x16_to_3x4.mp4',
           name: 'Transición 9:16 ➔ 3:4',
           shortName: 'Video ➔ 3:4'
         };
       }
       if (fromFmt === '3:4' && toFmt === '9:16') {
         return {
-          src: 'Transitions/9x16_to_3x4_reverse.mp4?v=20260924_1256',
+          src: 'Transitions/9x16_to_3x4_reverse.mp4',
           name: 'Transición 3:4 ➔ 9:16 (Inversa)',
           shortName: 'Video ➔ 9:16'
         };
@@ -4406,12 +4406,11 @@
   <script>
     // ═══════════════════════════════════════════════════════
     //  PRECARGA DE ACTIVOS EN SEGUNDO PLANO
-    //  Mete todas las transiciones e imágenes en el caché del
-    //  navegador para que no haya tiempos de carga durante el show.
+    //  Estrategia: <link rel="preload" as="video"> + <video preload="auto">
+    //  para máxima compatibilidad con la caché de media del navegador.
     // ═══════════════════════════════════════════════════════
     (function preloadAssets() {
-      const ASSETS = [
-        // Vídeos de transición (12 archivos)
+      const VIDEO_ASSETS = [
         'Transitions/title_to_3x4.mp4',
         'Transitions/title_to_3x4_reverse.mp4',
         'Transitions/title_to_9x16.mp4',
@@ -4424,7 +4423,9 @@
         'Transitions/9x16_to_16x9_reverse.mp4',
         'Transitions/9x16_to_3x4.mp4',
         'Transitions/9x16_to_3x4_reverse.mp4',
-        // Marcos e imágenes estáticas
+      ];
+
+      const IMAGE_ASSETS = [
         'Frame%20fijos/3x4.png',
         'Frame%20fijos/16x9.png',
         'Frame%20fijos/9x16.png',
@@ -4433,7 +4434,7 @@
         'logo_derecha.png',
       ];
 
-      const total = ASSETS.length;
+      const total = VIDEO_ASSETS.length + IMAGE_ASSETS.length;
       let done = 0;
 
       // Indicador de progreso pequeño (esquina inferior izquierda)
@@ -4450,66 +4451,60 @@
       `;
       document.body.appendChild(indicator);
 
-      function updateIndicator() {
-        const pct = Math.round((done / total) * 100);
-        indicator.textContent = `⬇ Precargando activos… ${pct}%`;
-        if (indicator.style.opacity === '0') indicator.style.opacity = '1';
-      }
-
-      function onAssetDone() {
+      function onDone() {
         done++;
-        updateIndicator();
+        const pct = Math.round((done / total) * 100);
+        indicator.textContent = `\u2193 Cargando recursos… ${pct}%`;
+        indicator.style.opacity = '1';
         if (done >= total) {
-          // Todo listo: ocultar indicador suavemente
-          indicator.textContent = '✓ Activos precargados';
-          setTimeout(() => { indicator.style.opacity = '0'; }, 1200);
-          setTimeout(() => { indicator.remove(); }, 1600);
-          console.log('[Preload] Todos los activos están en caché.');
+          indicator.textContent = '\u2713 Recursos listos';
+          setTimeout(() => { indicator.style.opacity = '0'; }, 1500);
+          setTimeout(() => { indicator.remove(); }, 2000);
+          console.log('[Preload] Todos los activos en caché.');
         }
       }
 
-      // Iniciamos la precarga 2s después del arranque para no competir
-      // con el render inicial de la presentación
+      // Paso 1: <link rel="preload" as="video"> para que el navegador
+      // los descargue con máxima prioridad y los meta en el caché de red
+      VIDEO_ASSETS.forEach(url => {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'video';
+        link.href = url;
+        link.type = 'video/mp4';
+        document.head.appendChild(link);
+      });
+
+      // Paso 2 (2s después): hidden <video preload="auto"> para que el
+      // motor de media decodifique y almacene en el buffer de media
       setTimeout(() => {
-        ASSETS.forEach(url => {
-          if (url.endsWith('.mp4')) {
-            // Para vídeos: fetch() mete el archivo en el caché HTTP
-            // + elemento <video> con preload="auto" como refuerzo
-            fetch(url, { cache: 'force-cache' })
-              .then(r => {
-                if (!r.ok) throw new Error(r.status);
-                return r.blob(); // asegura que el body se descarga completo
-              })
-              .then(() => {
-                // Segundo nivel: hidden <video> para que el motor de media
-                // tenga el archivo decodificado y listo
-                const v = document.createElement('video');
-                v.preload = 'auto';
-                v.muted = true;
-                v.src = url;
-                v.load();
-                v.addEventListener('canplaythrough', () => v.remove(), { once: true });
-                // Limpiar si tarda más de 10s
-                setTimeout(() => v.remove(), 10000);
-                onAssetDone();
-              })
-              .catch(() => {
-                // Si fetch falla (offline, CORS), intentar solo con <video>
-                const v = document.createElement('video');
-                v.preload = 'auto';
-                v.muted = true;
-                v.src = url;
-                v.load();
-                onAssetDone();
-              });
-          } else {
-            // Para imágenes: <link rel="preload"> + Image()
-            const img = new Image();
-            img.onload = onAssetDone;
-            img.onerror = onAssetDone; // contar aunque falle
-            img.src = url;
-          }
+        const container = document.createElement('div');
+        container.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;';
+        document.body.appendChild(container);
+
+        VIDEO_ASSETS.forEach(url => {
+          const v = document.createElement('video');
+          v.muted = true;
+          v.preload = 'auto';
+          v.src = url;
+          container.appendChild(v);
+          v.load();
+          v.addEventListener('canplaythrough', onDone, { once: true });
+          // Fallback: contar como listo aunque no dispare canplaythrough
+          setTimeout(() => { if (!v.dataset.counted) { v.dataset.counted='1'; onDone(); } }, 8000);
+          v.addEventListener('canplaythrough', () => { v.dataset.counted='1'; }, { once: true });
         });
+
+        // Imágenes
+        IMAGE_ASSETS.forEach(url => {
+          const img = new Image();
+          img.onload = onDone;
+          img.onerror = onDone;
+          img.src = url;
+        });
+
+        // Limpiar elementos de video a los 15s
+        setTimeout(() => container.remove(), 15000);
       }, 2000);
     })();
   </script>
