@@ -2929,13 +2929,22 @@
       if (currentStepIndex >= STEPS.length) currentStepIndex = 0;
       const step = STEPS[currentStepIndex];
 
-      // Logos: visibles siempre excepto en portada title y durante transiciones que involucran title
+      // Logos: visibles siempre excepto en portada title y durante transición title → X
       if (step.format === 'title') {
         // Escena portada: logos ocultos
         setCornerLogos(false);
       } else if (step.type === 'video') {
-        // Los logos se manejarán dentro de beginHoldAndPlay / triggerEndHold
-        // No cambiar aquí para no interferir con la animación
+        // Para vídeo: ocultar SOLO si es una transición title → X (salida de portada)
+        // En todos los demás casos (incluido reverse), logos visibles
+        const videoSrcCheck = (step.src || '').toLowerCase();
+        const isTitleForward = videoSrcCheck.includes('title') && !videoSrcCheck.includes('reverse');
+        if (isTitleForward) {
+          // Se ocultarán con fundido cuando empiece el vídeo (en beginHoldAndPlay)
+          // No tocar aquí para no parpadear — beginHoldAndPlay lo gestiona
+        } else {
+          // Cualquier transición que no sea salida de portada: logos siempre visibles
+          setCornerLogos(true);
+        }
       } else {
         // Cualquier otra escena (3:4, 9:16, 16:9): logos siempre visibles
         setCornerLogos(true);
