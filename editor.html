@@ -2587,7 +2587,7 @@
       });
     }
 
-    function selectSlotForCalib(slotId) {
+    function selectSlotForCalib(slotId, shouldBroadcastStep = true) {
       activeCalibSlotId = slotId;
       const slot = slots.find(s => s.id === slotId) || slots[0];
       if (!slot) return;
@@ -2604,20 +2604,22 @@
         titleEl.textContent = `Calibrador: ${slot.name} (${slot.format})`;
       }
 
-      // Sync timeline: find the first step that matches this slotId
-      const stepIdx = currentTimeline.findIndex(s => s.type === 'slide' && s.slotId === slotId);
-      if (stepIdx >= 0) {
-        currentStep = stepIdx;
-        try {
-          localStorage.setItem('dm_current_step_' + activeDeckId, stepIdx);
-          localStorage.setItem('dm_stage_set_step', JSON.stringify({ step: stepIdx, deckId: activeDeckId, time: Date.now() }));
-        } catch (e) { }
-        updateStageLink();
-        const stepPayload = { type: 'SET_STEP', step: stepIdx, deckId: activeDeckId };
-        bus.postMessage(stepPayload);
-        postToStageIframe(stepPayload);
-        if (window.DMCloud && DMCloud.isConfigured()) {
-          DMCloud.broadcastLiveCommand(stepPayload);
+      // Sync timeline: find the first step that matches this slotId ONLY if explicitly requested
+      if (shouldBroadcastStep) {
+        const stepIdx = currentTimeline.findIndex(s => s.type === 'slide' && s.slotId === slotId);
+        if (stepIdx >= 0) {
+          currentStep = stepIdx;
+          try {
+            localStorage.setItem('dm_current_step_' + activeDeckId, stepIdx);
+            localStorage.setItem('dm_stage_set_step', JSON.stringify({ step: stepIdx, deckId: activeDeckId, time: Date.now() }));
+          } catch (e) { }
+          updateStageLink();
+          const stepPayload = { type: 'SET_STEP', step: stepIdx, deckId: activeDeckId };
+          bus.postMessage(stepPayload);
+          postToStageIframe(stepPayload);
+          if (window.DMCloud && DMCloud.isConfigured()) {
+            DMCloud.broadcastLiveCommand(stepPayload);
+          }
         }
       }
       if (slot.calib) {
@@ -2975,7 +2977,7 @@
 
       const step = currentTimeline[stepIndex];
       if (step && step.type === 'slide' && step.slotId) {
-        selectSlotForCalib(step.slotId);
+        selectSlotForCalib(step.slotId, false);
       }
 
       const stepPayload = { type: 'SET_STEP', step: stepIndex, deckId: activeDeckId };
@@ -3035,16 +3037,16 @@
       if (step.type === 'slide' && step.slotId) {
         targetSlotId = step.slotId;
       } else {
-        // Search backwards from current step for the nearest slide
-        for (let i = currentStep - 1; i >= 0; i--) {
+        // En pasos de vídeo de transición, buscar hacia adelante la diapositiva entrante
+        for (let i = currentStep + 1; i < currentTimeline.length; i++) {
           if (currentTimeline[i].type === 'slide' && currentTimeline[i].slotId) {
             targetSlotId = currentTimeline[i].slotId;
             break;
           }
         }
-        // If not found, search forward
+        // Si no se encuentra hacia adelante, buscar hacia atrás
         if (!targetSlotId) {
-          for (let i = currentStep + 1; i < currentTimeline.length; i++) {
+          for (let i = currentStep - 1; i >= 0; i--) {
             if (currentTimeline[i].type === 'slide' && currentTimeline[i].slotId) {
               targetSlotId = currentTimeline[i].slotId;
               break;
@@ -3054,7 +3056,7 @@
       }
 
       if (targetSlotId) {
-        selectSlotForCalib(targetSlotId);
+        selectSlotForCalib(targetSlotId, false);
       }
     }
 
@@ -3502,7 +3504,7 @@
 
       renderSlotList();
       renderStepGrid();
-      if (activeCalibSlotId) selectSlotForCalib(activeCalibSlotId);
+      if (activeCalibSlotId) selectSlotForCalib(activeCalibSlotId, false);
       updateStepButtons();
       updateStageLink();
       renderPreview();
@@ -3815,7 +3817,7 @@
     updateStageLink();
     renderSlotList();
     renderStepGrid();
-    selectSlotForCalib(activeCalibSlotId);
+    selectSlotForCalib(activeCalibSlotId, false);
     updateStepButtons();
   </script>
 </body>
