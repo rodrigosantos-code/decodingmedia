@@ -2622,73 +2622,101 @@
       });
     }
 
+    // ─── SYNC CENTRAL: garantiza que Timeline, Escenas, Calibrador y Preview estén siempre alineados ───
+    function syncEditorUI() {
+      // 1. Actualizar highlight de la timeline según currentStep
+      document.querySelectorAll('.tl-node, .tl-trans').forEach(el => {
+        const idx = parseInt(el.getAttribute('data-step'), 10);
+        el.classList.toggle('active', idx === currentStep);
+      });
+
+      // 2. Actualizar texto de fase
+      const activeStepObj = currentTimeline[currentStep];
+      if (activeStepObj && currentPhaseLabel) {
+        currentPhaseLabel.textContent = activeStepObj.name || ('Paso ' + (currentStep + 1));
+      }
+
+      // 3. Sincronizar activeCalibSlotId con el step actual
+      if (activeStepObj && activeStepObj.slotId) {
+        activeCalibSlotId = activeStepObj.slotId;
+      }
+
+      // 4. Actualizar highlight de la lista de escenas
+      document.querySelectorAll('.slot-item').forEach(el => {
+        el.classList.toggle('active-calib', el.getAttribute('data-slot-id') === activeCalibSlotId);
+      });
+
+      // 5. Actualizar calibrador
+      const slot = slots.find(s => s.id === activeCalibSlotId) || slots[0];
+      if (slot) {
+        const indicator = document.getElementById('calib-format-indicator');
+        if (indicator) {
+          const fmtText = { '3:4': '3:4 MÓVIL', '9:16': '9:16 MÓVIL', '16:9': '16:9 ESCENARIO', 'title': 'TITLE' };
+          indicator.textContent = fmtText[slot.format] || slot.format;
+          indicator.className = `slot-format-tag ${getFormatTagClass(slot.format)}`;
+        }
+        const titleEl = document.getElementById('calib-card-title');
+        if (titleEl) titleEl.textContent = `Calibrador: ${slot.name} (${slot.format})`;
+        configureSliderRanges(slot.format);
+        if (slot.calib) {
+          const calibPayload = { type: 'SLOT_CALIB_UPDATE', slotId: slot.id, format: slot.format, calib: slot.calib };
+          postToStageIframe(calibPayload);
+          if (liveMode) {
+            bus.postMessage(calibPayload);
+            try { localStorage.setItem('dm_slot_calib_sync', JSON.stringify({ slotId: slot.id, format: slot.format, calib: slot.calib, time: Date.now() })); } catch(e) {}
+          }
+        }
+      }
+
+      // 6. Actualizar preview
+      renderPreview();
+
+      // 7. Botones Anterior/Siguiente
+      updateStepButtons();
+
+      // 8. Auto-scroll en la timeline
+      requestAnimationFrame(() => {
+        const container = document.getElementById('dynamic-step-grid');
+        if (!container) return;
+        const active = container.querySelector('.tl-node.active, .tl-trans.active');
+        if (active) {
+          const scrollTarget = active.offsetLeft - container.clientWidth / 2 + active.offsetWidth / 2;
+          container.scrollTo({ left: scrollTarget, behavior: 'smooth' });
+        }
+      });
+    }
+
     function selectSlotForCalib(slotId, shouldBroadcastStep = true) {
       activeCalibSlotId = slotId;
       const slot = slots.find(s => s.id === slotId) || slots[0];
       if (!slot) return;
 
-      const indicator = document.getElementById('calib-format-indicator');
-      if (indicator) {
-        const fmtText = { '3:4': '3:4 MÓVIL', '9:16': '9:16 MÓVIL', '16:9': '16:9 ESCENARIO', 'title': 'TITLE' };
-        indicator.textContent = fmtText[slot.format] || slot.format;
-        indicator.className = `slot-format-tag ${getFormatTagClass(slot.format)}`;
+      // Actualizar currentStep al primer paso que corresponde a esta escena
+      const stepIdx = currentTimeline.findIndex(s => s.type === 'slide' && s.slotId === slotId);
+      if (stepIdx >= 0) {
+        currentStep = stepIdx;
       }
 
-      const titleEl = document.getElementById('calib-card-title');
-      if (titleEl) {
-        titleEl.textContent = `Calibrador: ${slot.name} (${slot.format})`;
-      }
+      // Sincronizar UI local siempre
+      syncEditorUI();
 
-      // Sync timeline: find the first step that matches this slotId ONLY if explicitly requested AND live mode is on
-      if (shouldBroadcastStep && liveMode) {
-        const stepIdx = currentTimeline.findIndex(s => s.type === 'slide' && s.slotId === slotId);
-        if (stepIdx >= 0) {
-          currentStep = stepIdx;
-          try {
-            localStorage.setItem('dm_current_step_' + activeDeckId, stepIdx);
-            localStorage.setItem('dm_stage_set_step', JSON.stringify({ step: stepIdx, deckId: activeDeckId, time: Date.now() }));
-          } catch (e) { }
-          updateStageLink();
-          const stepPayload = { type: 'SET_STEP', step: stepIdx, deckId: activeDeckId };
-          bus.postMessage(stepPayload);
-          postToStageIframe(stepPayload);
-          if (window.DMCloud && DMCloud.isConfigured()) {
-            DMCloud.broadcastLiveCommand(stepPayload);
-          }
-        }
-      }
-      if (slot.calib) {
-        const calibPayload = {
-          type: 'SLOT_CALIB_UPDATE',
-          slotId: slot.id,
-          format: slot.format,
-          calib: slot.calib
-        };
-        // Preview del editor: siempre
-        postToStageIframe(calibPayload);
+      // Enviar al escenario/preview
+      if (shouldBroadcastStep) {
+        const stepPayload = { type: 'SET_STEP', step: currentStep, deckId: activeDeckId };
+        // Preview: siempre
+        postToStageIframe(stepPayload);
         // Escenario real: solo en directo
         if (liveMode) {
-          bus.postMessage(calibPayload);
+          currentStep = stepIdx >= 0 ? stepIdx : currentStep;
           try {
-            localStorage.setItem('dm_slot_calib_sync', JSON.stringify({
-              slotId: slot.id,
-              format: slot.format,
-              calib: slot.calib,
-              time: Date.now()
-            }));
-          } catch (e) { }
+            localStorage.setItem('dm_current_step_' + activeDeckId, currentStep);
+            localStorage.setItem('dm_stage_set_step', JSON.stringify({ step: currentStep, deckId: activeDeckId, time: Date.now() }));
+          } catch(e) {}
+          updateStageLink();
+          bus.postMessage(stepPayload);
+          if (window.DMCloud && DMCloud.isConfigured()) DMCloud.broadcastLiveCommand(stepPayload);
         }
       }
-      updateStepButtons();
-
-      // Sync scene list active state
-      document.querySelectorAll('.slot-item').forEach(el => {
-        el.classList.toggle('active-calib', el.getAttribute('data-slot-id') === slotId);
-      });
-
-      renderCalibSlotSelector();
-      configureSliderRanges(slot.format);
-      renderPreview();
     }
 
     function updateSlotName(id, val) {
@@ -3040,40 +3068,30 @@
 
     function sendStep(stepIndex) {
       currentStep = stepIndex;
-      updateStepButtons();
-      try {
-        if (typeof activeDeckId !== 'undefined' && activeDeckId) {
-          localStorage.setItem('dm_current_step_' + activeDeckId, String(stepIndex));
-        }
-      } catch (e) {}
+
+      // Sincronizar toda la UI local siempre (independientemente del modo)
+      syncEditorUI();
+
       updateStageLink();
 
       const step = currentTimeline[stepIndex];
-      if (step && step.type === 'slide' && step.slotId) {
-        selectSlotForCalib(step.slotId, false);
-      }
-
       const stepPayload = { type: 'SET_STEP', step: stepIndex, deckId: activeDeckId };
 
-      // Preview del editor: siempre actualizar
+      // Preview del editor: siempre
       postToStageIframe(stepPayload);
 
       if (!liveMode) {
-        // Modo libre: solo preview, no escenario real
         showToast(`[Libre] Vista: ${step ? step.name : 'Paso ' + (stepIndex + 1)}`);
         return;
       }
 
       // En directo: enviar al escenario real
-      bus.postMessage(stepPayload);
       try {
+        localStorage.setItem('dm_current_step_' + activeDeckId, String(stepIndex));
         localStorage.setItem('dm_stage_set_step', JSON.stringify({ step: stepIndex, deckId: activeDeckId, time: Date.now() }));
-      } catch (e) { }
-
-      if (window.DMCloud && DMCloud.isConfigured()) {
-        DMCloud.broadcastLiveCommand(stepPayload);
-      }
-
+      } catch(e) {}
+      bus.postMessage(stepPayload);
+      if (window.DMCloud && DMCloud.isConfigured()) DMCloud.broadcastLiveCommand(stepPayload);
       showToast(`Paso ${stepIndex + 1}: ${step ? step.name : ''}`);
     }
 
