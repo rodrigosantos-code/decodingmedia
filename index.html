@@ -697,7 +697,7 @@
               <div class="card-top">
                 <div>
                   <h2 class="card-name">${escapeHtml(deck.name)}</h2>
-                  <span class="card-id-tag">${escapeHtml(deck.id)}</span>
+                  ${isDefault ? '<span class="card-id-tag" style="color: #f472b6; background: rgba(236,72,153,0.12); border-color: rgba(236,72,153,0.25);">Principal</span>' : ''}
                 </div>
                 <div style="display: flex; gap: 4px; align-items: center;">
                   <button class="btn-text-action" onclick="openRenameModal('${deck.id}', '${escapeHtml(deck.name)}')" title="Renombrar">Renombrar</button>

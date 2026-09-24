@@ -641,14 +641,7 @@
     }
 
     .slider-val-tag {
-      font-family: ui-monospace, SFMono-Regular, monospace;
-      color: #f472b6;
-      font-size: 10px;
-      font-weight: 700;
-      background: rgba(236, 72, 153, 0.12);
-      border: 1px solid rgba(236, 72, 153, 0.25);
-      padding: 2px 8px;
-      border-radius: 9999px;
+      display: none;
     }
 
     .slider-control-row {
@@ -1126,9 +1119,6 @@
       </a>
       <div class="brand-title">
         <span class="brand-logo-text">Decoding Media</span>
-        <span class="brand-sticker-badge">el nuevo branding</span>
-        <span class="event-info-sticker">PRODUCER ROOM</span>
-        <span class="event-info-sticker" style="display: none;" id="venue-tag">13 OCT · LA CASA ENCENDIDA</span>
       </div>
     </div>
 
@@ -1200,12 +1190,6 @@
               Añadir Escena
             </button>
           </div>
-        </div>
-
-        <p style="font-size: 11px; color: #94a3b8; margin-bottom: 8px; line-height: 1.3;">
-          Configura cada escena en <strong>3:4</strong>, <strong>9:16</strong>, <strong>16:9</strong> o <strong>Title</strong>. Intercala vídeos de transición automáticamente.
-        </p>
-
         <!-- Lista dinámica de diapositivas con miniatura de la 1ª diapo y conectores de transición -->
         <div class="slot-list" id="slot-list-container">
           <!-- Renderizado dinámicamente -->
@@ -1246,14 +1230,11 @@
         </div>
 
         <!-- Previsualización: iframe directo de index.html a resolución nativa escalado -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <span style="font-size: 10px; text-transform: uppercase; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 10.5px; text-transform: uppercase; font-weight: 700; color: #8e95a5; letter-spacing: 0.5px;">
             Previsualización (1:1)
           </span>
-          <div style="display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; color: #fff;">
-            <span class="live-blink-dot"></span>
-            <span id="preview-phase-text" style="color: #f472b6;">ESCENARIO EN VIVO</span>
-          </div>
+          <span id="preview-phase-text" style="display: none;"></span>
         </div>
 
         <div class="preview-box" id="preview-box" style="cursor: pointer;" title="Haz clic para avanzar al siguiente paso">
@@ -1783,14 +1764,14 @@
       // 6. 9:16 <-> 3:4
       if (fromFmt === '9:16' && toFmt === '3:4') {
         return {
-          src: 'Transitions/9x16_to_3x4.mp4',
+          src: 'Transitions/9x16_to_3x4.mp4?v=20260924_1256',
           name: 'Transición 9:16 ➔ 3:4',
           shortName: 'Video ➔ 3:4'
         };
       }
       if (fromFmt === '3:4' && toFmt === '9:16') {
         return {
-          src: 'Transitions/9x16_to_3x4_reverse.mp4',
+          src: 'Transitions/9x16_to_3x4_reverse.mp4?v=20260924_1256',
           name: 'Transición 3:4 ➔ 9:16 (Inversa)',
           shortName: 'Video ➔ 9:16'
         };
@@ -2227,25 +2208,19 @@
           <div class="slot-header">
             <div class="slot-title-area">
               <div class="slot-num-badge">#${i + 1}</div>
-              <span class="slot-format-tag ${formatTagClass}">
-                ${s.format === 'title' ? 'Title' : s.format} ${s.format === '3:4' ? 'Móvil' : (s.format === '9:16' ? 'Móvil' : (s.format === '16:9' ? 'Escenario' : (s.format === 'title' ? 'Portada' : '')))}
-              </span>
+              <button type="button" class="slot-format-tag ${formatTagClass}" onclick="event.stopPropagation(); toggleSlotFormat('${s.id}')" title="Clic para alternar formato (3:4 / 9:16 / 16:9 / Title)" style="cursor: pointer; border: none;">
+                ${s.format === 'title' ? 'Title' : s.format}
+              </button>
               <input class="slot-name-input" value="${escapeHtml(s.name)}" onchange="updateSlotName('${s.id}', this.value)" title="Clic para editar nombre" />
             </div>
             <div class="slot-actions">
-              <button class="btn-icon-mini" onclick="toggleSlotFormat('${s.id}')" title="Cambiar formato (3:4 / 9:16 / 16:9 / Title)">
-                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4"/></svg>
-              </button>
-              <button class="btn-icon-mini ${isActiveCalib ? 'btn-active-calib' : ''}" onclick="selectSlotForCalib('${s.id}')" title="Calibrar esta escena">
-                <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="3" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="3" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="21" y2="12"/></svg>
-              </button>
-              <button class="btn-icon-mini" onclick="moveSlot('${s.id}', -1)" title="Subir orden" ${i === 0 ? 'disabled style="opacity:0.3;cursor:default;"' : ''}>
+              <button class="btn-icon-mini" onclick="event.stopPropagation(); moveSlot('${s.id}', -1)" title="Subir orden" ${i === 0 ? 'disabled style="opacity:0.25;cursor:default;"' : ''}>
                 <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
               </button>
-              <button class="btn-icon-mini" onclick="moveSlot('${s.id}', 1)" title="Bajar orden" ${i === slots.length - 1 ? 'disabled style="opacity:0.3;cursor:default;"' : ''}>
+              <button class="btn-icon-mini" onclick="event.stopPropagation(); moveSlot('${s.id}', 1)" title="Bajar orden" ${i === slots.length - 1 ? 'disabled style="opacity:0.25;cursor:default;"' : ''}>
                 <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
-              <button class="btn-icon-mini btn-icon-danger" onclick="deleteSlot('${s.id}')" title="Eliminar escena">
+              <button class="btn-icon-mini btn-icon-danger" onclick="event.stopPropagation(); deleteSlot('${s.id}')" title="Eliminar escena">
                 <svg class="icon-svg" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
