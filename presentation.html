@@ -2481,12 +2481,13 @@
     // =========================================================================
     // AUDIO DE TRANSICIONES (transition.mp3) & SILENCIAMIENTO DE VÍDEOS
     // =========================================================================
+    const ENABLE_TRANSITION_SOUND = false; // Silenciado de momento
     const transitionAudio = new Audio('transition.mp3');
-    transitionAudio.preload = 'auto';
+    transitionAudio.preload = 'none';
 
     let audioUnlocked = false;
     function unlockAudio() {
-      if (audioUnlocked) return;
+      if (audioUnlocked || !ENABLE_TRANSITION_SOUND) return;
       try {
         transitionAudio.volume = 0.01;
         const p = transitionAudio.play();
@@ -2504,6 +2505,7 @@
     window.addEventListener('keydown', unlockAudio, { once: true });
 
     function playTransitionSound() {
+      if (!ENABLE_TRANSITION_SOUND) return;
       try {
         if (!transitionAudio) return;
         transitionAudio.currentTime = 0;
