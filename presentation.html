@@ -140,21 +140,30 @@
     /* Logos en esquinas superiores (Izquierda: Making Science, Derecha: Decoding Media) */
     .stage-corner-logo {
       position: absolute;
-      z-index: 30;
+      z-index: 35;
       pointer-events: none;
       display: flex;
       align-items: center;
       filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.6));
       opacity: 1;
       visibility: visible;
+      /* Sin transition por defecto: evita parpados accidentales */
+    }
+
+    /* Fundido activado sólo durante transiciones title (se añade por JS) */
+    .stage-corner-logo.logo-animating {
       transition: opacity 0.5s ease-in-out, visibility 0s linear 0s;
     }
 
-    /* Ocultar logos siempre que esté el stage title o cualquier transición que involucre a title con fundido de 0,5s */
+    /* Ocultar logos: sólo en portada title y transiciones title→X */
     #stage-container.hide-corner-logos .stage-corner-logo {
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
+    }
+
+    /* Fundido de ocultación con transition activo */
+    #stage-container.hide-corner-logos .stage-corner-logo.logo-animating {
       transition: opacity 0.5s ease-in-out, visibility 0s linear 0.5s;
     }
 
@@ -1651,13 +1660,6 @@
         </div>
       </header>
 
-    <!-- Logos de Esquinas Superiores (Izquierda: Making Science, Derecha: Decoding Media) -->
-    <div class="stage-corner-logo stage-corner-logo-left">
-      <img src="logo_izquierda.png" alt="Making Science" />
-    </div>
-    <div class="stage-corner-logo stage-corner-logo-right">
-      <img src="logo_derecha.png" alt="Decoding Media - El Nuevo Branding" />
-    </div>
 
     <!-- PASO 1: Móvil con Presentación (Aparece inmediatamente dentro del marco) -->
     <div id="layer-step1" class="stage-layer active">
@@ -1825,6 +1827,13 @@
         </div>
       </div>
     </footer>
+    <!-- Logos de Esquinas: al final del DOM para quedar por encima de todas las capas sin conflicto de z-index -->
+    <div class="stage-corner-logo stage-corner-logo-left">
+      <img src="logo_izquierda.png" alt="Making Science" />
+    </div>
+    <div class="stage-corner-logo stage-corner-logo-right">
+      <img src="logo_derecha.png" alt="Decoding Media - El Nuevo Branding" />
+    </div>
 
   </div>
   </div>
@@ -2911,9 +2920,19 @@
     }
 
     /* ---- Utilidad de logos de esquina ---- */
-    function setCornerLogos(visible) {
+    function setCornerLogos(visible, animate) {
       const sc = document.getElementById('stage-container');
       if (!sc) return;
+      const logos = sc.querySelectorAll('.stage-corner-logo');
+      if (animate) {
+        // Activar transition ANTES del cambio de clase
+        logos.forEach(el => el.classList.add('logo-animating'));
+        // Quitar la clase animating tras la transición para no interferir con futuros cambios
+        setTimeout(() => logos.forEach(el => el.classList.remove('logo-animating')), 600);
+      } else {
+        // Cambio instantáneo: sin transition
+        logos.forEach(el => el.classList.remove('logo-animating'));
+      }
       if (visible) {
         sc.classList.remove('hide-corner-logos');
       } else {
@@ -2938,23 +2957,20 @@
 
       // Logos: visibles siempre excepto en portada title y durante transición title → X
       if (step.format === 'title') {
-        // Escena portada: logos ocultos
-        setCornerLogos(false);
+        // Escena portada: ocultar CON fundido (animate=true)
+        setCornerLogos(false, true);
       } else if (step.type === 'video') {
-        // Para vídeo: ocultar SOLO si es una transición title → X (salida de portada)
-        // En todos los demás casos (incluido reverse), logos visibles
         const videoSrcCheck = (step.src || '').toLowerCase();
         const isTitleForward = videoSrcCheck.includes('title') && !videoSrcCheck.includes('reverse');
         if (isTitleForward) {
-          // Se ocultarán con fundido cuando empiece el vídeo (en beginHoldAndPlay)
-          // No tocar aquí para no parpadear — beginHoldAndPlay lo gestiona
+          // Se ocultarán con fundido en beginHoldAndPlay
         } else {
-          // Cualquier transición que no sea salida de portada: logos siempre visibles
-          setCornerLogos(true);
+          // Transición normal: logos visibles al instante (sin transition)
+          setCornerLogos(true, false);
         }
       } else {
-        // Cualquier otra escena (3:4, 9:16, 16:9): logos siempre visibles
-        setCornerLogos(true);
+        // Cualquier escena (3:4, 9:16, 16:9): logos visibles al instante
+        setCornerLogos(true, false);
       }
 
       // Actualizar textos superiores del HUD si existen
@@ -3173,12 +3189,11 @@
             targetLayer.classList.add('active');
           }
 
-          // Logos: al iniciar una transición title → X (salida de portada), ocultar logos ahora
+          // Logos: al iniciar una transición title → X (salida de portada), ocultar CON fundido
           if (isTitleForwardVideoSrc(rawVideoSrc)) {
-            setCornerLogos(false);
+            setCornerLogos(false, true);
           }
-          // En transición X → title (reverse), los logos ya están visibles y se ocultarán al llegar a la portada
-          // No hacer nada aquí para la reverse; los logos se ocultarán cuando updateStepUI llegue a format=title
+          // En transición X → title (reverse), los logos se ocultarán al llegar a la portada con animate=true
 
           // Retirar limpiamente las capas anteriores ahora que el vídeo está visible y congelado en fotograma 0
           if (previousLayers.length > 0) {
