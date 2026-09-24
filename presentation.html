@@ -1552,6 +1552,17 @@
 </head>
 <body tabindex="-1" style="outline: none;">
 
+  <!-- Overlay de arranque: negro que se desvanece en 1s al cargar -->
+  <div id="startup-overlay" style="
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 1s ease-in-out;
+    pointer-events: none;
+  "></div>
+
   <!-- Botón Desplegable Flotante Lateral (Izquierda) -->
   <button id="drawer-toggle-btn" class="drawer-toggle-btn" onclick="toggleScenesDrawer()" title="Ver Escenas (E)">
     <div class="drawer-toggle-inner">
@@ -4272,6 +4283,24 @@
     try {
       bus.postMessage({ type: 'REQUEST_CURRENT_STATE', deckId: stageDeckId });
     } catch(e) {}
+  </script>
+
+  <script>
+    // Fade-in de arranque: desvanece el overlay negro en 1s al cargar
+    (function() {
+      const overlay = document.getElementById('startup-overlay');
+      if (overlay) {
+        // Pequeño delay para asegurar que el primer frame esté pintado
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+              overlay.remove();
+            }, 1100);
+          });
+        });
+      }
+    })();
   </script>
 </body>
 </html>
