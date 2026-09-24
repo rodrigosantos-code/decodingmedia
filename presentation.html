@@ -1598,7 +1598,7 @@
     <div class="stage-ambient-glow" id="stage-ambient-glow"></div>
 
     <!-- Escenario Principal 16:9 -->
-    <div id="stage-container" class="hide-corner-logos">
+    <div id="stage-container">
 
       <!-- Barra Superior de Emisión (Broadcast Topbar) -->
       <header id="stage-top-bar" class="stage-hud-bar stage-hud-top">
@@ -2903,19 +2903,42 @@
       return false;
     }
 
+    /* ---- Utilidad de logos de esquina ---- */
+    function setCornerLogos(visible) {
+      const sc = document.getElementById('stage-container');
+      if (!sc) return;
+      if (visible) {
+        sc.classList.remove('hide-corner-logos');
+      } else {
+        sc.classList.add('hide-corner-logos');
+      }
+    }
+
+    function isTitleForwardVideoSrc(src) {
+      const s = (src || '').toLowerCase();
+      return s.includes('title') && !s.includes('reverse');
+    }
+
+    function isTitleReverseVideoSrc(src) {
+      const s = (src || '').toLowerCase();
+      return s.includes('title') && s.includes('reverse');
+    }
+
     function updateStepUI() {
       if (!STEPS || STEPS.length === 0) return;
       if (currentStepIndex >= STEPS.length) currentStepIndex = 0;
       const step = STEPS[currentStepIndex];
 
-      // Ocultar los logos en esquina si estamos en stage title o cualquier transición que involucre a title
-      const stageContainer = document.getElementById('stage-container');
-      if (stageContainer) {
-        if (isTitleStepOrTransition(step)) {
-          stageContainer.classList.add('hide-corner-logos');
-        } else {
-          stageContainer.classList.remove('hide-corner-logos');
-        }
+      // Logos: visibles siempre excepto en portada title y durante transiciones que involucran title
+      if (step.format === 'title') {
+        // Escena portada: logos ocultos
+        setCornerLogos(false);
+      } else if (step.type === 'video') {
+        // Los logos se manejarán dentro de beginHoldAndPlay / triggerEndHold
+        // No cambiar aquí para no interferir con la animación
+      } else {
+        // Cualquier otra escena (3:4, 9:16, 16:9): logos siempre visibles
+        setCornerLogos(true);
       }
 
       // Actualizar textos superiores del HUD si existen
@@ -3133,6 +3156,13 @@
           if (targetLayer) {
             targetLayer.classList.add('active');
           }
+
+          // Logos: al iniciar una transición title → X (salida de portada), ocultar logos ahora
+          if (isTitleForwardVideoSrc(rawVideoSrc)) {
+            setCornerLogos(false);
+          }
+          // En transición X → title (reverse), los logos ya están visibles y se ocultarán al llegar a la portada
+          // No hacer nada aquí para la reverse; los logos se ocultarán cuando updateStepUI llegue a format=title
 
           // Retirar limpiamente las capas anteriores ahora que el vídeo está visible y congelado en fotograma 0
           if (previousLayers.length > 0) {
@@ -3387,6 +3417,16 @@
       }
       try { videoEl.pause(); } catch(e) {}
       if (videoEndTimeout) clearTimeout(videoEndTimeout);
+
+      // Logos al final del vídeo:
+      // Si es transición reverse de title (X → title), los logos SALEN MOSTRÁNDOSE
+      // (aparecen al llegar a la portada — en realidad se ocultan porque llega una slide title)
+      // Si es transición title → X (forward), los logos ya se ocultaron al inicio; no hacer nada.
+      // Nota: en ambos casos updateStepUI tomará la decisión correcta al avanzar.
+      const currentVideoStep = STEPS[currentStepIndex];
+      const currentVideoSrc = currentVideoStep ? (currentVideoStep.src || '') : '';
+      const isReverseTitle = isTitleReverseVideoSrc(currentVideoSrc);
+
       // Pausa de 0.5 segundos en el último fotograma antes de entrar a la siguiente diapositiva
       videoEndTimeout = setTimeout(() => {
         const step = STEPS[currentStepIndex];
