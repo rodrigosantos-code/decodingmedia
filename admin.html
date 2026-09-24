@@ -9,93 +9,137 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #09090f; --surface: #111118; --surface2: #18181f;
-      --border: rgba(255,255,255,0.07);
+      --bg: #09090f; --surface: #111118; --surface2: #18181f; --surface3: #1e1e28;
+      --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
       --accent: #e91e8c; --accent2: #7c3aed;
-      --text: #f1f5f9; --muted: #64748b;
+      --text: #f1f5f9; --muted: #64748b; --muted2: #94a3b8;
       --success: #22c55e; --warn: #f59e0b; --danger: #ef4444;
     }
     body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-    .header {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(9,9,15,0.92); backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 16px;
-      padding: 0 28px; height: 60px;
-    }
-    .header-logo {
-      font-size: 15px; font-weight: 800; letter-spacing: 0.5px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .header-badge {
-      font-size: 10px; font-weight: 700; letter-spacing: 1px;
-      background: rgba(233,30,140,0.15); color: var(--accent);
-      border: 1px solid rgba(233,30,140,0.3);
-      padding: 3px 8px; border-radius: 100px; text-transform: uppercase;
-    }
+
+    /* ── Header ── */
+    .header { position: sticky; top: 0; z-index: 100; background: rgba(9,9,15,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; padding: 0 28px; height: 60px; }
+    .header-logo { font-size: 15px; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-badge { font-size: 10px; font-weight: 700; letter-spacing: 1px; background: rgba(233,30,140,0.15); color: var(--accent); border: 1px solid rgba(233,30,140,0.3); padding: 3px 8px; border-radius: 100px; text-transform: uppercase; }
     .header-spacer { flex: 1; }
     .conn-badge { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--muted); }
     .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); transition: background 0.3s; }
     .conn-dot.ok { background: var(--success); box-shadow: 0 0 6px var(--success); }
     .conn-dot.err { background: var(--danger); }
     .conn-dot.warn { background: var(--warn); }
-    .tabs { display: flex; gap: 4px; padding: 20px 28px 0; }
-    .tab {
-      font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
-      padding: 8px 18px; border-radius: 8px 8px 0 0;
-      border: 1px solid var(--border); border-bottom: none;
-      background: var(--surface2); color: var(--muted);
-      cursor: pointer; transition: all 0.2s; text-transform: uppercase;
-    }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 4px; padding: 20px 28px 0; flex-wrap: wrap; }
+    .tab { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; padding: 8px 16px; border-radius: 8px 8px 0 0; border: 1px solid var(--border); border-bottom: none; background: var(--surface2); color: var(--muted); cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
     .tab:hover { color: var(--text); }
     .tab.active { background: var(--surface); color: var(--text); border-color: var(--border); }
+
+    /* ── Panels ── */
     .panel { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 0 12px 12px 12px; margin: 0 28px 40px; padding: 28px; }
     .panel.active { display: block; }
     .section-title { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
     .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ── Asset Cards ── */
     .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
-    .asset-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: border-color 0.2s, transform 0.2s; position: relative; }
+    .asset-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: border-color 0.2s; position: relative; }
     .asset-card:hover { border-color: rgba(233,30,140,0.4); }
-    .asset-card.drag-over { border-color: var(--accent) !important; transform: scale(1.02); box-shadow: 0 0 20px rgba(233,30,140,0.2); }
+    .asset-card.drag-over { border-color: var(--accent) !important; box-shadow: 0 0 20px rgba(233,30,140,0.2); }
     .asset-card.overridden { border-color: rgba(124,58,237,0.5); }
     .asset-preview { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    .asset-preview.r34 { aspect-ratio: 3/4; }
-    .asset-preview.r916 { aspect-ratio: 9/16; }
-    .asset-preview.r1 { aspect-ratio: 1/1; }
-    .asset-preview img { width: 100%; height: 100%; object-fit: cover; }
-    .asset-preview video { width: 100%; height: 100%; object-fit: cover; }
-    .placeholder-icon { font-size: 32px; color: var(--muted); }
-    .override-tag { position: absolute; top: 6px; right: 6px; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; padding: 2px 7px; border-radius: 100px; background: rgba(124,58,237,0.85); color: #fff; }
+    .asset-preview.r34 { aspect-ratio: 3/4; } .asset-preview.r916 { aspect-ratio: 9/16; } .asset-preview.r1 { aspect-ratio: 1/1; }
+    .asset-preview img, .asset-preview video { width: 100%; height: 100%; object-fit: cover; }
+    .override-tag { position: absolute; top: 6px; right: 6px; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 100px; background: rgba(124,58,237,0.85); color: #fff; }
     .asset-info { padding: 12px; }
-    .asset-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .asset-name { font-size: 12px; font-weight: 700; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .asset-sub { font-size: 10px; color: var(--muted); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .asset-actions { display: flex; gap: 6px; }
     .btn-upload { flex: 1; font-size: 11px; font-weight: 700; padding: 7px 10px; border-radius: 7px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; cursor: pointer; transition: opacity 0.2s; }
-    .btn-upload:hover { opacity: 0.85; }
-    .btn-upload:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn-restore { font-size: 11px; font-weight: 700; padding: 7px 10px; border-radius: 7px; background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; }
-    .btn-restore:hover { color: var(--text); background: rgba(255,255,255,0.1); }
-    .btn-restore:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-upload:hover { opacity: 0.85; } .btn-upload:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-sm { font-size: 11px; font-weight: 700; padding: 7px 10px; border-radius: 7px; background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; }
+    .btn-sm:hover { color: var(--text); background: rgba(255,255,255,0.1); } .btn-sm:disabled { opacity: 0.3; cursor: not-allowed; }
     .upload-progress { position: absolute; inset: 0; background: rgba(9,9,15,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
     .upload-progress.active { opacity: 1; pointer-events: all; }
-    .progress-label { font-size: 12px; font-weight: 700; color: var(--text); }
+    .progress-label { font-size: 12px; font-weight: 700; }
     .progress-bar-wrap { width: 80%; height: 4px; background: var(--border); border-radius: 100px; }
     .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 100px; width: 0%; transition: width 0.3s; }
+    .drag-hint { position: absolute; inset: 0; background: rgba(233,30,140,0.12); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--accent); opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+    .asset-card.drag-over .drag-hint { opacity: 1; }
+    .file-input-hidden { display: none; }
+    .info-bar { background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.2); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; font-size: 12px; color: var(--muted); }
+    .info-bar strong { color: var(--text); }
+
+    /* ── Alignment Panel ── */
+    .align-layout { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
+    .align-sidebar { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+    .form-group select, .form-group input[type="number"] { background: var(--surface3); border: 1px solid var(--border2); color: var(--text); border-radius: 7px; padding: 7px 10px; font-family: inherit; font-size: 12px; outline: none; }
+    .form-group select:focus, .form-group input[type="number"]:focus { border-color: var(--accent); }
+    .form-group input[type="range"] { width: 100%; accent-color: var(--accent); }
+    .val-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .align-main { display: flex; flex-direction: column; gap: 12px; }
+    .align-canvas-wrap { position: relative; width: 100%; aspect-ratio: 16/9; background: repeating-conic-gradient(#1a1a24 0% 25%, #13131a 0% 50%) 0 0/20px 20px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+    .align-canvas-wrap video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    /* The draggable box represents where the video window sits inside the frame */
+    .align-drag-box {
+      position: absolute;
+      border: 2px solid rgba(233,30,140,0.8);
+      box-shadow: 0 0 0 1px rgba(233,30,140,0.3) inset;
+      cursor: move; user-select: none;
+      background: rgba(233,30,140,0.05);
+    }
+    .align-drag-box .handle {
+      position: absolute; width: 14px; height: 14px;
+      background: var(--accent); border: 2px solid #fff; border-radius: 3px;
+    }
+    .handle-tl { top: -7px; left: -7px; cursor: nw-resize; }
+    .handle-tr { top: -7px; right: -7px; cursor: ne-resize; }
+    .handle-bl { bottom: -7px; left: -7px; cursor: sw-resize; }
+    .handle-br { bottom: -7px; right: -7px; cursor: se-resize; }
+    .handle-c  { top: 50%; left: 50%; transform: translate(-50%,-50%); cursor: move; border-radius: 50%; width: 18px; height: 18px; background: rgba(233,30,140,0.9); }
+    .align-frame-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    /* Timeline */
+    .timeline-bar { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+    .btn-play-pause { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #fff; border: none; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tl-scrubber { flex: 1; accent-color: var(--accent); cursor: pointer; }
+    .tl-time { font-size: 11px; font-weight: 700; color: var(--muted); white-space: nowrap; min-width: 70px; text-align: right; }
+    .btn-primary { font-size: 12px; font-weight: 700; padding: 9px 16px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; cursor: pointer; transition: opacity 0.2s; width: 100%; }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-danger { font-size: 12px; font-weight: 700; padding: 9px 16px; border-radius: 8px; background: rgba(239,68,68,0.12); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); cursor: pointer; transition: all 0.2s; width: 100%; }
+    .btn-danger:hover { background: rgba(239,68,68,0.2); }
+    .divider { height: 1px; background: var(--border); }
+
+    /* ── Presets Panel ── */
+    .presets-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .presets-header h2 { font-size: 14px; font-weight: 700; }
+    .btn-new-preset { font-size: 12px; font-weight: 700; padding: 8px 16px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; cursor: pointer; }
+    .presets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .preset-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 18px; position: relative; transition: border-color 0.2s; }
+    .preset-card:hover { border-color: var(--border2); }
+    .preset-card.active-preset { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(233,30,140,0.2); }
+    .preset-badge { position: absolute; top: 12px; right: 12px; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 100px; background: var(--accent); color: #fff; }
+    .preset-badge.default { background: rgba(124,58,237,0.8); }
+    .preset-name { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+    .preset-name-input { background: transparent; border: none; border-bottom: 1px dashed var(--border2); color: var(--text); font-family: inherit; font-size: 16px; font-weight: 800; outline: none; width: 100%; padding: 2px 0; }
+    .preset-name-input:focus { border-bottom-color: var(--accent); }
+    .preset-desc { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+    .preset-assets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .preset-asset-thumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border); }
+    .preset-actions { display: flex; gap: 8px; }
+    .btn-activate { flex: 1; font-size: 11px; font-weight: 700; padding: 8px; border-radius: 7px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; cursor: pointer; }
+    .btn-activate:disabled { opacity: 0.4; cursor: default; }
+    .btn-del-preset { font-size: 11px; font-weight: 700; padding: 8px 10px; border-radius: 7px; background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.25); cursor: pointer; }
+
+    /* ── Toast ── */
     #toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 32px rgba(0,0,0,0.5); transform: translateY(80px); opacity: 0; transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); z-index: 9999; pointer-events: none; }
     #toast.show { transform: translateY(0); opacity: 1; }
     #toast.ok { border-color: rgba(34,197,94,0.4); color: var(--success); }
     #toast.err { border-color: rgba(239,68,68,0.4); color: var(--danger); }
-    .drag-hint { position: absolute; inset: 0; background: rgba(233,30,140,0.12); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--accent); opacity: 0; pointer-events: none; transition: opacity 0.15s; }
-    .asset-card.drag-over .drag-hint { opacity: 1; }
-    .file-input-hidden { display: none; }
-    .storage-bar { background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.2); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 10px; }
-    .storage-bar strong { color: var(--text); }
-    .setup-note { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; font-size: 12px; color: var(--warn); line-height: 1.6; }
-    .setup-note code { font-family: monospace; background: rgba(255,255,255,0.08); padding: 2px 5px; border-radius: 4px; }
   </style>
 </head>
 <body>
+
   <div class="header">
     <span class="header-logo">DM Admin</span>
     <span class="header-badge">🔒 Panel Secreto</span>
@@ -107,30 +151,102 @@
   </div>
 
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('frames')">🖼 Frames Fijos</div>
-    <div class="tab" onclick="switchTab('transitions')">🎬 Transiciones</div>
-    <div class="tab" onclick="switchTab('logos')">🏷 Logos</div>
+    <div class="tab active"  onclick="switchTab('frames')">🖼 Frames</div>
+    <div class="tab"         onclick="switchTab('transitions')">🎬 Transiciones</div>
+    <div class="tab"         onclick="switchTab('logos')">🏷 Logos</div>
+    <div class="tab"         onclick="switchTab('align')">🎯 Alineación</div>
+    <div class="tab"         onclick="switchTab('presets')">📦 Presets</div>
   </div>
 
+  <!-- FRAMES -->
   <div class="panel active" id="panel-frames">
-    <div class="storage-bar">ℹ️ Arrastra una imagen encima del frame que quieres reemplazar, o haz clic en <strong>Subir</strong>. Los archivos se guardan en Supabase Storage.</div>
-    <div class="setup-note" id="setup-note" style="display:none">
-      ⚠️ Para usar esta función necesitas crear un bucket público en Supabase Storage llamado <code>dm_assets</code>. Ve a tu proyecto Supabase → Storage → New Bucket → nombre: <code>dm_assets</code> → Public.
-    </div>
+    <div class="info-bar">Arrastra una imagen sobre el frame o haz clic en <strong>Subir</strong>. Los archivos se guardan en Supabase Storage.</div>
     <div class="section-title">Marcos de pantalla</div>
     <div class="asset-grid" id="grid-frames"></div>
   </div>
 
+  <!-- TRANSITIONS -->
   <div class="panel" id="panel-transitions">
-    <div class="storage-bar">ℹ️ Arrastra un vídeo MP4 sobre la transición a actualizar. Asegúrate de que tenga el mismo formato que el original.</div>
-    <div class="section-title">Transiciones de vídeo (12 archivos)</div>
+    <div class="info-bar">Arrastra un vídeo MP4 sobre la transición a actualizar.</div>
+    <div class="section-title">Transiciones de vídeo · 12 archivos</div>
     <div class="asset-grid" id="grid-transitions"></div>
   </div>
 
+  <!-- LOGOS -->
   <div class="panel" id="panel-logos">
-    <div class="storage-bar">ℹ️ Los logos aparecen en las esquinas. Se muestran en todas las escenas excepto en <strong>Title</strong>.</div>
+    <div class="info-bar">Los logos aparecen en las esquinas de la presentación en todas las escenas excepto <strong>Title</strong>.</div>
     <div class="section-title">Logos corporativos</div>
     <div class="asset-grid" id="grid-logos"></div>
+  </div>
+
+  <!-- ALIGNMENT -->
+  <div class="panel" id="panel-align">
+    <div class="info-bar">Superpón el frame fijo sobre la transición para comprobar la alineación. Arrastra los <strong>manejadores rosados</strong> para posicionar la ventana de vídeo.</div>
+    <div class="align-layout">
+
+      <!-- Sidebar -->
+      <div class="align-sidebar">
+        <div class="form-group">
+          <label>Frame fijo</label>
+          <select id="align-frame-sel" onchange="initAlignmentPreview()">
+            <option value="frame_3x4">Marco 3:4 (Móvil)</option>
+            <option value="frame_16x9">Marco 16:9 (Escenario)</option>
+            <option value="frame_9x16">Marco 9:16 (Vertical)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Transición</label>
+          <select id="align-trans-sel" onchange="initAlignmentPreview()"></select>
+        </div>
+        <div class="form-group">
+          <label>Opacidad del frame (<span id="opacity-val">80</span>%)</label>
+          <input type="range" id="frame-opacity" min="0" max="100" value="80" oninput="setFrameOpacity(this.value)">
+        </div>
+        <div class="divider"></div>
+        <div class="section-title" style="margin-bottom:8px">Posición ventana de vídeo</div>
+        <div class="val-grid">
+          <div class="form-group"><label>Left %</label><input type="number" id="v-left"   step="0.01" onchange="applyInputsToBox()"></div>
+          <div class="form-group"><label>Top %</label><input type="number"  id="v-top"    step="0.01" onchange="applyInputsToBox()"></div>
+          <div class="form-group"><label>Width %</label><input type="number" id="v-width"  step="0.01" onchange="applyInputsToBox()"></div>
+          <div class="form-group"><label>Height %</label><input type="number" id="v-height" step="0.01" onchange="applyInputsToBox()"></div>
+          <div class="form-group"><label>Rot °</label><input type="number"   id="v-rot"    step="0.1"  onchange="applyInputsToBox()"></div>
+          <div class="form-group"><label>Zoom %</label><input type="number"  id="v-zoom"   step="1"    onchange="applyInputsToBox()"></div>
+        </div>
+        <div class="divider"></div>
+        <button class="btn-primary" onclick="applyAlignToCalib()">💾 Aplicar al sistema</button>
+        <button class="btn-sm"      onclick="resetAlignToDefaults()" style="margin-top:6px;width:100%">↺ Restaurar valores originales</button>
+      </div>
+
+      <!-- Preview + Timeline -->
+      <div class="align-main">
+        <div class="align-canvas-wrap" id="align-canvas">
+          <video id="align-video" muted loop playsinline></video>
+          <div class="align-drag-box" id="align-drag-box">
+            <div class="handle handle-tl" data-h="tl"></div>
+            <div class="handle handle-tr" data-h="tr"></div>
+            <div class="handle handle-bl" data-h="bl"></div>
+            <div class="handle handle-br" data-h="br"></div>
+            <div class="handle handle-c"  data-h="c"></div>
+          </div>
+          <img id="align-frame-img" class="align-frame-img" />
+        </div>
+        <div class="timeline-bar">
+          <button class="btn-play-pause" id="btn-align-play" onclick="toggleAlignPlay()">▶</button>
+          <input type="range" class="tl-scrubber" id="tl-scrubber" min="0" max="100" value="0" step="0.01" oninput="scrubVideo(this.value)">
+          <span class="tl-time" id="tl-time">0:00 / 0:00</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRESETS -->
+  <div class="panel" id="panel-presets">
+    <div class="presets-header">
+      <h2>Presets de presentación</h2>
+      <button class="btn-new-preset" onclick="createPreset()">+ Nuevo preset</button>
+    </div>
+    <div class="info-bar">Cada preset guarda qué frames, transiciones y logos están activos. <strong>PRESET 1</strong> es la configuración original con los archivos por defecto.</div>
+    <div class="presets-grid" id="presets-grid"></div>
   </div>
 
   <div id="toast"></div>
@@ -138,188 +254,452 @@
   <script src="supabase-config.js"></script>
   <script src="supabase-client.js"></script>
   <script>
-    const FRAMES = [
-      { key:'frame_3x4',   label:'Marco 3:4 (Móvil)',     src:'Frame%20fijos/3x4.png',    type:'image', ratio:'r34',  accept:'image/*' },
-      { key:'frame_16x9',  label:'Marco 16:9 (Escenario)',src:'Frame%20fijos/16x9.png',   type:'image', ratio:'',     accept:'image/*' },
-      { key:'frame_9x16',  label:'Marco 9:16 (Vertical)', src:'Frame%20fijos/9x16.png',   type:'image', ratio:'r916', accept:'image/*' },
-      { key:'frame_title', label:'Portada Title',          src:'Frame%20fijos/title.jpeg', type:'image', ratio:'',     accept:'image/*' },
-    ];
-    const TRANSITIONS = [
-      { key:'trans_title_3x4',     label:'Title → 3:4',   src:'Transitions/title_to_3x4.mp4',          type:'video' },
-      { key:'trans_title_3x4_rev', label:'3:4 → Title',   src:'Transitions/title_to_3x4_reverse.mp4',  type:'video' },
-      { key:'trans_title_916',     label:'Title → 9:16',  src:'Transitions/title_to_9x16.mp4',          type:'video' },
-      { key:'trans_title_916_rev', label:'9:16 → Title',  src:'Transitions/title_to_9x16_reverse.mp4', type:'video' },
-      { key:'trans_title_169',     label:'Title → 16:9',  src:'Transitions/title_to_16x9.mp4',          type:'video' },
-      { key:'trans_title_169_rev', label:'16:9 → Title',  src:'Transitions/title_to_16x9_reverse.mp4', type:'video' },
-      { key:'trans_34_169',        label:'3:4 → 16:9',    src:'Transitions/3x4_to_16x9.mp4',            type:'video' },
-      { key:'trans_34_169_rev',    label:'16:9 → 3:4',    src:'Transitions/3x4_to_16x9_reverse.mp4',   type:'video' },
-      { key:'trans_916_169',       label:'9:16 → 16:9',   src:'Transitions/9x16_to_16x9.mp4',           type:'video' },
-      { key:'trans_916_169_rev',   label:'16:9 → 9:16',   src:'Transitions/9x16_to_16x9_reverse.mp4',  type:'video' },
-      { key:'trans_916_34',        label:'9:16 → 3:4',    src:'Transitions/9x16_to_3x4.mp4',            type:'video' },
-      { key:'trans_916_34_rev',    label:'3:4 → 9:16',    src:'Transitions/9x16_to_3x4_reverse.mp4',   type:'video' },
-    ];
-    const LOGOS = [
-      { key:'logo_left',  label:'Logo Izquierda', src:'logo_izquierda.png', type:'image', ratio:'r1', accept:'image/*' },
-      { key:'logo_right', label:'Logo Derecha',   src:'logo_derecha.png',   type:'image', ratio:'r1', accept:'image/*' },
-    ];
+  // ════════════════════════════════════════════════════════════
+  //  ASSET REGISTRY
+  // ════════════════════════════════════════════════════════════
+  const FRAMES = [
+    { key:'frame_3x4',   label:'Marco 3:4 (Móvil)',      src:'Frame%20fijos/3x4.png',    type:'image', ratio:'r34',  accept:'image/*' },
+    { key:'frame_16x9',  label:'Marco 16:9 (Escenario)', src:'Frame%20fijos/16x9.png',   type:'image', ratio:'',     accept:'image/*' },
+    { key:'frame_9x16',  label:'Marco 9:16 (Vertical)',  src:'Frame%20fijos/9x16.png',   type:'image', ratio:'r916', accept:'image/*' },
+    { key:'frame_title', label:'Portada Title',           src:'Frame%20fijos/title.jpeg', type:'image', ratio:'',     accept:'image/*' },
+  ];
+  const TRANSITIONS = [
+    { key:'trans_title_3x4',     label:'Title → 3:4',   src:'Transitions/title_to_3x4.mp4',          type:'video' },
+    { key:'trans_title_3x4_rev', label:'3:4 → Title',   src:'Transitions/title_to_3x4_reverse.mp4',  type:'video' },
+    { key:'trans_title_916',     label:'Title → 9:16',  src:'Transitions/title_to_9x16.mp4',          type:'video' },
+    { key:'trans_title_916_rev', label:'9:16 → Title',  src:'Transitions/title_to_9x16_reverse.mp4', type:'video' },
+    { key:'trans_title_169',     label:'Title → 16:9',  src:'Transitions/title_to_16x9.mp4',          type:'video' },
+    { key:'trans_title_169_rev', label:'16:9 → Title',  src:'Transitions/title_to_16x9_reverse.mp4', type:'video' },
+    { key:'trans_34_169',        label:'3:4 → 16:9',    src:'Transitions/3x4_to_16x9.mp4',            type:'video' },
+    { key:'trans_34_169_rev',    label:'16:9 → 3:4',    src:'Transitions/3x4_to_16x9_reverse.mp4',   type:'video' },
+    { key:'trans_916_169',       label:'9:16 → 16:9',   src:'Transitions/9x16_to_16x9.mp4',           type:'video' },
+    { key:'trans_916_169_rev',   label:'16:9 → 9:16',   src:'Transitions/9x16_to_16x9_reverse.mp4',  type:'video' },
+    { key:'trans_916_34',        label:'9:16 → 3:4',    src:'Transitions/9x16_to_3x4.mp4',            type:'video' },
+    { key:'trans_916_34_rev',    label:'3:4 → 9:16',    src:'Transitions/9x16_to_3x4_reverse.mp4',   type:'video' },
+  ];
+  const LOGOS = [
+    { key:'logo_left',  label:'Logo Izquierda', src:'logo_izquierda.png', type:'image', ratio:'r1', accept:'image/*' },
+    { key:'logo_right', label:'Logo Derecha',   src:'logo_derecha.png',   type:'image', ratio:'r1', accept:'image/*' },
+  ];
+  function getAllAssets() { return [...FRAMES,...TRANSITIONS,...LOGOS]; }
+  function getAsset(key) { return getAllAssets().find(a=>a.key===key); }
 
-    const OVERRIDE_KEY = 'dm_asset_overrides';
-    let overrides = {};
-    function loadOverrides() { try { overrides = JSON.parse(localStorage.getItem(OVERRIDE_KEY)||'{}'); } catch(e){ overrides={}; } }
-    function saveOverrides() { localStorage.setItem(OVERRIDE_KEY, JSON.stringify(overrides)); }
+  // Default calibration values per frame slot (left%, top%, width%, height%, rot°, zoom%)
+  const DEFAULT_CALIB = {
+    frame_3x4:  { left:28.55, top:-2.85,  width:47.7,  height:111.45, rot:-0.8, zoom:100 },
+    frame_16x9: { left:7.2,   top:15.45,  width:85.85, height:66.7,   rot:0,    zoom:141 },
+    frame_9x16: { left:41.88, top:8.45,   width:19.17, height:95.15,  rot:0,    zoom:119 },
+  };
 
-    function switchTab(tab) {
-      document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['frames','transitions','logos'][i]===tab));
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      document.getElementById('panel-'+tab).classList.add('active');
+  // ════════════════════════════════════════════════════════════
+  //  OVERRIDES (asset URLs)
+  // ════════════════════════════════════════════════════════════
+  const OVERRIDE_KEY = 'dm_asset_overrides';
+  let overrides = {};
+  function loadOverrides() { try { overrides = JSON.parse(localStorage.getItem(OVERRIDE_KEY)||'{}'); } catch(e){ overrides={}; } }
+  function saveOverrides() { localStorage.setItem(OVERRIDE_KEY, JSON.stringify(overrides)); }
+
+  // ════════════════════════════════════════════════════════════
+  //  TABS
+  // ════════════════════════════════════════════════════════════
+  const TAB_NAMES = ['frames','transitions','logos','align','presets'];
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', TAB_NAMES[i]===tab));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('panel-'+tab).classList.add('active');
+    if (tab==='align') initAlignmentPreview();
+    if (tab==='presets') renderPresets();
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  ASSET CARDS (Frames / Transitions / Logos)
+  // ════════════════════════════════════════════════════════════
+  function buildCard(asset) {
+    const isOvr = !!overrides[asset.key];
+    const src   = overrides[asset.key] || asset.src;
+    const card  = document.createElement('div');
+    card.className = 'asset-card'+(isOvr?' overridden':'');
+    card.id = 'card-'+asset.key;
+
+    const preview = asset.type==='image'
+      ? `<img src="${src}" alt="${asset.label}" onerror="this.style.display='none'" />`
+      : `<video src="${src}" muted preload="metadata" controls style="pointer-events:auto"></video>`;
+
+    card.innerHTML = `
+      <div class="asset-preview ${asset.ratio||''}" id="prev-${asset.key}">
+        ${preview}
+        ${isOvr?'<span class="override-tag">✦ CUSTOM</span>':''}
+        <div class="drag-hint">⬇ Suelta aquí</div>
+        <div class="upload-progress" id="prog-${asset.key}">
+          <div class="progress-label" id="plabel-${asset.key}">Subiendo…</div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="pfill-${asset.key}"></div></div>
+        </div>
+      </div>
+      <div class="asset-info">
+        <div class="asset-name">${asset.label}</div>
+        <div class="asset-sub">${isOvr?'✦ Personalizado (Supabase)':asset.src}</div>
+        <div class="asset-actions">
+          <button class="btn-upload" id="btn-${asset.key}" onclick="triggerUpload('${asset.key}')">⬆ Subir</button>
+          <button class="btn-sm" id="rst-${asset.key}" onclick="restoreAsset('${asset.key}')" ${isOvr?'':'disabled'}>↺</button>
+        </div>
+      </div>
+      <input type="file" class="file-input-hidden" id="fi-${asset.key}" accept="${asset.accept||'video/mp4,image/*'}" onchange="handleInput(event,'${asset.key}')" />
+    `;
+
+    const prev = card.querySelector('.asset-preview');
+    prev.addEventListener('dragover', e=>{e.preventDefault();card.classList.add('drag-over');});
+    prev.addEventListener('dragleave', ()=>card.classList.remove('drag-over'));
+    prev.addEventListener('drop', e=>{e.preventDefault();card.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)uploadAsset(asset.key,f);});
+    return card;
+  }
+
+  function renderGrid(id, assets) { const g=document.getElementById(id); g.innerHTML=''; assets.forEach(a=>g.appendChild(buildCard(a))); }
+  function triggerUpload(key) { document.getElementById('fi-'+key)?.click(); }
+  function handleInput(e,key) { const f=e.target.files[0]; if(f) uploadAsset(key,f); e.target.value=''; }
+
+  async function uploadAsset(key, file) {
+    const asset = getAsset(key); if(!asset) return;
+    const btn=document.getElementById('btn-'+key);
+    const prog=document.getElementById('prog-'+key);
+    const fill=document.getElementById('pfill-'+key);
+    const lbl=document.getElementById('plabel-'+key);
+    btn.disabled=true; prog.classList.add('active'); lbl.textContent='Conectando…'; fill.style.width='5%';
+    try {
+      if (!window.DMCloud||!DMCloud.isConfigured()) throw new Error('Supabase no configurado');
+      const sc = DMCloud._getClient(); if(!sc) throw new Error('Cliente no disponible');
+      const ext=file.name.split('.').pop();
+      const path=`assets/${key}.${ext}`;
+      lbl.textContent='Subiendo…'; fill.style.width='40%';
+      const {error:upErr}=await sc.storage.from('dm_assets').upload(path,file,{upsert:true,contentType:file.type});
+      if(upErr) throw upErr;
+      fill.style.width='85%'; lbl.textContent='Generando URL…';
+      const {data:urlData}=sc.storage.from('dm_assets').getPublicUrl(path);
+      overrides[key]=urlData.publicUrl+'?t='+Date.now();
+      saveOverrides();
+      fill.style.width='100%'; lbl.textContent='✓ ¡Listo!';
+      setTimeout(()=>{ prog.classList.remove('active'); btn.disabled=false; document.getElementById('card-'+key)?.replaceWith(buildCard(asset)); showToast('✓ '+asset.label+' actualizado','ok'); },700);
+    } catch(err) {
+      console.error('[Admin]',err);
+      prog.classList.remove('active'); btn.disabled=false;
+      showToast('✗ Error: '+(err.message||err),'err');
     }
+  }
 
-    function getAllAssets() { return [...FRAMES,...TRANSITIONS,...LOGOS]; }
-    function getAsset(key) { return getAllAssets().find(a=>a.key===key); }
+  function restoreAsset(key) {
+    if(!confirm('¿Restaurar el archivo original?')) return;
+    delete overrides[key]; saveOverrides();
+    const a=getAsset(key);
+    document.getElementById('card-'+key)?.replaceWith(buildCard(a));
+    showToast('↺ '+(a?.label||key)+' restaurado','ok');
+  }
 
-    function buildCard(asset) {
-      const isOverridden = !!overrides[asset.key];
-      const src = overrides[asset.key] || asset.src;
-      const card = document.createElement('div');
-      card.className = 'asset-card'+(isOverridden?' overridden':'');
-      card.id = 'card-'+asset.key;
+  // ════════════════════════════════════════════════════════════
+  //  ALIGNMENT EDITOR
+  // ════════════════════════════════════════════════════════════
+  let alignBoxState = { left:28.55, top:-2.85, width:47.7, height:111.45, rot:-0.8, zoom:100 };
+  let _dragActive = null;
+  let _dragOrigin = null;
 
-      let previewContent;
-      if (asset.type==='image') {
-        previewContent = `<img src="${src}" alt="${asset.label}" onerror="this.style.display='none'" />`;
-      } else {
-        previewContent = `<video src="${src}" muted preload="metadata" controls style="pointer-events:auto"></video>`;
+  function populateAlignSelects() {
+    const sel = document.getElementById('align-trans-sel');
+    sel.innerHTML = TRANSITIONS.map(t=>`<option value="${t.key}">${t.label}</option>`).join('');
+  }
+
+  function initAlignmentPreview() {
+    const frameKey = document.getElementById('align-frame-sel').value;
+    const transKey = document.getElementById('align-trans-sel').value;
+    const frameSrc = overrides[frameKey] || (FRAMES.find(f=>f.key===frameKey)?.src||'');
+    const transSrc = overrides[transKey] || (TRANSITIONS.find(t=>t.key===transKey)?.src||'');
+
+    document.getElementById('align-frame-img').src = frameSrc;
+
+    const video = document.getElementById('align-video');
+    if (video.src !== new URL(transSrc, location.href).href) {
+      video.src = transSrc;
+      video.load();
+      video.addEventListener('loadedmetadata', updateTlTime, {once:true});
+    }
+    // Load saved calib for this frame key
+    const saved = getSavedCalib(frameKey) || DEFAULT_CALIB[frameKey] || alignBoxState;
+    alignBoxState = {...saved};
+    applyBoxToDOM();
+    updateInputsFromState();
+  }
+
+  function applyBoxToDOM() {
+    const box = document.getElementById('align-drag-box');
+    if (!box) return;
+    box.style.left   = alignBoxState.left   + '%';
+    box.style.top    = alignBoxState.top    + '%';
+    box.style.width  = alignBoxState.width  + '%';
+    box.style.height = alignBoxState.height + '%';
+    box.style.transform = `rotate(${alignBoxState.rot||0}deg)`;
+  }
+
+  function updateInputsFromState() {
+    const s = alignBoxState;
+    ['left','top','width','height','rot','zoom'].forEach(k=>{
+      const el = document.getElementById('v-'+k);
+      if(el) el.value = +(s[k]||0).toFixed(2);
+    });
+  }
+
+  function applyInputsToBox() {
+    ['left','top','width','height','rot','zoom'].forEach(k=>{
+      const el=document.getElementById('v-'+k);
+      if(el) alignBoxState[k] = parseFloat(el.value)||0;
+    });
+    applyBoxToDOM();
+  }
+
+  function setFrameOpacity(v) {
+    document.getElementById('opacity-val').textContent = v;
+    document.getElementById('align-frame-img').style.opacity = v/100;
+  }
+
+  function toggleAlignPlay() {
+    const v=document.getElementById('align-video');
+    const btn=document.getElementById('btn-align-play');
+    if (v.paused) { v.play(); btn.textContent='⏸'; } else { v.pause(); btn.textContent='▶'; }
+  }
+
+  function scrubVideo(val) {
+    const v=document.getElementById('align-video');
+    if (v.duration) v.currentTime = (val/100)*v.duration;
+  }
+
+  function updateTlTime() {
+    const v=document.getElementById('align-video');
+    const scrubber=document.getElementById('tl-scrubber');
+    const timeEl=document.getElementById('tl-time');
+    v.addEventListener('timeupdate', ()=>{
+      if (v.duration) {
+        const pct=(v.currentTime/v.duration)*100;
+        scrubber.value=pct;
+        timeEl.textContent=`${fmt(v.currentTime)} / ${fmt(v.duration)}`;
       }
+    });
+    timeEl.textContent=`0:00 / ${fmt(v.duration||0)}`;
+  }
+  function fmt(s){ const m=Math.floor(s/60); return `${m}:${String(Math.floor(s%60)).padStart(2,'0')}`; }
 
-      card.innerHTML = `
-        <div class="asset-preview ${asset.ratio||''}" id="prev-${asset.key}">
-          ${previewContent}
-          ${isOverridden?'<span class="override-tag">✦ CUSTOM</span>':''}
-          <div class="drag-hint">⬇ Suelta aquí</div>
-          <div class="upload-progress" id="prog-${asset.key}">
-            <div class="progress-label" id="plabel-${asset.key}">Subiendo…</div>
-            <div class="progress-bar-wrap"><div class="progress-bar-fill" id="pfill-${asset.key}"></div></div>
-          </div>
-        </div>
-        <div class="asset-info">
-          <div class="asset-name">${asset.label}</div>
-          <div class="asset-sub">${isOverridden?'✦ Personalizado (Supabase)':asset.src}</div>
-          <div class="asset-actions">
-            <button class="btn-upload" id="btn-${asset.key}" onclick="triggerUpload('${asset.key}')">⬆ Subir</button>
-            <button class="btn-restore" id="rst-${asset.key}" onclick="restoreAsset('${asset.key}')" ${isOverridden?'':'disabled'}>↺</button>
-          </div>
-        </div>
-        <input type="file" class="file-input-hidden" id="fi-${asset.key}" accept="${asset.accept||'video/mp4,image/*'}" onchange="handleInput(event,'${asset.key}')" />
-      `;
+  function resetAlignToDefaults() {
+    const frameKey=document.getElementById('align-frame-sel').value;
+    alignBoxState = {...(DEFAULT_CALIB[frameKey]||{left:28.55,top:-2.85,width:47.7,height:111.45,rot:-0.8,zoom:100})};
+    applyBoxToDOM(); updateInputsFromState();
+    showToast('Valores restaurados a originales','ok');
+  }
 
-      const prev = card.querySelector('.asset-preview');
-      prev.addEventListener('dragover', e=>{e.preventDefault();card.classList.add('drag-over');});
-      prev.addEventListener('dragleave', ()=>card.classList.remove('drag-over'));
-      prev.addEventListener('drop', e=>{
-        e.preventDefault(); card.classList.remove('drag-over');
-        const f=e.dataTransfer.files[0]; if(f) uploadAsset(asset.key,f);
+  function applyAlignToCalib() {
+    const frameKey=document.getElementById('align-frame-sel').value;
+    const CALIB_STORE_KEY='dm_admin_calib';
+    let store={};
+    try{store=JSON.parse(localStorage.getItem(CALIB_STORE_KEY)||'{}');}catch(e){}
+    store[frameKey]={...alignBoxState};
+    localStorage.setItem(CALIB_STORE_KEY,JSON.stringify(store));
+    // Also broadcast as SLOT_CALIB_UPDATE via BroadcastChannel
+    try {
+      const bc=new BroadcastChannel('dm_stage_bus');
+      const slotFormatMap={frame_3x4:'3:4',frame_16x9:'16:9',frame_9x16:'9:16'};
+      bc.postMessage({ type:'SLOT_CALIB_UPDATE_GLOBAL', frameKey, format:slotFormatMap[frameKey], calib:{...alignBoxState} });
+      bc.close();
+    } catch(e){}
+    showToast('💾 Calibración guardada para '+frameKey,'ok');
+  }
+
+  function getSavedCalib(frameKey) {
+    try { const s=JSON.parse(localStorage.getItem('dm_admin_calib')||'{}'); return s[frameKey]||null; } catch(e){ return null; }
+  }
+
+  // ── Drag handles ──
+  function initDragHandles() {
+    const box=document.getElementById('align-drag-box');
+    if (!box) return;
+    box.querySelectorAll('.handle').forEach(h=>{
+      h.addEventListener('pointerdown', e=>{
+        e.preventDefault(); e.stopPropagation();
+        _dragActive = h.dataset.h;
+        _dragOrigin = { x:e.clientX, y:e.clientY, state:{...alignBoxState} };
+        document.addEventListener('pointermove', onDragMove);
+        document.addEventListener('pointerup', onDragEnd);
       });
-      return card;
+    });
+  }
+
+  function onDragMove(e) {
+    if (!_dragActive || !_dragOrigin) return;
+    const canvas=document.getElementById('align-canvas');
+    const rect=canvas.getBoundingClientRect();
+    const dx=(e.clientX-_dragOrigin.x)/rect.width*100;
+    const dy=(e.clientY-_dragOrigin.y)/rect.height*100;
+    const s=_dragOrigin.state;
+
+    if (_dragActive==='c') {
+      alignBoxState.left=s.left+dx;
+      alignBoxState.top=s.top+dy;
+    } else if (_dragActive==='br') {
+      alignBoxState.width=Math.max(2,s.width+dx);
+      alignBoxState.height=Math.max(2,s.height+dy);
+    } else if (_dragActive==='tl') {
+      alignBoxState.left=s.left+dx; alignBoxState.top=s.top+dy;
+      alignBoxState.width=Math.max(2,s.width-dx);
+      alignBoxState.height=Math.max(2,s.height-dy);
+    } else if (_dragActive==='tr') {
+      alignBoxState.top=s.top+dy;
+      alignBoxState.width=Math.max(2,s.width+dx);
+      alignBoxState.height=Math.max(2,s.height-dy);
+    } else if (_dragActive==='bl') {
+      alignBoxState.left=s.left+dx;
+      alignBoxState.width=Math.max(2,s.width-dx);
+      alignBoxState.height=Math.max(2,s.height+dy);
     }
+    applyBoxToDOM(); updateInputsFromState();
+  }
 
-    function renderGrid(id, assets) {
-      const g = document.getElementById(id); g.innerHTML='';
-      assets.forEach(a=>g.appendChild(buildCard(a)));
-    }
+  function onDragEnd() {
+    _dragActive=null; _dragOrigin=null;
+    document.removeEventListener('pointermove',onDragMove);
+    document.removeEventListener('pointerup',onDragEnd);
+  }
 
-    function triggerUpload(key) { document.getElementById('fi-'+key)?.click(); }
-    function handleInput(e,key) { const f=e.target.files[0]; if(f) uploadAsset(key,f); e.target.value=''; }
+  // ════════════════════════════════════════════════════════════
+  //  PRESETS
+  // ════════════════════════════════════════════════════════════
+  const PRESETS_KEY='dm_presets';
+  const ACTIVE_PRESET_KEY='dm_active_preset';
 
-    async function uploadAsset(key, file) {
-      const asset = getAsset(key);
-      if (!asset) return;
-      const btn=document.getElementById('btn-'+key);
-      const prog=document.getElementById('prog-'+key);
-      const fill=document.getElementById('pfill-'+key);
-      const lbl=document.getElementById('plabel-'+key);
+  function getDefaultPreset1() {
+    const assets={};
+    getAllAssets().forEach(a=>{ assets[a.key]=null; }); // null = use default file
+    return { id:'preset1', name:'PRESET 1', description:'Configuración original por defecto', locked:true, createdAt:Date.now(), assets };
+  }
 
-      btn.disabled=true; prog.classList.add('active'); lbl.textContent='Conectando…'; fill.style.width='5%';
+  function loadPresets() {
+    try {
+      let ps=JSON.parse(localStorage.getItem(PRESETS_KEY)||'[]');
+      if (!ps.find(p=>p.id==='preset1')) ps.unshift(getDefaultPreset1());
+      return ps;
+    } catch(e) { return [getDefaultPreset1()]; }
+  }
+  function savePresets(ps) { localStorage.setItem(PRESETS_KEY,JSON.stringify(ps)); }
+  function getActivePresetId() { return localStorage.getItem(ACTIVE_PRESET_KEY)||'preset1'; }
+  function setActivePresetId(id) { localStorage.setItem(ACTIVE_PRESET_KEY,id); }
 
-      try {
-        if (!window.DMCloud||!DMCloud.isConfigured()) throw new Error('Supabase no configurado');
-        const supabase = DMCloud._getClient ? DMCloud._getClient() : null;
-        if (!supabase) throw new Error('Cliente Supabase no disponible');
+  function createPreset() {
+    const name=prompt('Nombre del nuevo preset:','PRESET 2');
+    if (!name) return;
+    const ps=loadPresets();
+    const newP={
+      id:'preset_'+Date.now(),
+      name:name.toUpperCase(),
+      description:'Basado en los overrides actuales',
+      locked:false,
+      createdAt:Date.now(),
+      assets:{...overrides}
+    };
+    // Fill missing keys with null
+    getAllAssets().forEach(a=>{ if(!(a.key in newP.assets)) newP.assets[a.key]=null; });
+    ps.push(newP);
+    savePresets(ps);
+    renderPresets();
+    showToast('✓ Preset "'+newP.name+'" creado','ok');
+  }
 
-        const ext = file.name.split('.').pop();
-        const path = `assets/${key}.${ext}`;
+  function activatePreset(id) {
+    const ps=loadPresets();
+    const p=ps.find(x=>x.id===id); if(!p) return;
+    setActivePresetId(id);
+    // Apply assets as overrides
+    overrides={};
+    Object.entries(p.assets).forEach(([k,v])=>{ if(v) overrides[k]=v; });
+    saveOverrides();
+    // Re-render asset grids
+    renderGrid('grid-frames',FRAMES);
+    renderGrid('grid-transitions',TRANSITIONS);
+    renderGrid('grid-logos',LOGOS);
+    renderPresets();
+    showToast('✓ Preset "'+p.name+'" activado','ok');
+  }
 
-        lbl.textContent='Subiendo archivo…'; fill.style.width='40%';
+  function deletePreset(id) {
+    if (!confirm('¿Eliminar este preset?')) return;
+    let ps=loadPresets();
+    ps=ps.filter(p=>p.id!==id);
+    savePresets(ps);
+    if (getActivePresetId()===id) { setActivePresetId('preset1'); overrides={}; saveOverrides(); }
+    renderPresets();
+    showToast('Preset eliminado','ok');
+  }
 
-        const { error: upErr } = await supabase.storage.from('dm_assets').upload(path, file, {upsert:true, contentType:file.type});
-        if (upErr) throw upErr;
+  function renamePreset(id, val) {
+    const ps=loadPresets();
+    const p=ps.find(x=>x.id===id); if(!p) return;
+    p.name=val; savePresets(ps);
+  }
 
-        fill.style.width='85%'; lbl.textContent='Generando URL…';
-        const { data: urlData } = supabase.storage.from('dm_assets').getPublicUrl(path);
-        overrides[key] = urlData.publicUrl + '?t=' + Date.now();
-        saveOverrides();
+  function renderPresets() {
+    const grid=document.getElementById('presets-grid'); grid.innerHTML='';
+    const ps=loadPresets();
+    const activeId=getActivePresetId();
+    ps.forEach(p=>{
+      const card=document.createElement('div');
+      card.className='preset-card'+(p.id===activeId?' active-preset':'');
+      const thumbs=FRAMES.slice(0,3).map(f=>{
+        const src=p.assets[f.key]||f.src;
+        return `<img class="preset-asset-thumb" src="${src}" alt="${f.label}" onerror="this.style.display='none'">`;
+      }).join('');
+      const isActive=p.id===activeId;
+      card.innerHTML=`
+        ${isActive?'<span class="preset-badge">✓ Activo</span>':''}
+        ${p.locked?'<span class="preset-badge default" style="'+(isActive?'right:70px':'')+'">Original</span>':''}
+        <input class="preset-name-input" value="${p.name}" ${p.locked?'readonly':''} onchange="renamePreset('${p.id}',this.value)" />
+        <div class="preset-desc">${p.description}</div>
+        <div class="preset-assets">${thumbs}</div>
+        <div class="preset-actions">
+          <button class="btn-activate" onclick="activatePreset('${p.id}')" ${isActive?'disabled':''}>
+            ${isActive?'✓ Activo':'Activar'}
+          </button>
+          ${!p.locked?`<button class="btn-del-preset" onclick="deletePreset('${p.id}')">✕</button>`:''}
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
 
-        fill.style.width='100%'; lbl.textContent='✓ ¡Listo!';
-        setTimeout(()=>{
-          prog.classList.remove('active'); btn.disabled=false;
-          const card=document.getElementById('card-'+key);
-          if(card) card.replaceWith(buildCard(asset));
-          showToast('✓ '+asset.label+' actualizado','ok');
-        },700);
+  // ════════════════════════════════════════════════════════════
+  //  SUPABASE CONNECTION
+  // ════════════════════════════════════════════════════════════
+  async function checkConnection() {
+    const dot=document.getElementById('conn-dot');
+    const lbl=document.getElementById('conn-label');
+    try {
+      if (!window.DMCloud||!DMCloud.isConfigured()) { dot.className='conn-dot err'; lbl.textContent='Supabase no configurado'; return; }
+      const sc=DMCloud._getClient(); if(!sc) throw new Error();
+      const {error}=await sc.storage.from('dm_assets').list('',{limit:1});
+      if (error) { dot.className='conn-dot warn'; lbl.textContent='Bucket "dm_assets" no existe'; }
+      else { dot.className='conn-dot ok'; lbl.textContent='Supabase Storage listo'; }
+    } catch(e) { dot.className='conn-dot err'; lbl.textContent='Error de conexión'; }
+  }
 
-      } catch(err) {
-        console.error('[Admin]',err);
-        prog.classList.remove('active'); btn.disabled=false;
-        showToast('✗ Error: '+(err.message||err),'err');
-      }
-    }
+  // ════════════════════════════════════════════════════════════
+  //  TOAST
+  // ════════════════════════════════════════════════════════════
+  let _tt;
+  function showToast(msg,type='') { const t=document.getElementById('toast'); t.textContent=msg; t.className='show '+(type||''); clearTimeout(_tt); _tt=setTimeout(()=>t.className='',3500); }
 
-    function restoreAsset(key) {
-      if (!confirm('¿Restaurar el archivo original?')) return;
-      delete overrides[key]; saveOverrides();
-      const a=getAsset(key);
-      const card=document.getElementById('card-'+key);
-      if(card&&a) card.replaceWith(buildCard(a));
-      showToast('↺ '+(a?.label||key)+' restaurado','ok');
-    }
+  // ════════════════════════════════════════════════════════════
+  //  INIT
+  // ════════════════════════════════════════════════════════════
+  if (window.DMCloud && !DMCloud._getClient) DMCloud._getClient=()=>null;
 
-    let _tt;
-    function showToast(msg,type='') {
-      const t=document.getElementById('toast');
-      t.textContent=msg; t.className='show '+(type||'');
-      clearTimeout(_tt); _tt=setTimeout(()=>t.className='',3500);
-    }
-
-    async function checkConnection() {
-      const dot=document.getElementById('conn-dot');
-      const lbl=document.getElementById('conn-label');
-      try {
-        if (!window.DMCloud||!DMCloud.isConfigured()) {
-          dot.className='conn-dot err'; lbl.textContent='Supabase no configurado'; return;
-        }
-        const supabase = DMCloud._getClient ? DMCloud._getClient() : null;
-        if (!supabase) throw new Error('no client');
-        const { error } = await supabase.storage.from('dm_assets').list('',{limit:1});
-        if (error) {
-          if (error.message?.includes('not found')||error.message?.includes('does not exist')) {
-            dot.className='conn-dot warn'; lbl.textContent='Bucket "dm_assets" no existe';
-            document.getElementById('setup-note').style.display='flex';
-          } else throw error;
-        } else {
-          dot.className='conn-dot ok'; lbl.textContent='Supabase Storage listo';
-        }
-      } catch(e) {
-        dot.className='conn-dot err'; lbl.textContent='Error de conexión'; console.error(e);
-      }
-    }
-
-    // Exponer _getClient si falta
-    if (window.DMCloud && !DMCloud._getClient) DMCloud._getClient = ()=>null;
-
-    loadOverrides();
-    renderGrid('grid-frames', FRAMES);
-    renderGrid('grid-transitions', TRANSITIONS);
-    renderGrid('grid-logos', LOGOS);
-    checkConnection();
+  loadOverrides();
+  renderGrid('grid-frames',FRAMES);
+  renderGrid('grid-transitions',TRANSITIONS);
+  renderGrid('grid-logos',LOGOS);
+  populateAlignSelects();
+  renderPresets();
+  checkConnection();
+  initDragHandles();
   </script>
 </body>
 </html>
