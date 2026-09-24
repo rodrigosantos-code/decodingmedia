@@ -104,7 +104,7 @@
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
-      z-index: 15;
+      z-index: 25;
       transition: none !important;
     }
 
@@ -1942,13 +1942,14 @@
   </div>
 
   <script>
-    // Modo estático: sin transiciones (para visor de calibración)
+    // Modo preview (iframe incrustado en el editor o parámetro ?preview=1 / ?static=1)
     const IS_STATIC = new URLSearchParams(window.location.search).has('static');
-    if (IS_STATIC) {
+    const IS_PREVIEW = (window.self !== window.top) || new URLSearchParams(window.location.search).has('preview') || IS_STATIC;
+    if (IS_PREVIEW) {
       const s = document.createElement('style');
       s.textContent = `
         .stage-layer { transition: none !important; }
-        .controls-hint, #step-hud { display: none !important; }
+        .controls-hint, #step-hud, #stage-top-bar, #stage-bottom-bar, #live-badge, #live-clock, #drawer-toggle-btn { display: none !important; }
       `;
       document.head.appendChild(s);
     }
@@ -3093,6 +3094,15 @@
           showHint(`<b>${step.name}</b> (Escena ${currentSlide}/${step.slidesCount}). Pulsa <span class="key-badge">Espacio</span> para avanzar`, 3000);
         }
       } else if (step.type === 'video') {
+        if (IS_PREVIEW) {
+          // En el preview del editor no se reproduce el vídeo de animación:
+          // saltar limpiamente a la escena entrante (como si se pasara a otra escena y ya)
+          currentStepIndex = (currentStepIndex + 1) % STEPS.length;
+          currentSlide = 1;
+          updateStepUI();
+          return;
+        }
+
         isTransitionLocked = true;
         hasTriggeredEndFade = false;
         hasTriggeredEndHold = false;
@@ -3807,18 +3817,50 @@
     // Iniciar UI del escenario
     updateStepUI();
 
+    function isDeckMatch(cmdDeckId) {
+      if (!cmdDeckId || !stageDeckId) return true;
+      if (cmdDeckId === stageDeckId) return true;
+      if (cmdDeckId === 'default' || stageDeckId === 'default') return true;
+      return false;
+    }
+
     function executeStageCommand(cmd) {
       if (!cmd) return;
+
+      if (IS_PREVIEW) {
+        // En el preview del editor, cambiar limpiamente de escena sin vídeo
+        if (cmd === 'NEXT_STEP' || cmd === 'NEXT_ACTION' || cmd === 'NEXT_SLIDE') {
+          let nextIdx = (currentStepIndex + 1) % STEPS.length;
+          while (STEPS[nextIdx] && STEPS[nextIdx].type === 'video') {
+            nextIdx = (nextIdx + 1) % STEPS.length;
+          }
+          goToStep(nextIdx);
+        } else if (cmd === 'PREV_STEP' || cmd === 'PREV_ACTION' || cmd === 'PREV_SLIDE') {
+          let prevIdx = (currentStepIndex - 1 + STEPS.length) % STEPS.length;
+          while (STEPS[prevIdx] && STEPS[prevIdx].type === 'video') {
+            prevIdx = (prevIdx - 1 + STEPS.length) % STEPS.length;
+          }
+          goToStep(prevIdx);
+        } else if (cmd === 'RESET') {
+          goToStep(0);
+        }
+        return;
+      }
+
+      // En la proyección del directo en escenario:
       if (cmd === 'NEXT_STEP') {
         isTransitionLocked = false;
+        if (STEPS[currentStepIndex] && STEPS[currentStepIndex].type === 'video') {
+          return; // Ya está reproduciendo la animación en directo
+        }
         advanceToNextStep();
+      } else if (cmd === 'NEXT_ACTION' || cmd === 'NEXT_SLIDE') {
+        isTransitionLocked = false;
+        handleNextAction();
       } else if (cmd === 'PREV_STEP') {
         isTransitionLocked = false;
         prevStep();
-      } else if (cmd === 'NEXT_SLIDE') {
-        isTransitionLocked = false;
-        handleNextAction();
-      } else if (cmd === 'PREV_SLIDE') {
+      } else if (cmd === 'PREV_ACTION' || cmd === 'PREV_SLIDE') {
         isTransitionLocked = false;
         handlePrevAction();
       } else if (cmd === 'RESET') {
@@ -3828,6 +3870,7 @@
 
     // --- SISTEMA DE SINCRONIZACIÓN HÍBRIDO (BroadcastChannel + LocalStorage + StorageEvent) ---
     function broadcastState(userTriggered = true) {
+      if (IS_PREVIEW) return; // El visor de preview del editor jamás emite su estado al directo
       const step = STEPS[currentStepIndex] || {};
       const stateObj = {
         type: 'STAGE_STATE',
@@ -3868,7 +3911,7 @@
           const cmdData = JSON.parse(e.newValue);
           if (cmdData && cmdData.time > lastProcessedCmdTime) {
             lastProcessedCmdTime = cmdData.time;
-            if (!cmdData.deckId || cmdData.deckId === stageDeckId) {
+            if (isDeckMatch(cmdData.deckId)) {
               executeStageCommand(cmdData.command);
             }
           }
@@ -3876,7 +3919,9 @@
           const stepData = JSON.parse(e.newValue);
           if (stepData && stepData.time > lastProcessedStepTime) {
             lastProcessedStepTime = stepData.time;
-            if (typeof stepData.step === 'number') goToStep(stepData.step);
+            if (isDeckMatch(stepData.deckId)) {
+              if (typeof stepData.step === 'number') goToStep(stepData.step);
+            }
           }
         } else if (e.key === 'dm_deck_slots_sync') {
           const syncData = JSON.parse(e.newValue);
@@ -3999,7 +4044,7 @@
       }
       // Comandos remotos
       else if (data.type === 'STAGE_COMMAND') {
-        if (!data.deckId || data.deckId === stageDeckId) {
+        if (isDeckMatch(data.deckId)) {
           executeStageCommand(data.command);
         }
       }
@@ -4034,7 +4079,7 @@
           const cmdData = JSON.parse(cmdRaw);
           if (cmdData && cmdData.time > lastProcessedCmdTime) {
             lastProcessedCmdTime = cmdData.time;
-            if (!cmdData.deckId || cmdData.deckId === stageDeckId) {
+            if (isDeckMatch(cmdData.deckId)) {
               executeStageCommand(cmdData.command);
             }
           }

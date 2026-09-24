@@ -1419,7 +1419,7 @@
 
         <div class="preview-wrap">
           <div class="preview-box" id="preview-box" style="cursor: pointer;" title="Haz clic para avanzar al siguiente paso">
-            <iframe id="preview-stage-iframe" src="presentation.html?v=20260924_1314"
+            <iframe id="preview-stage-iframe" src="presentation.html?preview=1&static=1&v=20260924_1345"
               style="position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; border: none; pointer-events: none; display: block; transform-origin: 0 0;"
             ></iframe>
           </div>
@@ -3011,12 +3011,43 @@
 
       const totalSteps = Math.max(1, currentTimeline.length);
       if (cmd === 'NEXT_STEP') {
-        currentStep = (currentStep + 1) % totalSteps;
+        // En el editor no se reproducen vídeos de animación: saltar directamente a la siguiente escena (slide)
+        let nextSlideStep = -1;
+        for (let i = currentStep + 1; i < currentTimeline.length; i++) {
+          if (currentTimeline[i].type === 'slide') {
+            nextSlideStep = i;
+            break;
+          }
+        }
+        if (nextSlideStep < 0) {
+          for (let i = 0; i < currentTimeline.length; i++) {
+            if (currentTimeline[i].type === 'slide') {
+              nextSlideStep = i;
+              break;
+            }
+          }
+        }
+        currentStep = (nextSlideStep >= 0) ? nextSlideStep : (currentStep + 1) % totalSteps;
         syncPreviewToCurrentStep();
         const cur = currentTimeline[currentStep];
         showToast(`Escena en directo: ${cur ? cur.name : 'Paso ' + (currentStep + 1)}`);
       } else if (cmd === 'PREV_STEP') {
-        currentStep = (currentStep - 1 + totalSteps) % totalSteps;
+        let prevSlideStep = -1;
+        for (let i = currentStep - 1; i >= 0; i--) {
+          if (currentTimeline[i].type === 'slide') {
+            prevSlideStep = i;
+            break;
+          }
+        }
+        if (prevSlideStep < 0) {
+          for (let i = currentTimeline.length - 1; i >= 0; i--) {
+            if (currentTimeline[i].type === 'slide') {
+              prevSlideStep = i;
+              break;
+            }
+          }
+        }
+        currentStep = (prevSlideStep >= 0) ? prevSlideStep : (currentStep - 1 + totalSteps) % totalSteps;
         syncPreviewToCurrentStep();
         const cur = currentTimeline[currentStep];
         showToast(`Escena en directo: ${cur ? cur.name : 'Paso ' + (currentStep + 1)}`);
@@ -3186,7 +3217,7 @@
       if (data.type === 'STAGE_HEARTBEAT' || data.type === 'STAGE_STATE') {
         setStageOnline(true);
         // Solo actualizar paso si fue una acción deliberada desde el escenario y coincide el deck
-        if (data.userTriggered && typeof data.currentStepIndex === 'number' && (!data.deckId || data.deckId === activeDeckId)) {
+        if (data.userTriggered && typeof data.currentStepIndex === 'number' && (!data.deckId || data.deckId === activeDeckId || activeDeckId === 'default')) {
           currentStep = data.currentStepIndex;
           updateStepButtons();
         }
@@ -3512,7 +3543,7 @@
       // Actualizar el iframe de preview para que apunte al nuevo deck
       const previewIframe = document.getElementById('preview-stage-iframe');
       if (previewIframe) {
-        previewIframe.src = `presentation.html?deck=${newDeckId}&step=${currentStep}&v=${Date.now()}`;
+        previewIframe.src = `presentation.html?deck=${newDeckId}&step=${currentStep}&preview=1&static=1&v=${Date.now()}`;
       }
 
       // Notificar a todos los dispositivos (local y nube)
@@ -3728,7 +3759,7 @@
 
       const previewIframe = document.getElementById('preview-stage-iframe');
       if (previewIframe) {
-        previewIframe.src = `presentation.html?deck=${newId}&v=${Date.now()}`;
+        previewIframe.src = `presentation.html?deck=${newId}&preview=1&static=1&v=${Date.now()}`;
       }
 
       updateStageLink();
