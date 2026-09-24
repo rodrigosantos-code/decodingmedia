@@ -301,12 +301,18 @@
       flex: 1;
       min-height: 0;
       display: grid;
-      grid-template-columns: 310px 1.22fr 355px;
+      grid-template-columns: 460px 1.15fr 345px;
       gap: 12px;
       align-items: stretch;
     }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 1280px) {
+      .cockpit-grid {
+        grid-template-columns: 410px 1fr 330px;
+      }
+    }
+
+    @media (max-width: 1080px) {
       html, body {
         height: auto;
         max-height: none;
@@ -1070,12 +1076,15 @@
 
     .slot-details-row {
       display: flex;
-      gap: 6px;
+      gap: 8px;
       align-items: center;
+      min-width: 0;
+      width: 100%;
     }
 
     .slot-url-input {
       flex: 1;
+      min-width: 90px;
       background: #0b0c10;
       border: 1px solid rgba(255, 255, 255, 0.08);
       color: #ec4899;
@@ -1085,6 +1094,7 @@
       font-family: ui-monospace, monospace;
       outline: none;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      text-overflow: ellipsis;
     }
 
     .slot-url-input:focus {
@@ -1092,8 +1102,15 @@
       box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.18);
     }
 
+    .slot-slides-wrap {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
     .slot-slides-input {
-      width: 46px;
+      width: 44px;
       background: #0b0c10;
       border: 1px solid rgba(255, 255, 255, 0.08);
       color: #fff;
@@ -1104,6 +1121,7 @@
       text-align: center;
       outline: none;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      flex-shrink: 0;
     }
 
     .slot-slides-input:focus {
@@ -1697,14 +1715,6 @@
   </div>
 
   <script>
-    // Limpieza de URL: oculta 'editor.html' de la barra de direcciones dejando '/editor'
-    try {
-      if (window.location.pathname.endsWith('editor.html')) {
-        const cleanPath = window.location.pathname.replace(/\/editor\.html$/, '/editor');
-        window.history.replaceState({}, document.title, cleanPath + window.location.search);
-      }
-    } catch (e) {}
-
     const CHANNEL_NAME = 'dm_presentation_bus';
     const bus = new BroadcastChannel(CHANNEL_NAME);
 
@@ -2314,8 +2324,8 @@
             ` : `
               ${getSlideThumbnailHtml(s, false)}
               <input class="slot-url-input" placeholder="URL Google Slides / PPT de esta escena..." value="${escapeHtml(s.url || '')}" onchange="updateSlotUrl('${s.id}', this.value)" title="Enlace de la presentación" />
-              <div style="display: flex; align-items: center; gap: 6px;" title="Total escenas antes de pasar al vídeo">
-                <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">Slides:</span>
+              <div class="slot-slides-wrap" title="Total diapositivas antes de pasar al vídeo">
+                <span style="font-size: 11px; color: #94a3b8; font-weight: 600; white-space: nowrap;">Slides:</span>
                 <input type="number" class="slot-slides-input" min="1" max="200" value="${s.slidesCount || 1}" onchange="updateSlotSlidesCount('${s.id}', this.value)" oninput="updateSlotSlidesCount('${s.id}', this.value)" />
               </div>
             `}
@@ -3387,7 +3397,9 @@
       showToast(`${deckName} activa`);
       updateStageLink();
       try {
-        window.history.replaceState({}, document.title, window.location.pathname + '?deck=' + encodeURIComponent(newDeckId));
+        const u = new URL(window.location.href);
+        u.searchParams.set('deck', newDeckId);
+        window.history.replaceState({}, document.title, u.pathname + u.search);
       } catch (e) {}
     }
 
@@ -3587,7 +3599,9 @@
 
       updateStageLink();
       try {
-        window.history.replaceState({}, document.title, window.location.pathname + '?deck=' + encodeURIComponent(newId));
+        const u = new URL(window.location.href);
+        u.searchParams.set('deck', newId);
+        window.history.replaceState({}, document.title, u.pathname + u.search);
       } catch (e) {}
 
       showToast(`${name} creada y guardada`);

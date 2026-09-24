@@ -1942,14 +1942,6 @@
   </div>
 
   <script>
-    // Limpieza de URL: oculta 'presentation.html' de la barra de direcciones dejando '/presentation'
-    try {
-      if (window.location.pathname.endsWith('presentation.html')) {
-        const cleanPath = window.location.pathname.replace(/\/presentation\.html$/, '/presentation');
-        window.history.replaceState({}, document.title, cleanPath + window.location.search);
-      }
-    } catch (e) {}
-
     // Modo estático: sin transiciones (para visor de calibración)
     const IS_STATIC = new URLSearchParams(window.location.search).has('static');
     if (IS_STATIC) {
