@@ -56,8 +56,20 @@
       width: min(100vw, calc(100vh * 16 / 9));
       height: min(100vh, calc(100vw * 9 / 16));
       background: #000;
-      box-shadow: 0 0 100px rgba(0, 0, 0, 0.95), 0 0 40px rgba(255, 0, 127, 0.15);
+      box-shadow: 
+        0 25px 90px rgba(0, 0, 0, 0.95), 
+        0 0 50px rgba(236, 72, 153, 0.16),
+        0 0 0 1px rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
       overflow: hidden;
+      transition: border-radius 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    :fullscreen #stage-container,
+    :-webkit-full-screen #stage-container,
+    .presentation-viewport:fullscreen #stage-container {
+      border-radius: 0 !important;
+      box-shadow: none !important;
     }
 
     /* Capas de cada paso con fundido suave de 1 segundo */
@@ -1125,6 +1137,409 @@
       font-family: monospace;
       color: #94a3b8;
     }
+
+    /* =========================================================================
+       NUEVO LAYOUT DE PRESENTACIÓN (STUDIO AMBIENCE & BROADCAST HUD)
+       ========================================================================= */
+    .presentation-viewport {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .stage-ambient-glow {
+      position: absolute;
+      width: min(98vw, calc(98vh * 16 / 9));
+      height: min(98vh, calc(98vw * 9 / 16));
+      border-radius: 40px;
+      background: radial-gradient(ellipse at center, rgba(236, 72, 153, 0.22) 0%, rgba(168, 85, 247, 0.12) 40%, rgba(56, 189, 248, 0.05) 65%, transparent 80%);
+      filter: blur(55px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.85;
+      transition: opacity 0.5s ease;
+    }
+
+    /* Barras de Control del Escenario (HUD Broadcast) */
+    .stage-hud-bar {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 0 16px;
+      background: rgba(9, 11, 17, 0.78);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(236, 72, 153, 0.08);
+      color: #fff;
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: auto;
+    }
+
+    .stage-hud-top {
+      top: 14px;
+      height: 46px;
+    }
+
+    .stage-hud-bottom {
+      bottom: 14px;
+      height: 44px;
+    }
+
+    /* Auto-ocultación elegante por inactividad del cursor */
+    body.hud-idle .stage-hud-top {
+      opacity: 0;
+      transform: translateY(-10px);
+      pointer-events: none;
+    }
+
+    body.hud-idle .stage-hud-bottom {
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+    }
+
+    body.hud-idle #drawer-toggle-btn {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    body.hud-force-hidden .stage-hud-bar,
+    body.hud-force-hidden #drawer-toggle-btn {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    /* Elementos Topbar */
+    .hud-top-left,
+    .hud-top-right,
+    .hud-bottom-left,
+    .hud-bottom-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hud-top-center,
+    .hud-bottom-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .hud-live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 9999px;
+      background: rgba(236, 72, 153, 0.16);
+      border: 1px solid rgba(236, 72, 153, 0.35);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #f472b6;
+      white-space: nowrap;
+    }
+
+    .live-dot-pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ec4899;
+      box-shadow: 0 0 8px #ec4899;
+      animation: pulseLiveDot 1.6s ease-in-out infinite;
+    }
+
+    @keyframes pulseLiveDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .hud-brand-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #e2e8f0;
+      white-space: nowrap;
+    }
+
+    .hud-brand-title {
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+
+    .hud-brand-dot {
+      color: #64748b;
+    }
+
+    .hud-deck-title {
+      color: #94a3b8;
+      font-weight: 600;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hud-scene-tracker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .hud-scene-step-pill {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #94a3b8;
+      white-space: nowrap;
+    }
+
+    .hud-scene-step-pill b {
+      color: #fff;
+    }
+
+    .hud-scene-name {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 300px;
+    }
+
+    .hud-format-tag {
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      padding: 2px 7px;
+      border-radius: 5px;
+      white-space: nowrap;
+    }
+
+    .badge-fmt-title {
+      background: rgba(236, 72, 153, 0.2);
+      border: 1px solid rgba(236, 72, 153, 0.4);
+      color: #f472b6;
+    }
+
+    .badge-fmt-34 {
+      background: rgba(56, 189, 248, 0.2);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+    }
+
+    .badge-fmt-169 {
+      background: rgba(168, 85, 247, 0.2);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      color: #c084fc;
+    }
+
+    .badge-fmt-916 {
+      background: rgba(251, 146, 60, 0.2);
+      border: 1px solid rgba(251, 146, 60, 0.4);
+      color: #fb923c;
+    }
+
+    .badge-fmt-video {
+      background: rgba(148, 163, 184, 0.16);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      color: #cbd5e1;
+    }
+
+    /* Botones de acción en barras */
+    .btn-hud-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      font-size: 11px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .btn-hud-action:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.22);
+      color: #fff;
+    }
+
+    .hud-key-hint {
+      font-family: monospace;
+      font-size: 9px;
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #94a3b8;
+    }
+
+    /* Elementos Bottombar */
+    .hud-slide-counter-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .slide-tag {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: #94a3b8;
+    }
+
+    .slide-val {
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+
+    .slide-val b {
+      color: #38bdf8;
+    }
+
+    .hud-speaker-pill {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 3px 9px;
+      white-space: nowrap;
+    }
+
+    /* Línea de tiempo interactiva de escenas */
+    .hud-timeline-strip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 9999px;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    .hud-timeline-dot {
+      width: 14px;
+      height: 7px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.18);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .hud-timeline-dot:hover {
+      background: rgba(255, 255, 255, 0.5);
+      transform: scaleY(1.3);
+    }
+
+    .hud-timeline-dot.active {
+      width: 28px;
+      background: var(--neon-pink);
+      box-shadow: 0 0 10px rgba(236, 72, 153, 0.6);
+    }
+
+    .hud-timeline-dot.is-video {
+      border-radius: 2px;
+      height: 5px;
+    }
+
+    /* Botones de reproducción */
+    .hud-playback-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-hud-playback {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 28px;
+      padding: 0 9px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-hud-playback:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    .btn-hud-playback-primary {
+      background: rgba(236, 72, 153, 0.22);
+      border-color: rgba(236, 72, 153, 0.45);
+      color: #fff;
+    }
+
+    .btn-hud-playback-primary:hover {
+      background: #ec4899;
+      border-color: #ec4899;
+      color: #000;
+      box-shadow: 0 0 14px rgba(236, 72, 153, 0.5);
+    }
+
+    .hud-hints-summary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      color: #64748b;
+    }
+
+    .hud-hints-summary kbd {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+      padding: 1px 4px;
+      font-family: monospace;
+      color: #94a3b8;
+    }
   </style>
 </head>
 <body tabindex="-1" style="outline: none;">
@@ -1194,8 +1609,66 @@
     </div>
   </aside>
 
-  <!-- Escenario Principal 16:9 -->
-  <div id="stage-container" class="hide-corner-logos">
+  <!-- Shell del Escenario con Halo Ambiental -->
+  <div id="presentation-viewport" class="presentation-viewport">
+    <div class="stage-ambient-glow" id="stage-ambient-glow"></div>
+
+    <!-- Escenario Principal 16:9 -->
+    <div id="stage-container" class="hide-corner-logos">
+
+      <!-- Barra Superior de Emisión (Broadcast Topbar) -->
+      <header id="stage-top-bar" class="stage-hud-bar stage-hud-top">
+        <div class="hud-top-left">
+          <div class="hud-live-pill">
+            <span class="live-dot-pulse"></span>
+            <span class="live-text">EN DIRECTO</span>
+          </div>
+          <div class="hud-brand-info">
+            <span class="hud-brand-title">Decoding Media</span>
+            <span class="hud-brand-dot">&middot;</span>
+            <span class="hud-deck-title" id="hud-deck-name">Presentación</span>
+          </div>
+        </div>
+
+        <div class="hud-top-center">
+          <div class="hud-scene-tracker" id="hud-scene-tracker">
+            <span class="hud-scene-step-pill">PASO <b id="step-num">1</b> / <span id="step-tot">1</span></span>
+            <span class="hud-scene-name" id="step-name">Cargando escena...</span>
+            <span class="hud-format-tag badge-fmt-title" id="hud-format-badge">TITLE</span>
+          </div>
+        </div>
+
+        <div class="hud-top-right">
+          <button type="button" class="btn-hud-action" onclick="toggleScenesDrawer()" title="Lista de escenas (E)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="15" y2="12"/>
+              <line x1="3" y1="18" x2="18" y2="18"/>
+            </svg>
+            <span>Escenas</span>
+            <span class="hud-key-hint">E</span>
+          </button>
+
+          <a href="editor.html" class="btn-hud-action" title="Abrir Producer Room">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+            <span>Producer</span>
+          </a>
+
+          <button type="button" class="btn-hud-action" id="btn-topbar-hud" onclick="toggleHudVisibility()" title="Ocultar o fijar controles (H)">
+            <span>HUD</span>
+            <span class="hud-key-hint">H</span>
+          </button>
+
+          <button type="button" class="btn-hud-action" onclick="toggleFullScreen()" title="Pantalla Completa (F)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+            </svg>
+            <span class="hud-key-hint">F</span>
+          </button>
+        </div>
+      </header>
 
     <!-- Logos de Esquinas Superiores (Izquierda: Making Science, Derecha: Decoding Media) -->
     <div class="stage-corner-logo stage-corner-logo-left">
@@ -1333,6 +1806,47 @@
       </video>
     </div>
 
+    <!-- Barra Inferior de Control y Línea de Tiempo (Broadcast Bottombar) -->
+    <footer id="stage-bottom-bar" class="stage-hud-bar stage-hud-bottom">
+      <div class="hud-bottom-left">
+        <div class="hud-slide-counter-box" id="hud-slide-counter-box">
+          <span class="slide-tag">SLIDE</span>
+          <span class="slide-val"><b id="bottom-slide-cur">1</b> / <span id="bottom-slide-tot">1</span></span>
+        </div>
+        <div class="hud-speaker-pill" id="hud-speaker-pill" style="display: none;">
+          <span id="bottom-speaker-name">Ponente</span>
+        </div>
+      </div>
+
+      <div class="hud-bottom-center">
+        <!-- Línea de tiempo interactiva con puntos de salto directo -->
+        <div class="hud-timeline-strip" id="hud-timeline-strip" title="Línea de tiempo de escenas">
+          <!-- Puntos generados dinámicamente con renderTimelineStrip() -->
+        </div>
+      </div>
+
+      <div class="hud-bottom-right">
+        <div class="hud-playback-group">
+          <button type="button" class="btn-hud-playback" onclick="prevStep()" title="Paso anterior (←)">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button type="button" class="btn-hud-playback btn-hud-playback-primary" onclick="handleNextAction()" title="Avanzar diapositiva o video (Espacio / Intro)">
+            <span>Avanzar</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button type="button" class="btn-hud-playback" onclick="nextStep()" title="Siguiente escena (→)">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+          </button>
+        </div>
+
+        <div class="hud-hints-summary">
+          <span><kbd>Espacio</kbd> avanzar</span>
+          <span><kbd>E</kbd> menú</span>
+        </div>
+      </div>
+    </footer>
+
+  </div>
   </div>
 
   <!-- Controles flotantes discretos -->
@@ -2452,6 +2966,50 @@
       } catch (e) {}
       renderSceneDrawer();
 
+      // Actualizar formato y tags del HUD
+      const formatBadge = document.getElementById('hud-format-badge');
+      if (formatBadge) {
+        if (step.type === 'video') {
+          formatBadge.textContent = 'TRANSICIÓN';
+          formatBadge.className = 'hud-format-tag badge-fmt-video';
+        } else {
+          const fmt = (step.format || '3:4').toUpperCase();
+          formatBadge.textContent = fmt === 'TITLE' ? 'PORTADA' : fmt;
+          let cls = 'badge-fmt-34';
+          if (fmt === '16:9') cls = 'badge-fmt-169';
+          else if (fmt === '9:16') cls = 'badge-fmt-916';
+          else if (fmt === 'TITLE') cls = 'badge-fmt-title';
+          formatBadge.className = `hud-format-tag ${cls}`;
+        }
+      }
+
+      const slideCurEl = document.getElementById('bottom-slide-cur');
+      const slideTotEl = document.getElementById('bottom-slide-tot');
+      const slideBox = document.getElementById('hud-slide-counter-box');
+      if (slideBox) {
+        if (step.type === 'slide') {
+          slideBox.style.display = 'inline-flex';
+          if (slideCurEl) slideCurEl.textContent = currentSlide;
+          if (slideTotEl) slideTotEl.textContent = step.slidesCount || 1;
+        } else {
+          slideBox.style.display = 'none';
+        }
+      }
+
+      const spkPill = document.getElementById('hud-speaker-pill');
+      const spkName = document.getElementById('bottom-speaker-name');
+      if (spkPill && spkName) {
+        if (step.speaker && step.speaker.trim()) {
+          spkName.textContent = step.speaker.trim();
+          spkPill.style.display = 'inline-flex';
+        } else {
+          spkPill.style.display = 'none';
+        }
+      }
+
+      renderTimelineStrip();
+      updateDeckTitleUI();
+
       // Identificar la capa destino de este paso
       let targetLayer = null;
       if (step.type === 'slide') {
@@ -2929,6 +3487,9 @@
       } else if (e.code === 'KeyE' || e.key === 'e' || e.key === 'E') {
         e.preventDefault();
         toggleScenesDrawer();
+      } else if (e.code === 'KeyH' || e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        toggleHudVisibility();
       } else if (e.code === 'Escape' || e.key === 'Escape') {
         if (isDrawerOpen) {
           e.preventDefault();
@@ -2948,7 +3509,9 @@
         e.target.closest('#config-modal') ||
         e.target.closest('#scenes-drawer') ||
         e.target.closest('#drawer-toggle-btn') ||
-        e.target.closest('#drawer-backdrop')
+        e.target.closest('#drawer-backdrop') ||
+        e.target.closest('#stage-top-bar') ||
+        e.target.closest('#stage-bottom-bar')
       );
     }
 
@@ -2992,8 +3555,10 @@
     });
 
     function toggleFullScreen() {
+      const target = document.getElementById('presentation-viewport') || document.documentElement;
       if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
+        if (target.requestFullscreen) target.requestFullscreen().catch(() => {});
+        else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
       } else {
         if (document.exitFullscreen) document.exitFullscreen();
       }
@@ -3002,26 +3567,94 @@
     const btnFs = document.getElementById('btn-fullscreen');
     if (btnFs) btnFs.addEventListener('click', toggleFullScreen);
 
-    let hudIdleTimer = setTimeout(() => {
-      if (btnFs && !btnFs.matches(':hover')) {
-        btnFs.style.opacity = '0';
-        btnFs.style.pointerEvents = 'none';
-      }
-    }, 3500);
+    // Sistema de Atenuación Inteligente del HUD (Auto-Dimming en 3.5s)
+    let hudIdleTimer = null;
+    let isHudForcedHidden = false;
 
-    window.addEventListener('mousemove', () => {
+    function wakeHud() {
+      if (isHudForcedHidden) return;
+      document.body.classList.remove('hud-idle');
       if (btnFs) {
         btnFs.style.opacity = '0.35';
         btnFs.style.pointerEvents = 'auto';
       }
+      scheduleHudDim();
+    }
+
+    function scheduleHudDim() {
       if (hudIdleTimer) clearTimeout(hudIdleTimer);
       hudIdleTimer = setTimeout(() => {
-        if (btnFs && !btnFs.matches(':hover')) {
-          btnFs.style.opacity = '0';
-          btnFs.style.pointerEvents = 'none';
+        const topBar = document.getElementById('stage-top-bar');
+        const bottomBar = document.getElementById('stage-bottom-bar');
+        const isHoveringHud = (topBar && topBar.matches(':hover')) ||
+                              (bottomBar && bottomBar.matches(':hover')) ||
+                              (btnFs && btnFs.matches(':hover')) ||
+                              isDrawerOpen;
+        if (!isHoveringHud) {
+          document.body.classList.add('hud-idle');
+        } else {
+          scheduleHudDim();
         }
-      }, 3000);
-    });
+      }, 3500);
+    }
+
+    function toggleHudVisibility() {
+      isHudForcedHidden = !isHudForcedHidden;
+      if (isHudForcedHidden) {
+        document.body.classList.add('hud-force-hidden');
+        showHint('HUD Oculto (Pulsa H para restaurar)', 2000);
+      } else {
+        document.body.classList.remove('hud-force-hidden');
+        wakeHud();
+        showHint('HUD Visible', 1500);
+      }
+    }
+
+    window.addEventListener('mousemove', wakeHud);
+    window.addEventListener('pointermove', wakeHud);
+    window.addEventListener('touchstart', wakeHud, { passive: true });
+    window.addEventListener('keydown', wakeHud);
+
+    scheduleHudDim();
+
+    // Renderizador de Línea de Tiempo de Escenas
+    function renderTimelineStrip() {
+      const strip = document.getElementById('hud-timeline-strip');
+      if (!strip || !Array.isArray(STEPS)) return;
+
+      strip.innerHTML = '';
+      STEPS.forEach((step, idx) => {
+        const isVideo = (step.type === 'video');
+        const isActive = (idx === currentStepIndex);
+        const dot = document.createElement('div');
+        dot.className = `hud-timeline-dot ${isActive ? 'active' : ''} ${isVideo ? 'is-video' : 'is-slide'}`;
+        const name = step.name || (isVideo ? 'Transición de Video' : 'Escena');
+        dot.title = `${idx + 1}. ${name} (${(step.format || 'video').toUpperCase()})`;
+        dot.onclick = (e) => {
+          e.stopPropagation();
+          goToStep(idx);
+        };
+        strip.appendChild(dot);
+      });
+    }
+
+    function updateDeckTitleUI() {
+      const el = document.getElementById('hud-deck-name');
+      if (!el) return;
+      try {
+        let name = '';
+        if (stageDeckId === 'default') name = 'Presentación Principal';
+        else {
+          const storedDecks = localStorage.getItem('dm_custom_decks');
+          if (storedDecks) {
+            const parsed = JSON.parse(storedDecks);
+            const match = parsed.find(d => d.id === stageDeckId);
+            if (match && match.name) name = match.name;
+          }
+        }
+        el.textContent = name || 'Presentación';
+      } catch(e) {}
+    }
 
     // --- MODAL DE CALIBRACIÓN Y SELECCIÓN DE PLAZAS ---
     const configModal = document.getElementById('config-modal');
