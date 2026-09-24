@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Decoding Media - Presentación</title>
-  <!-- Google Fonts: Plus Jakarta Sans -->
+  <!-- Google Fonts: Montserrat -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
   
   <!-- Supabase Cloud SDK y Cliente -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -41,7 +41,7 @@
         radial-gradient(ellipse 65% 50% at 15% 0%, rgba(236, 72, 153, 0.08) 0%, transparent 60%),
         radial-gradient(ellipse 65% 50% at 85% 10%, rgba(168, 85, 247, 0.08) 0%, transparent 60%),
         radial-gradient(ellipse 60% 40% at 50% 95%, rgba(56, 189, 248, 0.05) 0%, transparent 60%);
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #fff;
       display: flex;
       align-items: center;
@@ -402,27 +402,27 @@
       transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* Botón flotante discreto de Pantalla Completa estilo cápsula glass */
+    /* Botón flotante discreto de Pantalla Completa */
     .minimal-fs-btn {
       position: fixed;
       bottom: 20px;
       right: 20px;
       z-index: 1000;
-      width: 44px;
-      height: 44px;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(14, 17, 26, 0.45);
+      background: rgba(14, 17, 26, 0.6);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 9999px;
+      border-radius: 4px;
       color: rgba(255, 255, 255, 0.75);
       cursor: pointer;
       opacity: 0.25;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
       padding: 0;
     }
 
@@ -487,15 +487,15 @@
       backdrop-filter: blur(28px);
       -webkit-backdrop-filter: blur(28px);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 20px;
+      border-radius: 6px;
       width: 90%;
       max-width: 620px;
       max-height: 90vh;
       overflow-y: auto;
-      padding: 28px;
-      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
       transform: translateY(20px);
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform 0.25s ease;
     }
 
     .modal-backdrop.open .modal-card {
@@ -629,13 +629,13 @@
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-left: none;
-      border-radius: 0 14px 14px 0;
+      border-radius: 0 4px 4px 0;
       color: rgba(255, 255, 255, 0.7);
       padding: 12px 9px 12px 7px;
       cursor: pointer;
       opacity: 0.35;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+      transition: all 0.2s ease;
+      box-shadow: 4px 0 16px rgba(0, 0, 0, 0.4);
       outline: none;
     }
 
@@ -645,8 +645,7 @@
       background: rgba(15, 20, 34, 0.95);
       border-color: rgba(236, 72, 153, 0.5);
       color: #fff;
-      transform: translateY(-50%) translateX(3px);
-      box-shadow: 0 0 25px rgba(236, 72, 153, 0.3);
+      transform: translateY(-50%) translateX(2px);
     }
 
     .drawer-toggle-inner {
@@ -679,7 +678,7 @@
       border: 1px solid rgba(236, 72, 153, 0.4);
       color: #fff;
       padding: 2px 4px;
-      border-radius: 6px;
+      border-radius: 3px;
       letter-spacing: 0;
     }
 
@@ -716,7 +715,7 @@
       border-right: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: none;
       transform: translateX(-100%);
-      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex;
       flex-direction: column;
       user-select: none;
@@ -724,7 +723,7 @@
 
     .scenes-drawer.open {
       transform: translateX(0);
-      box-shadow: 20px 0 60px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      box-shadow: 20px 0 60px rgba(0, 0, 0, 0.85);
     }
 
     .drawer-header {
@@ -742,25 +741,25 @@
     }
 
     .drawer-pill-brand {
-      background: rgba(236, 72, 153, 0.15);
-      border: 1px solid rgba(236, 72, 153, 0.4);
+      background: rgba(236, 72, 153, 0.12);
+      border: 1px solid rgba(236, 72, 153, 0.3);
       color: #fff;
-      font-size: 10px;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 999px;
-      letter-spacing: 0.1em;
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 3px;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
     .drawer-pill-live {
       font-size: 9px;
-      font-weight: 800;
+      font-weight: 700;
       color: #38bdf8;
       background: rgba(56, 189, 248, 0.12);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      padding: 3px 7px;
-      border-radius: 999px;
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      padding: 2px 6px;
+      border-radius: 3px;
       letter-spacing: 0.06em;
       display: inline-flex;
       align-items: center;
@@ -773,21 +772,20 @@
       height: 5px;
       background: #38bdf8;
       border-radius: 50%;
-      box-shadow: 0 0 6px #38bdf8;
     }
 
     .drawer-close-btn {
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: #94a3b8;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
     }
 
     .drawer-close-btn:hover {
@@ -853,7 +851,7 @@
       padding: 12px 14px;
       background: rgba(255, 255, 255, 0.025);
       border: 1px solid rgba(255, 255, 255, 0.07);
-      border-radius: 12px;
+      border-radius: 4px;
       cursor: pointer;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       position: relative;
@@ -981,13 +979,14 @@
     }
 
     .scene-active-pill {
-      font-size: 9px;
+      font-size: 8.5px;
       font-weight: 800;
       background: #ec4899;
       color: #000;
-      padding: 3px 6px;
-      border-radius: 6px;
-      letter-spacing: 0.05em;
+      padding: 2px 6px;
+      border-radius: 3px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
 
     .scene-go-icon {
@@ -1042,8 +1041,8 @@
       color: #94a3b8;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 4px 10px;
-      border-radius: 999px;
+      padding: 3px 8px;
+      border-radius: 3px;
       transition: all 0.2s ease;
     }
 
@@ -1056,7 +1055,6 @@
       background: rgba(236, 72, 153, 0.15);
       border-color: rgba(236, 72, 153, 0.5);
       color: #ec4899;
-      box-shadow: 0 0 14px rgba(236, 72, 153, 0.25);
     }
 
     .trans-sound-tag {
@@ -1175,25 +1173,25 @@
       justify-content: space-between;
       gap: 14px;
       padding: 0 16px;
-      background: rgba(9, 11, 17, 0.78);
+      background: rgba(9, 11, 17, 0.88);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(236, 72, 153, 0.08);
+      border-radius: 4px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
       color: #fff;
-      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.25s ease, transform 0.25s ease;
       pointer-events: auto;
     }
 
     .stage-hud-top {
       top: 14px;
-      height: 46px;
+      height: 44px;
     }
 
     .stage-hud-bottom {
       bottom: 14px;
-      height: 44px;
+      height: 42px;
     }
 
     /* Auto-ocultación elegante por inactividad del cursor */
@@ -1243,12 +1241,12 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 3px 9px;
-      border-radius: 9999px;
-      background: rgba(236, 72, 153, 0.16);
-      border: 1px solid rgba(236, 72, 153, 0.35);
-      font-size: 10px;
-      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 3px;
+      background: rgba(236, 72, 153, 0.12);
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      font-size: 9.5px;
+      font-weight: 700;
       letter-spacing: 0.08em;
       color: #f472b6;
       white-space: nowrap;
@@ -1299,16 +1297,16 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 4px 12px;
+      padding: 3px 10px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
+      border-radius: 4px;
       max-width: 100%;
       overflow: hidden;
     }
 
     .hud-scene-step-pill {
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.04em;
       color: #94a3b8;
@@ -1321,7 +1319,7 @@
 
     .hud-scene-name {
       font-size: 11.5px;
-      font-weight: 700;
+      font-weight: 600;
       color: #f1f5f9;
       white-space: nowrap;
       overflow: hidden;
@@ -1330,41 +1328,41 @@
     }
 
     .hud-format-tag {
-      font-size: 9.5px;
+      font-size: 9px;
       font-weight: 800;
       letter-spacing: 0.06em;
-      padding: 2px 7px;
-      border-radius: 5px;
+      padding: 2px 6px;
+      border-radius: 3px;
       white-space: nowrap;
     }
 
     .badge-fmt-title {
-      background: rgba(236, 72, 153, 0.2);
-      border: 1px solid rgba(236, 72, 153, 0.4);
+      background: rgba(236, 72, 153, 0.16);
+      border: 1px solid rgba(236, 72, 153, 0.35);
       color: #f472b6;
     }
 
     .badge-fmt-34 {
-      background: rgba(56, 189, 248, 0.2);
-      border: 1px solid rgba(56, 189, 248, 0.4);
+      background: rgba(56, 189, 248, 0.16);
+      border: 1px solid rgba(56, 189, 248, 0.35);
       color: #38bdf8;
     }
 
     .badge-fmt-169 {
-      background: rgba(168, 85, 247, 0.2);
-      border: 1px solid rgba(168, 85, 247, 0.4);
+      background: rgba(168, 85, 247, 0.16);
+      border: 1px solid rgba(168, 85, 247, 0.35);
       color: #c084fc;
     }
 
     .badge-fmt-916 {
-      background: rgba(251, 146, 60, 0.2);
-      border: 1px solid rgba(251, 146, 60, 0.4);
+      background: rgba(251, 146, 60, 0.16);
+      border: 1px solid rgba(251, 146, 60, 0.35);
       color: #fb923c;
     }
 
     .badge-fmt-video {
-      background: rgba(148, 163, 184, 0.16);
-      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: rgba(148, 163, 184, 0.14);
+      border: 1px solid rgba(148, 163, 184, 0.28);
       color: #cbd5e1;
     }
 
@@ -1373,22 +1371,22 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 5px 10px;
-      border-radius: 7px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 4px 9px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.09);
       color: #cbd5e1;
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 600;
       text-decoration: none;
       cursor: pointer;
-      transition: all 0.18s ease;
+      transition: all 0.15s ease;
       white-space: nowrap;
     }
 
     .btn-hud-action:hover {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
       color: #fff;
     }
 
@@ -1396,9 +1394,9 @@
       font-family: monospace;
       font-size: 9px;
       padding: 1px 4px;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       color: #94a3b8;
     }
 
@@ -1407,8 +1405,8 @@
       display: inline-flex;
       align-items: center;
       gap: 7px;
-      padding: 3px 10px;
-      border-radius: 6px;
+      padding: 3px 9px;
+      border-radius: 4px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
       font-size: 11px;
@@ -1447,38 +1445,36 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 4px 10px;
+      padding: 4px 8px;
       background: rgba(0, 0, 0, 0.25);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 9999px;
+      border-radius: 4px;
       max-width: 100%;
       overflow-x: auto;
     }
 
     .hud-timeline-dot {
       width: 14px;
-      height: 7px;
-      border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.18);
+      height: 6px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.2);
       cursor: pointer;
       position: relative;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.2s ease;
     }
 
     .hud-timeline-dot:hover {
       background: rgba(255, 255, 255, 0.5);
-      transform: scaleY(1.3);
     }
 
     .hud-timeline-dot.active {
-      width: 28px;
+      width: 24px;
       background: var(--neon-pink);
-      box-shadow: 0 0 10px rgba(236, 72, 153, 0.6);
     }
 
     .hud-timeline-dot.is-video {
       border-radius: 2px;
-      height: 5px;
+      height: 4px;
     }
 
     /* Botones de reproducción */
@@ -1495,12 +1491,12 @@
       gap: 5px;
       height: 28px;
       padding: 0 9px;
-      border-radius: 6px;
+      border-radius: 4px;
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: #cbd5e1;
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.15s ease;
     }
@@ -1512,8 +1508,8 @@
     }
 
     .btn-hud-playback-primary {
-      background: rgba(236, 72, 153, 0.22);
-      border-color: rgba(236, 72, 153, 0.45);
+      background: rgba(236, 72, 153, 0.2);
+      border-color: rgba(236, 72, 153, 0.4);
       color: #fff;
     }
 
@@ -1521,7 +1517,6 @@
       background: #ec4899;
       border-color: #ec4899;
       color: #000;
-      box-shadow: 0 0 14px rgba(236, 72, 153, 0.5);
     }
 
     .hud-hints-summary {
@@ -1535,7 +1530,7 @@
     .hud-hints-summary kbd {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 4px;
+      border-radius: 3px;
       padding: 1px 4px;
       font-family: monospace;
       color: #94a3b8;
@@ -1567,12 +1562,7 @@
         <span class="drawer-pill-brand">DECODING MEDIA</span>
         <span class="drawer-pill-live" id="drawer-live-indicator">EN DIRECTO</span>
       </div>
-      <button class="drawer-close-btn" onclick="closeScenesDrawer()" title="Cerrar panel (Esc)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
+      <button class="drawer-close-btn" onclick="closeScenesDrawer()" title="Cerrar panel (Esc)">&times;</button>
     </div>
 
     <div class="drawer-title-box">
@@ -1589,16 +1579,13 @@
     <div class="drawer-footer">
       <div class="drawer-nav-actions">
         <button type="button" class="drawer-btn" onclick="prevStep()" title="Escena anterior (&larr;)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          Anterior
+          &larr; Anterior
         </button>
         <button type="button" class="drawer-btn" onclick="resetPresentation()" title="Reiniciar desde el inicio">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
           Inicio
         </button>
         <button type="button" class="drawer-btn drawer-btn-primary" onclick="nextStep()" title="Siguiente escena (&rarr; / Espacio)">
-          Siguiente
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          Siguiente &rarr;
         </button>
       </div>
       <div class="drawer-hotkeys-hint">
@@ -1640,20 +1627,12 @@
 
         <div class="hud-top-right">
           <button type="button" class="btn-hud-action" onclick="toggleScenesDrawer()" title="Lista de escenas (E)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="3" y1="6" x2="21" y2="6"/>
-              <line x1="3" y1="12" x2="15" y2="12"/>
-              <line x1="3" y1="18" x2="18" y2="18"/>
-            </svg>
             <span>Escenas</span>
             <span class="hud-key-hint">E</span>
           </button>
 
           <a href="editor.html" class="btn-hud-action" title="Abrir Producer Room">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-            </svg>
-            <span>Producer</span>
+            <span>Producer &nearr;</span>
           </a>
 
           <button type="button" class="btn-hud-action" id="btn-topbar-hud" onclick="toggleHudVisibility()" title="Ocultar o fijar controles (H)">
@@ -1662,9 +1641,7 @@
           </button>
 
           <button type="button" class="btn-hud-action" onclick="toggleFullScreen()" title="Pantalla Completa (F)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-            </svg>
+            <span>Pantalla</span>
             <span class="hud-key-hint">F</span>
           </button>
         </div>
@@ -1827,15 +1804,14 @@
 
       <div class="hud-bottom-right">
         <div class="hud-playback-group">
-          <button type="button" class="btn-hud-playback" onclick="prevStep()" title="Paso anterior (←)">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          <button type="button" class="btn-hud-playback" onclick="prevStep()" title="Paso anterior (←)" style="font-size: 13px; font-weight: 700;">
+            &larr;
           </button>
           <button type="button" class="btn-hud-playback btn-hud-playback-primary" onclick="handleNextAction()" title="Avanzar diapositiva o video (Espacio / Intro)">
-            <span>Avanzar</span>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            <span>Avanzar &rarr;</span>
           </button>
-          <button type="button" class="btn-hud-playback" onclick="nextStep()" title="Siguiente escena (→)">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+          <button type="button" class="btn-hud-playback" onclick="nextStep()" title="Siguiente escena (→)" style="font-size: 11px; font-weight: 700;">
+            Paso &rarr;
           </button>
         </div>
 
@@ -2663,9 +2639,7 @@
                 ${isActive ? `
                   <span class="scene-active-pill">ACTUAL</span>
                 ` : `
-                  <span class="scene-go-icon">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                  </span>
+                  <span class="scene-go-icon" style="font-size: 13px; font-weight: 700;">&rarr;</span>
                 `}
               </div>
             </div>
@@ -2675,9 +2649,6 @@
             <div class="drawer-trans-divider ${isActive ? 'active' : ''}" onclick="onDrawerSelectScene(${idx})" title="Transición con transition.mp3">
               <div class="trans-divider-line"></div>
               <div class="trans-pill">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
-                  <polygon points="5 3 19 12 5 21 5 3"/>
-                </svg>
                 <span>${escapeHtml(step.shortName || step.name || 'Transición')}</span>
                 <span class="trans-sound-tag">SFX</span>
               </div>

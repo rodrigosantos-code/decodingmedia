@@ -6,10 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Decoding Media - Proyectos</title>
   
-  <!-- Google Fonts: Plus Jakarta Sans -->
+  <!-- Google Fonts: Montserrat (Weights: 300, 400, 500, 600, 700, 800, 900) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
   
   <!-- Supabase Cloud SDK y Cliente -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -25,14 +25,14 @@
 
     :root {
       --bg-base: #090a0f;
-      --bg-card: rgba(18, 21, 31, 0.75);
-      --bg-card-hover: rgba(26, 31, 46, 0.9);
-      --bg-input: rgba(13, 15, 24, 0.85);
+      --bg-card: rgba(16, 19, 28, 0.85);
+      --bg-card-hover: rgba(22, 26, 38, 0.95);
+      --bg-input: rgba(13, 15, 24, 0.9);
       --border-card: rgba(255, 255, 255, 0.08);
-      --border-card-hover: rgba(255, 255, 255, 0.16);
+      --border-card-hover: rgba(255, 255, 255, 0.18);
       
       --accent: #ec4899;
-      --accent-glow: rgba(236, 72, 153, 0.2);
+      --accent-glow: rgba(236, 72, 153, 0.15);
       
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
@@ -43,23 +43,19 @@
 
     body {
       background-color: var(--bg-base);
-      background-image:
-        radial-gradient(ellipse 70% 50% at 20% 0%, rgba(236, 72, 153, 0.05) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 10%, rgba(168, 85, 247, 0.04) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 50% at 50% 100%, rgba(56, 189, 248, 0.03) 0%, transparent 60%);
-      background-attachment: fixed;
       color: var(--text-main);
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-size: 13px;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      -webkit-font-smoothing: antialiased;
     }
 
     /* Header */
     header {
-      height: 64px;
-      background: rgba(9, 10, 15, 0.8);
+      height: 60px;
+      background: rgba(9, 10, 15, 0.9);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border-card);
@@ -79,28 +75,27 @@
     }
 
     .brand-logo-text {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 800;
-      letter-spacing: -0.03em;
+      letter-spacing: -0.02em;
       color: #fff;
+      text-transform: uppercase;
     }
 
-    .brand-sticker-badge {
-      font-size: 10px;
-      font-weight: 700;
+    .brand-tagline {
+      font-size: 10.5px;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: var(--text-muted);
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      border-left: 1px solid rgba(255, 255, 255, 0.12);
+      padding-left: 12px;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     /* Buttons */
@@ -109,36 +104,37 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: 8px 16px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 700;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
       cursor: pointer;
-      transition: all 0.18s ease;
+      transition: all 0.15s ease;
       text-decoration: none;
-      border: none;
+      border: 1px solid transparent;
     }
 
     .btn-primary {
       background: var(--accent);
       color: #fff;
-      box-shadow: 0 2px 10px var(--accent-glow);
+      border-color: var(--accent);
     }
 
     .btn-primary:hover {
       background: #db2777;
-      transform: translateY(-1px);
+      border-color: #db2777;
     }
 
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border-card);
       color: var(--text-main);
     }
 
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.09);
+      background: rgba(255, 255, 255, 0.08);
       border-color: var(--border-card-hover);
       color: #fff;
     }
@@ -150,53 +146,70 @@
     }
 
     .btn-outline-danger:hover {
-      background: rgba(248, 113, 113, 0.1);
+      background: rgba(248, 113, 113, 0.08);
       border-color: var(--danger);
+    }
+
+    .btn-text-action {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 3px;
+      transition: color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .btn-text-action:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-text-action.danger:hover {
+      color: var(--danger);
+      background: rgba(248, 113, 113, 0.08);
     }
 
     /* Container */
     .dashboard-container {
       max-width: 1180px;
       margin: 0 auto;
-      padding: 48px 32px 64px 32px;
+      padding: 40px 32px 64px 32px;
       width: 100%;
       flex: 1;
     }
 
     /* Welcome Hero */
     .welcome-hero {
-      margin-bottom: 40px;
+      margin-bottom: 36px;
     }
 
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 20px;
-      background: rgba(236, 72, 153, 0.08);
-      border: 1px solid rgba(236, 72, 153, 0.2);
-      color: var(--accent);
+    .hero-eyebrow {
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      margin-bottom: 16px;
+      color: var(--accent);
+      margin-bottom: 8px;
     }
 
     .hero-title {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 800;
-      letter-spacing: -0.03em;
+      letter-spacing: -0.02em;
       color: #fff;
-      margin-bottom: 12px;
-      line-height: 1.2;
+      margin-bottom: 10px;
+      line-height: 1.25;
     }
 
     .hero-subtitle {
-      font-size: 14px;
+      font-size: 13.5px;
+      font-weight: 400;
       color: var(--text-muted);
-      max-width: 620px;
+      max-width: 580px;
       line-height: 1.6;
     }
 
@@ -213,8 +226,10 @@
     }
 
     .projects-count {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       color: #fff;
     }
 
@@ -236,53 +251,50 @@
       border: 1px solid var(--border-card);
       color: var(--text-main);
       padding: 8px 12px;
-      border-radius: 8px;
+      border-radius: 4px;
+      font-family: inherit;
       font-size: 12px;
       outline: none;
-      transition: all 0.2s;
+      transition: border-color 0.15s ease;
     }
 
     .search-input:focus {
       border-color: rgba(255, 255, 255, 0.25);
-      background: var(--bg-card-hover);
     }
 
     /* Projects Grid */
     .projects-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: 20px;
+      gap: 18px;
     }
 
     /* Project Card */
     .project-card {
       background: var(--bg-card);
       border: 1px solid var(--border-card);
-      border-radius: 16px;
-      padding: 22px;
+      border-radius: 6px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      transition: all 0.22s ease;
-      position: relative;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
     }
 
     .project-card:hover {
       background: var(--bg-card-hover);
       border-color: var(--border-card-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
     }
 
     .card-top {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .card-name {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       color: #fff;
       letter-spacing: -0.01em;
@@ -291,7 +303,7 @@
     }
 
     .card-id-tag {
-      font-size: 11px;
+      font-size: 10.5px;
       font-family: ui-monospace, monospace;
       color: var(--text-dim);
     }
@@ -302,8 +314,8 @@
       gap: 12px;
       font-size: 11px;
       color: var(--text-muted);
-      margin-bottom: 20px;
-      padding-bottom: 14px;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
@@ -319,55 +331,45 @@
       font-size: 11px;
     }
 
-    .btn-icon-only {
-      flex: 0 0 auto !important;
-      padding: 7px 9px !important;
-    }
-
     /* New Project Card Placeholder */
     .new-project-card {
-      border: 1px dashed rgba(255, 255, 255, 0.15);
-      background: rgba(255, 255, 255, 0.015);
-      border-radius: 16px;
-      padding: 32px 20px;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.01);
+      border-radius: 6px;
+      padding: 28px 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
       cursor: pointer;
-      transition: all 0.2s;
-      min-height: 170px;
+      transition: all 0.15s ease;
+      min-height: 160px;
     }
 
     .new-project-card:hover {
       border-color: var(--accent);
-      background: rgba(236, 72, 153, 0.03);
+      background: rgba(236, 72, 153, 0.02);
     }
 
     .new-project-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border-card);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 12px;
-      color: var(--text-muted);
+      font-size: 20px;
+      line-height: 1;
+      margin-bottom: 8px;
+      color: var(--text-dim);
+      font-weight: 300;
     }
 
     .new-project-card:hover .new-project-icon {
-      border-color: var(--accent);
-      color: #fff;
+      color: var(--accent);
     }
 
     .new-project-title {
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 700;
       color: #fff;
       margin-bottom: 4px;
+      letter-spacing: 0.02em;
     }
 
     .new-project-desc {
@@ -381,21 +383,21 @@
       position: fixed;
       inset: 0;
       background: rgba(5, 7, 11, 0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       z-index: 1000;
       align-items: center;
       justify-content: center;
     }
 
     .modal-card {
-      background: rgba(17, 20, 31, 0.98);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 20px;
+      background: #11141e;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
       width: 92%;
-      max-width: 460px;
+      max-width: 440px;
       padding: 24px;
-      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
     }
 
     .modal-header {
@@ -408,23 +410,28 @@
     }
 
     .modal-title {
-      font-size: 15px;
-      font-weight: 800;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
       color: #fff;
     }
 
     .modal-close {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: var(--text-muted);
-      font-size: 16px;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-size: 18px;
       cursor: pointer;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
+      width: 24px;
+      height: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: color 0.15s ease;
+    }
+
+    .modal-close:hover {
+      color: #fff;
     }
 
     .form-group {
@@ -433,21 +440,22 @@
 
     .form-label {
       display: block;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
       margin-bottom: 6px;
     }
 
     .form-input {
       width: 100%;
-      background: rgba(13, 15, 24, 0.85);
+      background: rgba(13, 15, 24, 0.9);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: #fff;
-      padding: 9px 12px;
-      border-radius: 8px;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: inherit;
       font-size: 12px;
       outline: none;
     }
@@ -461,10 +469,10 @@
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background: rgba(17, 20, 31, 0.95);
+      background: #151824;
       border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: 10px 18px;
-      border-radius: 10px;
+      padding: 9px 16px;
+      border-radius: 4px;
       font-size: 12px;
       font-weight: 600;
       color: #fff;
@@ -480,7 +488,7 @@
   <header>
     <div class="brand-title">
       <span class="brand-logo-text">Decoding Media</span>
-      <span class="brand-sticker-badge">Control Hub</span>
+      <span class="brand-tagline">Control Hub</span>
     </div>
 
     <div class="header-actions">
@@ -496,7 +504,7 @@
   <main class="dashboard-container">
     <!-- Hero Bienvenida -->
     <div class="welcome-hero">
-      <div class="hero-badge">Workspace</div>
+      <div class="hero-eyebrow">Decoding Media &middot; Control Hub</div>
       <h1 class="hero-title">Bienvenido a Decoding Media</h1>
       <p class="hero-subtitle">
         Centro de control y gestión de presentaciones en directo. Selecciona un proyecto para abrir la sala de realización o crea uno nuevo.
@@ -530,7 +538,7 @@
 
       <div class="form-group">
         <label class="form-label">Nombre del Proyecto</label>
-        <input type="text" id="new-deck-name-input" class="form-input" placeholder="Ej: Mesa Redonda - Sesión Tarde" />
+        <input type="text" id="new-deck-name-input" class="form-input" placeholder="Ej: Keynote Principal" />
       </div>
 
       <div class="form-group">
@@ -586,10 +594,10 @@
         <label class="form-label" id="share-deck-label">URL directa del escenario</label>
         <div style="display: flex; gap: 8px; align-items: center;">
           <input type="text" id="share-deck-url-input" class="form-input" readonly style="font-family: monospace; font-size: 11px; color: #a5f3fc; background: rgba(0,0,0,0.3); cursor: text;" onclick="this.select()" />
-          <button type="button" class="btn btn-primary" onclick="copyFromShareModal()" style="white-space: nowrap; padding: 9px 14px;">Copiar</button>
+          <button type="button" class="btn btn-primary" onclick="copyFromShareModal()" style="white-space: nowrap; padding: 7px 14px;">Copiar</button>
         </div>
         <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">
-          Usa este enlace para proyectar el escenario en pantalla completa o compartirlo con el equipo técnico.
+          Usa este enlace para proyectar el escenario o compartirlo con el equipo técnico.
         </p>
       </div>
 
@@ -669,17 +677,11 @@
                   <h2 class="card-name">${escapeHtml(deck.name)}</h2>
                   <span class="card-id-tag">${escapeHtml(deck.id)}</span>
                 </div>
-                <div style="display: flex; gap: 4px;">
-                  <button class="btn btn-secondary btn-icon-only" onclick="openShareDeckModal('${deck.id}', '${escapeHtml(deck.name)}')" title="Obtener link de presentación">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                  </button>
-                  <button class="btn btn-secondary btn-icon-only" onclick="openRenameModal('${deck.id}', '${escapeHtml(deck.name)}')" title="Renombrar">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                  </button>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                  <button class="btn-text-action" onclick="openShareDeckModal('${deck.id}', '${escapeHtml(deck.name)}')" title="Obtener enlace directo">Link</button>
+                  <button class="btn-text-action" onclick="openRenameModal('${deck.id}', '${escapeHtml(deck.name)}')" title="Renombrar">Renombrar</button>
                   ${!isDefault ? `
-                    <button class="btn btn-secondary btn-icon-only" style="color: var(--danger);" onclick="deleteProject('${deck.id}', '${escapeHtml(deck.name)}')" title="Eliminar">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    </button>
+                    <button class="btn-text-action danger" onclick="deleteProject('${deck.id}', '${escapeHtml(deck.name)}')" title="Eliminar">Eliminar</button>
                   ` : ''}
                 </div>
               </div>
@@ -690,14 +692,14 @@
             </div>
 
             <div class="card-actions">
-              <a href="editor.html?deck=${encodeURIComponent(deck.id)}" class="btn btn-primary" style="flex: 1.3;">
-                Mesa de Control
+              <a href="editor.html?deck=${encodeURIComponent(deck.id)}" class="btn btn-primary" style="flex: 1.2;">
+                Producer Room
               </a>
-              <a href="presentation.html?deck=${encodeURIComponent(deck.id)}" target="_blank" class="btn btn-secondary" title="Abrir escenario">
+              <a href="presentation.html?deck=${encodeURIComponent(deck.id)}" target="_blank" class="btn btn-secondary">
                 Escenario &nearr;
               </a>
-              <button class="btn btn-secondary btn-icon-only" onclick="copyPresentationLink('${deck.id}')" title="Copiar link directo de presentación">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <button class="btn btn-secondary" onclick="copyPresentationLink('${deck.id}')" title="Copiar link" style="flex: 0 0 auto; padding: 7px 11px;">
+                Copiar
               </button>
             </div>
           </div>
@@ -707,11 +709,9 @@
       // Tarjeta adicional "+ Crear nuevo proyecto"
       html += `
         <div class="new-project-card" onclick="openNewDeckModal()">
-          <div class="new-project-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </div>
+          <div class="new-project-icon">+</div>
           <div class="new-project-title">Nuevo Proyecto</div>
-          <div class="new-project-desc">Crear una nueva presentación en directo</div>
+          <div class="new-project-desc">Crear una nueva presentación</div>
         </div>
       `;
 
