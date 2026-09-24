@@ -22,16 +22,16 @@
     }
 
     :root {
-      --bg-base: #090a0f;
-      --bg-card: rgba(18, 21, 31, 0.75);
-      --bg-card-solid: #111422;
-      --bg-card-hover: rgba(26, 31, 46, 0.85);
-      --bg-input: rgba(13, 15, 24, 0.85);
-      --border-subtle: rgba(255, 255, 255, 0.07);
-      --border-card: rgba(255, 255, 255, 0.08);
-      --border-card-hover: rgba(255, 255, 255, 0.16);
+      --bg-base: #0c0d12;
+      --bg-card: #15161c;
+      --bg-card-solid: #15161c;
+      --bg-card-hover: #1a1c24;
+      --bg-input: #101116;
+      --border-subtle: rgba(255, 255, 255, 0.05);
+      --border-card: rgba(255, 255, 255, 0.06);
+      --border-card-hover: rgba(255, 255, 255, 0.14);
 
-      /* Single Accent — Rose */
+      /* Single Accent — Rose (Decoding Media) */
       --accent-50: #fdf2f8;
       --accent-100: #fce7f3;
       --accent-200: #fbcfe8;
@@ -39,25 +39,20 @@
       --accent-400: #f472b6;
       --accent-500: #ec4899;
       --accent-600: #db2777;
-      --accent-glow: rgba(236, 72, 153, 0.25);
+      --accent-glow: rgba(236, 72, 153, 0.22);
 
       --danger: #f87171;
       --danger-bg: rgba(248, 113, 113, 0.12);
       --danger-border: rgba(248, 113, 113, 0.25);
 
       --text-main: #f8fafc;
-      --text-muted: #94a3b8;
+      --text-muted: #8e95a5;
       --text-dim: #64748b;
       --accent: var(--accent-500);
     }
 
     body {
       background-color: var(--bg-base);
-      background-image:
-        radial-gradient(ellipse 65% 50% at 15% 0%, rgba(236, 72, 153, 0.06) 0%, transparent 60%),
-        radial-gradient(ellipse 65% 50% at 85% 10%, rgba(236, 72, 153, 0.04) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 50% 95%, rgba(236, 72, 153, 0.03) 0%, transparent 60%);
-      background-attachment: fixed;
       color: var(--text-main);
       font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-size: 13px;
@@ -69,12 +64,10 @@
     }
 
     header {
-      background: rgba(11, 13, 20, 0.85);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
+      background: #0e0f14;
       border-bottom: 1px solid var(--border-subtle);
-      padding: 8px 24px;
-      min-height: 46px;
+      padding: 10px 28px;
+      min-height: 56px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -304,34 +297,33 @@
 
     .card {
       background: var(--bg-card);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
       border: 1px solid var(--border-card);
-      border-radius: 6px;
-      padding: 12px 16px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-      transition: border-color 0.2s ease;
+      border-radius: 18px;
+      padding: 16px 20px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .card:hover {
       border-color: var(--border-card-hover);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
     }
 
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .card-title {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       color: #fff;
       letter-spacing: -0.01em;
     }
@@ -342,7 +334,7 @@
       align-items: flex-start;
       gap: 0;
       overflow-x: auto;
-      padding: 4px 2px 6px;
+      padding: 6px 2px 8px;
       scrollbar-width: none;
     }
 
@@ -354,35 +346,35 @@
       align-items: center;
       cursor: pointer;
       flex-shrink: 0;
-      padding: 3px 5px;
+      padding: 5px 7px;
       transition: all 0.2s ease;
-      border-radius: 8px;
+      border-radius: 10px;
     }
 
-    .tl-node:hover { background: rgba(255, 255, 255, 0.04); }
+    .tl-node:hover { background: rgba(255, 255, 255, 0.05); }
 
     .tl-shape {
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      background: #111218;
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
       transition: all 0.2s ease;
       flex-shrink: 0;
     }
 
     /* Format-proportional shapes */
-    .tl-shape.fmt-34   { width: 20px; height: 26px; }
-    .tl-shape.fmt-169  { width: 32px; height: 18px; }
-    .tl-shape.fmt-916  { width: 16px; height: 28px; }
-    .tl-shape.fmt-title { width: 26px; height: 18px; border-radius: 4px; background: rgba(255, 255, 255, 0.05); border-style: dashed; }
+    .tl-shape.fmt-34   { width: 22px; height: 28px; }
+    .tl-shape.fmt-169  { width: 34px; height: 20px; }
+    .tl-shape.fmt-916  { width: 18px; height: 30px; }
+    .tl-shape.fmt-title { width: 28px; height: 20px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); border-style: dashed; }
 
     .tl-node.active .tl-shape {
-      background: rgba(236, 72, 153, 0.2);
+      background: rgba(236, 72, 153, 0.22);
       border-color: #ec4899;
-      box-shadow: 0 0 10px rgba(236, 72, 153, 0.4);
+      box-shadow: 0 0 12px rgba(236, 72, 153, 0.45);
     }
 
     .tl-node:hover .tl-shape {
-      border-color: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.35);
     }
 
     .tl-name {
@@ -557,10 +549,10 @@
 
     .btn {
       flex: 1;
-      padding: 8px 14px;
-      border-radius: 4px;
-      font-size: 11.5px;
-      font-weight: 600;
+      padding: 9px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -574,31 +566,36 @@
 
     .btn-primary {
       background: var(--accent-300);
-      color: #090a0f;
-      font-weight: 700;
+      color: #000000 !important;
+      font-weight: 800;
       border: none;
+      box-shadow: 0 2px 10px rgba(249, 168, 212, 0.25);
     }
 
     .btn-primary:hover {
       background: #f472b6;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(244, 114, 182, 0.35);
+      color: #000000 !important;
     }
 
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.09);
-      color: #e2e8f0;
+      background: #101116;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #f1f5f9;
     }
 
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.09);
-      border-color: rgba(255, 255, 255, 0.18);
+      background: #181922;
+      border-color: rgba(255, 255, 255, 0.22);
       color: #fff;
     }
 
     .btn-danger {
       background: var(--danger-bg);
       color: #f87171;
-      border-color: var(--danger-border);
+      border: 1px solid var(--danger-border);
+      border-radius: 10px;
     }
 
     .btn-danger:hover {
@@ -610,90 +607,93 @@
     .sliders-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 5px 8px;
-      margin-top: 6px;
+      gap: 8px 10px;
+      margin-top: 8px;
       transition: opacity 0.2s ease;
     }
 
     .slider-group {
-      background: rgba(255, 255, 255, 0.025);
+      background: #101116;
       border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      padding: 5px 8px;
+      border-radius: 12px;
+      padding: 8px 12px;
+      transition: all 0.2s ease;
     }
 
     .slider-group:hover {
-      border-color: rgba(236, 72, 153, 0.25);
-      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(244, 114, 182, 0.25);
+      background: #13141b;
     }
 
     .slider-label-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2px;
-      font-size: 10px;
+      margin-bottom: 4px;
+      font-size: 10.5px;
     }
 
     .slider-label {
       color: var(--text-muted);
       font-weight: 600;
-      font-size: 10px;
+      font-size: 10.5px;
       white-space: nowrap;
     }
 
     .slider-val-tag {
       font-family: ui-monospace, SFMono-Regular, monospace;
       color: #f472b6;
-      font-size: 9.5px;
+      font-size: 10px;
       font-weight: 700;
       background: rgba(236, 72, 153, 0.12);
       border: 1px solid rgba(236, 72, 153, 0.25);
-      padding: 1px 5px;
-      border-radius: 4px;
+      padding: 2px 8px;
+      border-radius: 9999px;
     }
 
     .slider-control-row {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
 
     .slider-control-row input[type="range"] {
       flex: 1;
       -webkit-appearance: none;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 2px;
+      appearance: none;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 9999px;
       outline: none;
       cursor: pointer;
     }
 
     .slider-control-row input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 12px;
-      height: 12px;
+      appearance: none;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
-      background: #ec4899;
-      box-shadow: 0 0 6px rgba(236, 72, 153, 0.6), 0 0 0 1px #fff;
+      background: #f472b6;
+      box-shadow: 0 0 8px rgba(244, 114, 182, 0.6);
       cursor: grab;
       transition: transform 0.15s ease;
     }
 
     .slider-control-row input[type="range"]::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
+      transform: scale(1.25);
     }
 
     .slider-control-row input[type="number"] {
-      width: 48px;
-      background: var(--bg-input);
-      border: 1px solid var(--border-card);
+      width: 52px;
+      background: #0b0c10;
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: #fff;
-      padding: 2px 4px;
-      border-radius: 5px;
-      font-size: 10px;
+      padding: 3px 6px;
+      border-radius: 6px;
+      font-size: 10.5px;
       font-family: ui-monospace, SFMono-Regular, monospace;
-      font-weight: 600;
+      font-weight: 700;
       text-align: right;
       outline: none;
       transition: border-color 0.2s ease;
@@ -701,7 +701,7 @@
 
     .slider-control-row input[type="number"]:focus {
       border-color: #f472b6;
-      box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2);
+      box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.2);
     }
 
     /* Presentación Activa */
@@ -716,17 +716,17 @@
       background: var(--bg-input);
       border: 1px solid var(--border-card);
       color: #fff;
-      padding: 7px 10px;
-      border-radius: 8px;
+      padding: 9px 12px;
+      border-radius: 12px;
       font-size: 12px;
       font-family: inherit;
       outline: none;
-      transition: border-color 0.2s ease;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .text-input:focus {
       border-color: #f472b6;
-      box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.18);
+      box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.2);
     }
 
     /* Miniatura interactiva de previsualización con capas reales */
@@ -735,26 +735,26 @@
       max-width: min(100%, 390px);
       aspect-ratio: 16 / 9;
       background: #000;
-      border-radius: 8px;
+      border-radius: 14px;
       overflow: hidden;
       position: relative;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 15px rgba(236, 72, 153, 0.08);
-      margin: 0 auto 8px auto;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(236, 72, 153, 0.08);
+      margin: 0 auto 10px auto;
     }
 
     .preview-phase-badge {
       position: absolute;
-      top: 8px;
-      left: 8px;
+      top: 10px;
+      left: 10px;
       z-index: 10;
       display: flex;
       align-items: center;
       gap: 6px;
       background: rgba(13, 16, 24, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      padding: 3px 8px;
-      border-radius: 3px;
+      padding: 4px 10px;
+      border-radius: 9999px;
       font-size: 9.5px;
       font-weight: 700;
       color: #fff;
@@ -832,26 +832,26 @@
     }
 
     .slot-item {
-      background: rgba(16, 19, 29, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 10px;
-      padding: 8px 10px;
+      background: #111218;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 14px;
+      padding: 11px 14px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 7px;
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       position: relative;
     }
 
     .slot-item:hover {
-      border-color: rgba(255, 255, 255, 0.14);
-      background: rgba(22, 26, 38, 0.85);
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.12);
+      background: #15161f;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
     }
 
     .slot-item.active-calib {
       border-color: #ec4899;
-      box-shadow: 0 0 0 1px #ec4899, 0 4px 16px rgba(236, 72, 153, 0.25);
+      box-shadow: 0 0 0 1px #ec4899, 0 6px 20px rgba(236, 72, 153, 0.22);
     }
 
     .slot-header {
@@ -864,19 +864,19 @@
     .slot-title-area {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       flex: 1;
       min-width: 0;
     }
 
     .slot-num-badge {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: #ec4899;
+      background: rgba(236, 72, 153, 0.1);
+      border: 1px solid rgba(236, 72, 153, 0.25);
+      color: #f472b6;
       font-size: 10px;
-      font-weight: 700;
-      width: 20px;
-      height: 20px;
+      font-weight: 800;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -885,11 +885,11 @@
     }
 
     .slot-format-tag {
-      font-size: 9px;
+      font-size: 9.5px;
       font-weight: 800;
       text-transform: uppercase;
-      padding: 2px 6px;
-      border-radius: 3px;
+      padding: 3px 8px;
+      border-radius: 9999px;
       letter-spacing: 0.04em;
       flex-shrink: 0;
       display: inline-flex;
@@ -927,8 +927,8 @@
       color: #fff;
       font-weight: 600;
       font-size: 12px;
-      padding: 2px 6px;
-      border-radius: 3px;
+      padding: 3px 6px;
+      border-radius: 6px;
       width: 100%;
       outline: none;
       transition: all 0.2s;
@@ -942,17 +942,17 @@
     .slot-actions {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       flex-shrink: 0;
     }
 
     .btn-icon-mini {
-      background: rgba(255, 255, 255, 0.05);
+      background: #181922;
       border: 1px solid rgba(255, 255, 255, 0.08);
-      color: #94a3b8;
-      width: 24px;
-      height: 24px;
-      border-radius: 3px;
+      color: #8e95a5;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -961,16 +961,16 @@
     }
 
     .btn-icon-mini .icon-svg {
-      width: 11px;
-      height: 11px;
+      width: 12px;
+      height: 12px;
       stroke: currentColor;
       stroke-width: 1.75;
-      opacity: 0.8;
+      opacity: 0.85;
       display: block;
     }
 
     .btn-icon-mini:hover {
-      background: rgba(255, 255, 255, 0.12);
+      background: #222430;
       color: #fff;
       border-color: rgba(255, 255, 255, 0.2);
     }
@@ -986,9 +986,10 @@
     }
 
     .btn-icon-mini.btn-active-calib {
-      background: rgba(255, 255, 255, 0.16);
-      color: #ffffff;
-      border-color: rgba(255, 255, 255, 0.35);
+      background: #ffffff;
+      color: #000000;
+      border-color: transparent;
+      box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
     }
 
     .slot-details-row {
@@ -999,39 +1000,39 @@
 
     .slot-url-input {
       flex: 1;
-      background: var(--bg-input);
-      border: 1px solid var(--border-subtle);
+      background: #0b0c10;
+      border: 1px solid rgba(255, 255, 255, 0.08);
       color: #ec4899;
-      padding: 5px 8px;
-      border-radius: 6px;
+      padding: 6px 10px;
+      border-radius: 8px;
       font-size: 11px;
       font-family: ui-monospace, monospace;
       outline: none;
-      transition: border-color 0.2s ease;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .slot-url-input:focus {
       border-color: #ec4899;
-      box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.15);
+      box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.18);
     }
 
     .slot-slides-input {
-      width: 44px;
-      background: var(--bg-input);
-      border: 1px solid var(--border-subtle);
+      width: 46px;
+      background: #0b0c10;
+      border: 1px solid rgba(255, 255, 255, 0.08);
       color: #fff;
-      padding: 5px 4px;
-      border-radius: 6px;
+      padding: 6px 4px;
+      border-radius: 8px;
       font-size: 11px;
       font-weight: 700;
       text-align: center;
       outline: none;
-      transition: border-color 0.2s ease;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .slot-slides-input:focus {
       border-color: #ec4899;
-      box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.15);
+      box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.18);
     }
 
     /* Conectores visuales entre diapositivas */
@@ -1072,20 +1073,24 @@
       color: #64748b;
     }
 
-    /* Pestañas del selector de calibración dinámico */
+    /* Pestañas del selector de calibración dinámico (Pill Group cápsula estilo referencia) */
     .calib-slots-selector {
-      display: flex;
-      gap: 6px;
+      display: inline-flex;
+      background: #101116;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 9999px;
+      padding: 3px;
+      gap: 3px;
       overflow-x: auto;
-      padding-bottom: 4px;
+      max-width: 100%;
     }
 
     .calib-slot-btn {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      color: #94a3b8;
-      padding: 4px 10px;
-      border-radius: 4px;
+      background: transparent;
+      border: none;
+      color: #8e95a5;
+      padding: 5px 12px;
+      border-radius: 9999px;
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
@@ -1099,16 +1104,15 @@
     }
 
     .calib-slot-btn:hover {
-      background: rgba(255, 255, 255, 0.09);
+      background: rgba(255, 255, 255, 0.06);
       color: #fff;
-      border-color: rgba(255, 255, 255, 0.14);
     }
 
     .calib-slot-btn.active {
-      background: var(--accent-300);
-      border-color: transparent;
-      color: #090a0f;
-      font-weight: 700;
+      background: #ffffff;
+      color: #000000 !important;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15);
     }
   </style>
 </head>
@@ -1356,14 +1360,14 @@
   <div class="modal-overlay" id="add-slot-modal"
     style="display: none; position: fixed; inset: 0; background: rgba(5, 7, 11, 0.82); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 999; align-items: center; justify-content: center;">
     <div
-      style="background: rgba(17, 20, 31, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; width: 92%; max-width: 520px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+      style="background: #15161c; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px; width: 92%; max-width: 520px; padding: 26px; box-shadow: 0 24px 60px rgba(0,0,0,0.85);">
       <div
-        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 12px;">
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding-bottom: 12px;">
         <h3 style="font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -0.01em;">
           Nueva Escena
         </h3>
         <button onclick="closeAddSlotModal()"
-          style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; font-size: 16px; cursor: pointer; width: 26px; height: 26px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.15s;">&times;</button>
+          style="background: #1f2127; border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; font-size: 16px; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s;">&times;</button>
       </div>
 
       <div class="form-group" style="margin-bottom: 16px;">
@@ -1373,25 +1377,25 @@
         </label>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px;">
           <button type="button" id="btn-choice-34" class="btn"
-            style="background: rgba(236, 72, 153, 0.16); border: 1px solid #ec4899; color: #fff; flex-direction: column; padding: 10px 6px; gap: 4px; border-radius: 4px;"
+            style="background: rgba(236, 72, 153, 0.16); border: 1px solid #ec4899; color: #fff; flex-direction: column; padding: 10px 6px; gap: 4px; border-radius: 10px;"
             onclick="chooseFormat('3:4')">
             <span style="font-weight: 700; font-size: 11.5px;">3:4 Móvil</span>
             <span style="font-size: 9.5px; color: #94a3b8;">Imagen.png</span>
           </button>
           <button type="button" id="btn-choice-916" class="btn"
-            style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; flex-direction: column; padding: 10px 6px; gap: 4px; border-radius: 4px;"
+            style="background: #101116; border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; flex-direction: column; padding: 10px 6px; gap: 4px; border-radius: 10px;"
             onclick="chooseFormat('9:16')">
             <span style="font-weight: 700; font-size: 11.5px;">9:16 Móvil</span>
             <span style="font-size: 9.5px; color: #64748b;">Imagen 9x16</span>
           </button>
           <button type="button" id="btn-choice-169" class="btn"
-            style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; flex-direction: column; padding: 10px 6px; gap: 4px; border-radius: 4px;"
+            style="background: #101116; border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; flex-direction: column; padding: 10px 6px; gap: 4px; border-radius: 10px;"
             onclick="chooseFormat('16:9')">
             <span style="font-weight: 700; font-size: 11.5px;">16:9 Escenario</span>
             <span style="font-size: 9.5px; color: #64748b;">Imagen 2</span>
           </button>
           <button type="button" id="btn-choice-title" class="btn"
-            style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; flex-direction: column; padding: 10px 6px; gap: 4px; border-radius: 4px;"
+            style="background: #101116; border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; flex-direction: column; padding: 10px 6px; gap: 4px; border-radius: 10px;"
             onclick="chooseFormat('title')">
             <span style="font-weight: 700; font-size: 11.5px;">Title</span>
             <span style="font-size: 9.5px; color: #64748b;">Portada</span>
@@ -1405,7 +1409,7 @@
           Nombre de la Escena
         </label>
         <input type="text" id="new-slot-name" class="form-input text-input"
-          style="width: 100%; border-radius: 4px;"
+          style="width: 100%; border-radius: 10px;"
           placeholder="Ej: Escena 2 - Presentación" />
       </div>
 
@@ -1440,16 +1444,16 @@
   <div class="modal-overlay" id="supabase-modal"
     style="display: none; position: fixed; inset: 0; background: rgba(5, 7, 11, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 1000; align-items: center; justify-content: center;">
     <div
-      style="background: rgba(17, 20, 31, 0.98); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 6px; width: 92%; max-width: 580px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.85);">
+      style="background: #15161c; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px; width: 92%; max-width: 580px; padding: 26px; box-shadow: 0 24px 60px rgba(0,0,0,0.85);">
       <div
-        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 12px;">
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding-bottom: 12px;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <h3 style="font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -0.01em;">
             Conexión con Supabase Cloud
           </h3>
         </div>
         <button onclick="closeSupabaseModal()"
-          style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; font-size: 16px; cursor: pointer; width: 26px; height: 26px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.15s;">&times;</button>
+          style="background: #1f2127; border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; font-size: 16px; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s;">&times;</button>
       </div>
 
       <p style="font-size: 12px; color: #94a3b8; line-height: 1.5; margin-bottom: 18px;">
@@ -1521,14 +1525,14 @@
   <div class="modal-overlay" id="new-deck-modal"
     style="display: none; position: fixed; inset: 0; background: rgba(5, 7, 11, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 1000; align-items: center; justify-content: center;">
     <div
-      style="background: rgba(17, 20, 31, 0.98); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 6px; width: 92%; max-width: 480px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.85);">
+      style="background: #15161c; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px; width: 92%; max-width: 480px; padding: 26px; box-shadow: 0 24px 60px rgba(0,0,0,0.85);">
       <div
-        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 12px;">
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding-bottom: 12px;">
         <h3 style="font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -0.01em;">
           Nueva Presentación / Escena
         </h3>
         <button onclick="closeNewDeckModal()"
-          style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; font-size: 16px; cursor: pointer; width: 26px; height: 26px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">&times;</button>
+          style="background: #1f2127; border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; font-size: 16px; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">&times;</button>
       </div>
 
       <div class="form-group" style="margin-bottom: 14px;">
@@ -1536,7 +1540,7 @@
           Nombre de la Presentación / Show
         </label>
         <input type="text" id="new-deck-name-input" class="form-input text-input"
-          style="width: 100%; border-radius: 4px;" placeholder="Ej: Mesa Redonda - Sesión Tarde" />
+          style="width: 100%; border-radius: 10px;" placeholder="Ej: Mesa Redonda - Sesión Tarde" />
       </div>
 
       <div class="form-group" style="margin-bottom: 18px;">
@@ -1570,21 +1574,21 @@
   <div class="modal-overlay" id="rename-deck-modal"
     style="display: none; position: fixed; inset: 0; background: rgba(5, 7, 11, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 1000; align-items: center; justify-content: center;">
     <div
-      style="background: rgba(17, 20, 31, 0.98); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 6px; width: 92%; max-width: 440px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.85);">
+      style="background: #15161c; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px; width: 92%; max-width: 440px; padding: 26px; box-shadow: 0 24px 60px rgba(0,0,0,0.85);">
       <div
-        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 12px;">
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding-bottom: 12px;">
         <h3 style="font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -0.01em;">
           Renombrar Presentación
         </h3>
         <button onclick="closeRenameDeckModal()"
-          style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; font-size: 16px; cursor: pointer; width: 26px; height: 26px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">&times;</button>
+          style="background: #1f2127; border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; font-size: 16px; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">&times;</button>
       </div>
 
       <div class="form-group" style="margin-bottom: 18px;">
         <label class="form-label" style="display: block; font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;">
           Nuevo Nombre
         </label>
-        <input type="text" id="rename-deck-input" class="form-input text-input" style="width: 100%; border-radius: 4px;" />
+        <input type="text" id="rename-deck-input" class="form-input text-input" style="width: 100%; border-radius: 10px;" />
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 8px;">
@@ -1598,14 +1602,14 @@
   <div class="modal-overlay" id="share-deck-modal"
     style="display: none; position: fixed; inset: 0; background: rgba(5, 7, 11, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 1000; align-items: center; justify-content: center;">
     <div
-      style="background: rgba(17, 20, 31, 0.98); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 6px; width: 92%; max-width: 480px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.85);">
+      style="background: #15161c; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px; width: 92%; max-width: 480px; padding: 26px; box-shadow: 0 24px 60px rgba(0,0,0,0.85);">
       <div
-        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 12px;">
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding-bottom: 12px;">
         <h3 id="share-deck-modal-title" style="font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -0.01em;">
           Enlace de Presentación
         </h3>
         <button onclick="closeShareDeckModal()"
-          style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; font-size: 16px; cursor: pointer; width: 26px; height: 26px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">&times;</button>
+          style="background: #1f2127; border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; font-size: 16px; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">&times;</button>
       </div>
 
       <div class="form-group" style="margin-bottom: 14px;">
@@ -1614,9 +1618,9 @@
         </label>
         <div style="display: flex; gap: 8px; align-items: center;">
           <input type="text" id="share-deck-url-input" class="form-input text-input" readonly
-            style="width: 100%; font-family: monospace; font-size: 11px; color: #a5f3fc; background: rgba(0,0,0,0.3); cursor: text; border-radius: 4px;" onclick="this.select()" />
+            style="width: 100%; font-family: monospace; font-size: 11.5px; color: #a5f3fc; background: #0c0d12; cursor: text; border-radius: 10px;" onclick="this.select()" />
           <button type="button" class="btn btn-primary" onclick="copyFromShareModal()"
-            style="white-space: nowrap; padding: 8px 14px; font-size: 11.5px;">Copiar</button>
+            style="white-space: nowrap; padding: 9px 16px; font-size: 12px; border-radius: 10px;">Copiar</button>
         </div>
         <p style="font-size: 11px; color: #94a3b8; margin-top: 8px; line-height: 1.4;">
           Usa este enlace para proyectar el escenario en pantalla o compartirlo con la realización técnica.
