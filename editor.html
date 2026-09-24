@@ -1496,19 +1496,8 @@
           </button>
         </div>
 
-        <!-- Selector Dinámico de Diapositiva a Calibrar -->
-        <div style="margin-bottom: 6px; flex-shrink: 0;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <span style="font-size: 9.5px; text-transform: uppercase; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px;">
-              Escena en Calibrador
-            </span>
-            <span class="slot-format-tag format-34" id="calib-format-indicator">3:4 MÓVIL</span>
-          </div>
-          <div class="calib-slots-selector" id="calib-slots-selector">
-            <!-- Pestañas dinámicas para cada diapositiva -->
-          </div>
-        </div>
 
+        <!-- Sliders -->
         <!-- Sliders con doble input en rejilla compacta de 2 columnas -->
         <div class="sliders-grid" id="calibration-sliders">
           <div class="slider-group">
@@ -2388,10 +2377,16 @@
         timeline: currentTimeline,
         time: Date.now()
       };
-      bus.postMessage(payload);
+      // Enviar al bus (presentación real) solo cuando esté en directo
+      if (liveMode) {
+        bus.postMessage(payload);
+      }
+      // Preview del editor: siempre
       postToStageIframe(payload);
       try {
-        localStorage.setItem('dm_deck_slots_sync', JSON.stringify(payload));
+        if (liveMode) {
+          localStorage.setItem('dm_deck_slots_sync', JSON.stringify(payload));
+        }
       } catch (e) { }
 
       // Sincronizar automáticamente en la nube con Supabase
