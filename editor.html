@@ -3887,19 +3887,39 @@
         alert('La "Presentación Principal" no se puede eliminar.');
         return;
       }
+      const idToDelete = activeDeckId;
       const activeOpt = deckSelector ? deckSelector.options[deckSelector.selectedIndex] : null;
-      const name = activeOpt ? activeOpt.textContent : activeDeckId;
+      const name = activeOpt ? activeOpt.textContent : idToDelete;
       if (!confirm(`¿Estás seguro de eliminar "${name}"?`)) return;
 
       showToast('Eliminando...');
-      if (window.DMCloud) {
-        await DMCloud.deleteDeck(activeDeckId);
+      try {
+        // 1. Borrar del índice local INMEDIATAMENTE para que no reaparezca
+        try {
+          const localList = JSON.parse(localStorage.getItem('dm_decks_index') || '[]');
+          const filtered = localList.filter(d => d.id !== idToDelete);
+          localStorage.setItem('dm_decks_index', JSON.stringify(filtered));
+        } catch(e) {}
+        localStorage.removeItem('dm_deck_slots_' + idToDelete);
+
+        // 2. Borrar de Supabase
+        if (window.DMCloud) {
+          const ok = await DMCloud.deleteDeck(idToDelete);
+          if (!ok) {
+            console.warn('[Delete Deck] DMCloud.deleteDeck devolvió false para', idToDelete);
+          }
+        }
+
+        // 3. Volver a default y refrescar UI
+        activeDeckId = 'default';
+        if (window.DMCloud) DMCloud.setActiveDeckId('default');
+        await refreshDeckSelectorUI();
+        await onDeckSelectorChanged('default');
+        showToast(`«${name}» eliminado`);
+      } catch(err) {
+        console.error('[Delete Deck] Error:', err);
+        alert('Error al eliminar: ' + (err.message || err));
       }
-      localStorage.removeItem('dm_deck_slots_' + activeDeckId);
-      activeDeckId = 'default';
-      await refreshDeckSelectorUI();
-      await onDeckSelectorChanged('default');
-      showToast('Presentación eliminada');
     }
 
     // Inicializar listeners de Supabase Cloud

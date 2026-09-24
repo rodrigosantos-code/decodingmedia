@@ -361,8 +361,13 @@
       // Borrar de supabase
       if (client) {
         try {
-          await client.from('dm_decks').delete().eq('id', id);
-        } catch(e) {}
+          const { error } = await client.from('dm_decks').delete().eq('id', id);
+          if (error) {
+            console.error('[deleteDeck] Supabase error:', error);
+          }
+        } catch(e) {
+          console.error('[deleteDeck] Exception:', e);
+        }
       }
 
       // Borrar del índice local
