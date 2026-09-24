@@ -601,9 +601,598 @@
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
+    }
+
+    /* =========================================================================
+       DESPLEGABLE LATERAL DE ESCENAS (DRAWER IZQUIERDO)
+       ========================================================================= */
+    .drawer-toggle-btn {
+      position: fixed;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 998;
+      background: rgba(10, 14, 24, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-left: none;
+      border-radius: 0 14px 14px 0;
+      color: rgba(255, 255, 255, 0.7);
+      padding: 12px 9px 12px 7px;
+      cursor: pointer;
+      opacity: 0.35;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+      outline: none;
+    }
+
+    .drawer-toggle-btn:hover,
+    .drawer-toggle-btn.open-state {
+      opacity: 1 !important;
+      background: rgba(15, 20, 34, 0.95);
+      border-color: rgba(236, 72, 153, 0.5);
+      color: #fff;
+      transform: translateY(-50%) translateX(3px);
+      box-shadow: 0 0 25px rgba(236, 72, 153, 0.3);
+    }
+
+    .drawer-toggle-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .drawer-toggle-label {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.65);
+    }
+
+    .drawer-toggle-btn:hover .drawer-toggle-label {
+      color: #ec4899;
+    }
+
+    .drawer-toggle-badge {
+      font-size: 9px;
+      font-family: monospace;
+      font-weight: 800;
+      background: rgba(236, 72, 153, 0.2);
+      border: 1px solid rgba(236, 72, 153, 0.4);
+      color: #fff;
+      padding: 2px 4px;
+      border-radius: 6px;
+      letter-spacing: 0;
+    }
+
+    /* Backdrop */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 5, 10, 0.65);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 997;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .drawer-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Drawer Sidebar */
+    .scenes-drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 370px;
+      max-width: 90vw;
+      z-index: 999;
+      background: rgba(9, 12, 20, 0.94);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: none;
+      transform: translateX(-100%);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    .scenes-drawer.open {
+      transform: translateX(0);
+      box-shadow: 20px 0 60px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .drawer-header {
+      padding: 18px 20px 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .drawer-header-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .drawer-pill-brand {
+      background: rgba(236, 72, 153, 0.15);
+      border: 1px solid rgba(236, 72, 153, 0.4);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 999px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .drawer-pill-live {
+      font-size: 9px;
+      font-weight: 800;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 3px 7px;
+      border-radius: 999px;
+      letter-spacing: 0.06em;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .drawer-pill-live::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: #38bdf8;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #38bdf8;
+    }
+
+    .drawer-close-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .drawer-close-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .drawer-title-box {
+      padding: 14px 20px;
+      background: rgba(255, 255, 255, 0.015);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .drawer-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+      margin: 0 0 4px 0;
+    }
+
+    .drawer-subtitle {
+      font-size: 11px;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Lista de escenas con scroll suave */
+    .drawer-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .drawer-list::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .drawer-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .drawer-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+
+    .drawer-list::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Tarjeta de Escena */
+    .drawer-scene-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .drawer-scene-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateX(4px);
+    }
+
+    .drawer-scene-card.active {
+      background: rgba(236, 72, 153, 0.09);
+      border-color: rgba(236, 72, 153, 0.5);
+      box-shadow: 0 0 24px rgba(236, 72, 153, 0.18), inset 0 0 0 1px rgba(236, 72, 153, 0.25);
+      transform: translateX(4px);
+    }
+
+    .scene-card-left {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .scene-num {
+      font-size: 13px;
+      font-family: monospace;
+      font-weight: 800;
+      color: #64748b;
+      min-width: 20px;
+      transition: color 0.2s ease;
+    }
+
+    .drawer-scene-card.active .scene-num {
+      color: #ec4899;
+    }
+
+    .scene-card-center {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .scene-card-tags {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .scene-format-badge {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 5px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .badge-fmt-34 {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #7dd3fc;
+    }
+
+    .badge-fmt-169 {
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      color: #c084fc;
+    }
+
+    .badge-fmt-916 {
+      background: rgba(52, 211, 153, 0.12);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      color: #6ee7b7;
+    }
+
+    .badge-fmt-title {
+      background: rgba(251, 191, 36, 0.12);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      color: #fde047;
+    }
+
+    .scene-live-dot {
+      width: 6px;
+      height: 6px;
+      background: #ec4899;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #ec4899;
+      animation: pulse-dot 1.8s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .scene-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+
+    .drawer-scene-card.active .scene-card-title {
+      color: #fff;
+    }
+
+    .scene-card-sub {
+      font-size: 11px;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .scene-card-right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .scene-active-pill {
+      font-size: 9px;
+      font-weight: 800;
+      background: #ec4899;
+      color: #000;
+      padding: 3px 6px;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+    }
+
+    .scene-go-icon {
+      color: #475569;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    .drawer-scene-card:hover .scene-go-icon {
+      color: #cbd5e1;
+      transform: translateX(2px);
+    }
+
+    /* Divisor de Transición de Vídeo */
+    .drawer-trans-divider {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: all 0.2s ease;
+      margin: 2px 0;
+    }
+
+    .drawer-trans-divider:hover {
+      opacity: 1;
+      transform: translateX(3px);
+    }
+
+    .drawer-trans-divider.active {
+      opacity: 1;
+    }
+
+    .trans-divider-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .drawer-trans-divider.active .trans-divider-line {
+      background: rgba(236, 72, 153, 0.4);
+    }
+
+    .trans-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #94a3b8;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 4px 10px;
+      border-radius: 999px;
+      transition: all 0.2s ease;
+    }
+
+    .drawer-trans-divider:hover .trans-pill {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .drawer-trans-divider.active .trans-pill {
+      background: rgba(236, 72, 153, 0.15);
+      border-color: rgba(236, 72, 153, 0.5);
+      color: #ec4899;
+      box-shadow: 0 0 14px rgba(236, 72, 153, 0.25);
+    }
+
+    .trans-sound-tag {
+      font-size: 8px;
+      font-weight: 800;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #38bdf8;
+      padding: 1px 4px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    /* Pie del Drawer */
+    .drawer-footer {
+      padding: 14px 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(5, 7, 13, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .drawer-nav-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.2fr;
+      gap: 8px;
+    }
+
+    .drawer-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+    }
+
+    .drawer-btn:hover {
+      background: rgba(255, 255, 255, 0.09);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .drawer-btn-primary {
+      background: rgba(236, 72, 153, 0.18);
+      border-color: rgba(236, 72, 153, 0.5);
+      color: #fff;
+    }
+
+    .drawer-btn-primary:hover {
+      background: #ec4899;
+      color: #000;
+      box-shadow: 0 0 15px rgba(236, 72, 153, 0.4);
+    }
+
+    .drawer-hotkeys-hint {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 10px;
+      color: #64748b;
+    }
+
+    .drawer-hotkeys-hint kbd {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+      padding: 1px 4px;
+      font-family: monospace;
+      color: #94a3b8;
+    }
   </style>
 </head>
 <body tabindex="-1" style="outline: none;">
+
+  <!-- Botón Desplegable Flotante Lateral (Izquierda) -->
+  <button id="drawer-toggle-btn" class="drawer-toggle-btn" onclick="toggleScenesDrawer()" title="Ver Escenas (E)">
+    <div class="drawer-toggle-inner">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="15" y2="12"/>
+        <line x1="3" y1="18" x2="18" y2="18"/>
+      </svg>
+      <span class="drawer-toggle-label">ESCENAS</span>
+      <span id="drawer-toggle-counter" class="drawer-toggle-badge">1/1</span>
+    </div>
+  </button>
+
+  <!-- Backdrop para cerrar al pulsar fuera -->
+  <div id="drawer-backdrop" class="drawer-backdrop" onclick="closeScenesDrawer()"></div>
+
+  <!-- Panel Desplegable de Escenas en Orden -->
+  <aside id="scenes-drawer" class="scenes-drawer" aria-label="Navegador de escenas">
+    <div class="drawer-header">
+      <div class="drawer-header-brand">
+        <span class="drawer-pill-brand">DECODING MEDIA</span>
+        <span class="drawer-pill-live" id="drawer-live-indicator">EN DIRECTO</span>
+      </div>
+      <button class="drawer-close-btn" onclick="closeScenesDrawer()" title="Cerrar panel (Esc)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="drawer-title-box">
+      <h2 class="drawer-title">Secuencia del Show</h2>
+      <div class="drawer-subtitle" id="drawer-subtitle-status">Escena 1 activa</div>
+    </div>
+
+    <!-- Lista ordenada de escenas -->
+    <div id="scenes-drawer-list" class="drawer-list">
+      <!-- Se inyecta dinámicamente con renderSceneDrawer() -->
+    </div>
+
+    <!-- Barra de control y atajos en el pie -->
+    <div class="drawer-footer">
+      <div class="drawer-nav-actions">
+        <button type="button" class="drawer-btn" onclick="prevStep()" title="Escena anterior (&larr;)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Anterior
+        </button>
+        <button type="button" class="drawer-btn" onclick="resetPresentation()" title="Reiniciar desde el inicio">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          Inicio
+        </button>
+        <button type="button" class="drawer-btn drawer-btn-primary" onclick="nextStep()" title="Siguiente escena (&rarr; / Espacio)">
+          Siguiente
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="drawer-hotkeys-hint">
+        <span><kbd>E</kbd> ocultar</span>
+        <span><kbd>&larr;</kbd> <kbd>&rarr;</kbd> pasar</span>
+        <span><kbd>F</kbd> pantalla</span>
+      </div>
+    </div>
+  </aside>
 
   <!-- Escenario Principal 16:9 -->
   <div id="stage-container" class="hide-corner-logos">
@@ -739,7 +1328,7 @@
 
     <!-- PASO 4: Video de Transición Inversa al Móvil -->
     <div id="layer-step4" class="stage-layer">
-      <video id="video-reverse-element" class="media-cover" playsinline preload="auto">
+      <video id="video-reverse-element" class="media-cover" playsinline muted preload="auto">
         <source src="Transitions/3x4_to_16x9_reverse.mp4" type="video/mp4" />
       </video>
     </div>
@@ -1377,6 +1966,194 @@
     const frame2ScreenSlot = document.getElementById('frame2-screen-slot');
     const frame916ScreenSlot = document.getElementById('frame916-screen-slot');
 
+    // =========================================================================
+    // AUDIO DE TRANSICIONES (transition.mp3) & SILENCIAMIENTO DE VÍDEOS
+    // =========================================================================
+    const transitionAudio = new Audio('transition.mp3');
+    transitionAudio.preload = 'auto';
+
+    let audioUnlocked = false;
+    function unlockAudio() {
+      if (audioUnlocked) return;
+      try {
+        transitionAudio.volume = 0.01;
+        const p = transitionAudio.play();
+        if (p && p.then) {
+          p.then(() => {
+            transitionAudio.pause();
+            transitionAudio.currentTime = 0;
+            transitionAudio.volume = 0.85;
+            audioUnlocked = true;
+          }).catch(() => {});
+        }
+      } catch (e) {}
+    }
+    window.addEventListener('click', unlockAudio, { once: true });
+    window.addEventListener('keydown', unlockAudio, { once: true });
+
+    function playTransitionSound() {
+      try {
+        if (!transitionAudio) return;
+        transitionAudio.currentTime = 0;
+        transitionAudio.volume = 0.85;
+        const playPromise = transitionAudio.play();
+        if (playPromise && playPromise.catch) {
+          playPromise.catch((e) => {
+            console.log('[Transition Sound] Autoplay bloqueado hasta interacción de usuario');
+          });
+        }
+      } catch (err) {
+        console.warn('[Transition Sound] Error al reproducir transition.mp3:', err);
+      }
+    }
+
+    function muteAllVideos() {
+      if (videoEl) {
+        videoEl.muted = true;
+        videoEl.volume = 0;
+        videoEl.defaultMuted = true;
+      }
+      if (videoReverseEl) {
+        videoReverseEl.muted = true;
+        videoReverseEl.volume = 0;
+        videoReverseEl.defaultMuted = true;
+      }
+      document.querySelectorAll('video').forEach((v) => {
+        try {
+          v.muted = true;
+          v.volume = 0;
+          v.defaultMuted = true;
+        } catch (e) {}
+      });
+    }
+
+    // =========================================================================
+    // DESPLEGABLE LATERAL DE ESCENAS (DRAWER)
+    // =========================================================================
+    let isDrawerOpen = false;
+
+    function toggleScenesDrawer() {
+      if (isDrawerOpen) {
+        closeScenesDrawer();
+      } else {
+        openScenesDrawer();
+      }
+    }
+
+    function openScenesDrawer() {
+      isDrawerOpen = true;
+      const drawer = document.getElementById('scenes-drawer');
+      const backdrop = document.getElementById('drawer-backdrop');
+      const toggleBtn = document.getElementById('drawer-toggle-btn');
+      if (drawer) drawer.classList.add('open');
+      if (backdrop) backdrop.classList.add('active');
+      if (toggleBtn) toggleBtn.classList.add('open-state');
+      renderSceneDrawer();
+    }
+
+    function closeScenesDrawer() {
+      isDrawerOpen = false;
+      const drawer = document.getElementById('scenes-drawer');
+      const backdrop = document.getElementById('drawer-backdrop');
+      const toggleBtn = document.getElementById('drawer-toggle-btn');
+      if (drawer) drawer.classList.remove('open');
+      if (backdrop) backdrop.classList.remove('active');
+      if (toggleBtn) toggleBtn.classList.remove('open-state');
+      ensureWindowFocus();
+    }
+
+    function onDrawerSelectScene(index) {
+      if (typeof index !== 'number' || index < 0 || index >= STEPS.length) return;
+      goToStep(index);
+      renderSceneDrawer();
+    }
+
+    function renderSceneDrawer() {
+      const listEl = document.getElementById('scenes-drawer-list');
+      const counterEl = document.getElementById('drawer-toggle-counter');
+      const statusEl = document.getElementById('drawer-subtitle-status');
+      if (!listEl) return;
+
+      if (counterEl) {
+        counterEl.textContent = `${currentStepIndex + 1}/${STEPS.length}`;
+      }
+      if (statusEl) {
+        const cur = STEPS[currentStepIndex];
+        const name = cur ? (cur.name || cur.shortName || 'Escena') : 'Escena';
+        statusEl.innerHTML = `Paso <b>${currentStepIndex + 1}</b> de ${STEPS.length} &middot; <span style="color: var(--neon-pink);">${escapeHtml(name)}</span>`;
+      }
+
+      let html = '';
+      let slotNumber = 0;
+
+      STEPS.forEach((step, idx) => {
+        const isActive = (idx === currentStepIndex);
+        const isVideo = (step.type === 'video');
+
+        if (!isVideo) {
+          slotNumber++;
+          const fmt = (step.format || '3:4').toUpperCase();
+          let fmtBadgeClass = 'badge-fmt-34';
+          if (fmt === '16:9') fmtBadgeClass = 'badge-fmt-169';
+          else if (fmt === '9:16') fmtBadgeClass = 'badge-fmt-916';
+          else if (fmt === 'TITLE') fmtBadgeClass = 'badge-fmt-title';
+
+          const slideInfo = step.slidesCount ? `${step.slidesCount} diapositivas` : 'Escena Interactiva';
+
+          html += `
+            <div class="drawer-scene-card ${isActive ? 'active' : ''}" onclick="onDrawerSelectScene(${idx})">
+              <div class="scene-card-left">
+                <span class="scene-num">${String(slotNumber).padStart(2, '0')}</span>
+              </div>
+              <div class="scene-card-center">
+                <div class="scene-card-tags">
+                  <span class="scene-format-badge ${fmtBadgeClass}">${fmt}</span>
+                  ${isActive ? '<span class="scene-live-dot"></span>' : ''}
+                </div>
+                <div class="scene-card-title">${escapeHtml(step.name || 'Escena ' + slotNumber)}</div>
+                <div class="scene-card-sub">${escapeHtml(step.title || slideInfo)}</div>
+              </div>
+              <div class="scene-card-right">
+                ${isActive ? `
+                  <span class="scene-active-pill">ACTUAL</span>
+                ` : `
+                  <span class="scene-go-icon">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                  </span>
+                `}
+              </div>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="drawer-trans-divider ${isActive ? 'active' : ''}" onclick="onDrawerSelectScene(${idx})" title="Transición con transition.mp3">
+              <div class="trans-divider-line"></div>
+              <div class="trans-pill">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <span>${escapeHtml(step.shortName || step.name || 'Transición')}</span>
+                <span class="trans-sound-tag">SFX</span>
+              </div>
+              <div class="trans-divider-line"></div>
+            </div>
+          `;
+        }
+      });
+
+      listEl.innerHTML = html;
+
+      // Scroll automático al elemento activo si el panel está abierto
+      if (isDrawerOpen) {
+        const activeCard = listEl.querySelector('.drawer-scene-card.active, .drawer-trans-divider.active');
+        if (activeCard) {
+          try {
+            activeCard.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          } catch (e) {}
+        }
+      }
+    }
+
     // Plantillas de Contenido para Presentación Nativa (Visible si no hay URL externa)
     const SLIDES_CONTENT_34 = [
       { cat: 'Keynote de Apertura', title: 'Decoding Media', desc: 'Transformación audiovisual interactiva de móvil a gran pantalla.', b1: 'Formato vertical 3:4 ergonómico', b2: 'Transiciones de video 4K cinematográficas', b3: 'Sincronización en tiempo real para ponentes' },
@@ -1816,11 +2593,14 @@
               }, maxAllowedMs);
 
               videoEl.muted = true;
+              videoEl.volume = 0;
+              playTransitionSound();
               const playPromise = videoEl.play();
               if (playPromise !== undefined) {
                 playPromise.catch((err) => {
                   console.warn('[videoEl.play catch]', err);
                   videoEl.muted = true;
+                  videoEl.volume = 0;
                   videoEl.play().catch(() => {
                     // Si el navegador bloquea la reproducción de vídeo, avanzar limpiamente
                     triggerEndHold();
@@ -1909,6 +2689,8 @@
       }
 
       updateSlideCounters();
+      renderSceneDrawer();
+      muteAllVideos();
     }
 
     function handleNextAction() {
@@ -2096,6 +2878,14 @@
       } else if (e.code === 'KeyF' || e.key === 'f' || e.key === 'F') {
         e.preventDefault();
         toggleFullScreen();
+      } else if (e.code === 'KeyE' || e.key === 'e' || e.key === 'E') {
+        e.preventDefault();
+        toggleScenesDrawer();
+      } else if (e.code === 'Escape' || e.key === 'Escape') {
+        if (isDrawerOpen) {
+          e.preventDefault();
+          closeScenesDrawer();
+        }
       } else if (e.code === 'KeyC' || e.key === 'c' || e.key === 'C') {
         e.preventDefault();
         openConfigModal();
@@ -2103,40 +2893,48 @@
     });
 
     // Clic en la pantalla para avanzar slide o pasar video manteniendo foco en window
+    function isEventOverIgnoredControls(e) {
+      if (!e || !e.target) return false;
+      return !!(
+        e.target.closest('#btn-fullscreen') ||
+        e.target.closest('#config-modal') ||
+        e.target.closest('#scenes-drawer') ||
+        e.target.closest('#drawer-toggle-btn') ||
+        e.target.closest('#drawer-backdrop')
+      );
+    }
+
     if (layers.step1) {
       layers.step1.addEventListener('click', (e) => {
-        if (e && e.target && (e.target.closest('#btn-fullscreen') || e.target.closest('#config-modal'))) return;
+        if (isEventOverIgnoredControls(e)) return;
         handleNextAction();
       });
     }
     if (layers.step916) {
       layers.step916.addEventListener('click', (e) => {
-        if (e && e.target && (e.target.closest('#btn-fullscreen') || e.target.closest('#config-modal'))) return;
+        if (isEventOverIgnoredControls(e)) return;
         handleNextAction();
       });
     }
     if (layers.step2) {
       layers.step2.addEventListener('click', (e) => {
-        // Bloqueado: clic en el vídeo no salta ni cancela la animación
         if (e) e.stopPropagation();
       });
     }
     if (layers.step3) {
       layers.step3.addEventListener('click', (e) => {
-        if (isTransitionLocked) return;
-        if (e && e.target && (e.target.closest('#btn-fullscreen') || e.target.closest('#config-modal'))) return;
+        if (isTransitionLocked || isEventOverIgnoredControls(e)) return;
         handleNextAction();
       });
     }
     if (layers.step4) {
       layers.step4.addEventListener('click', (e) => {
-        // Bloqueado: clic en el vídeo no salta ni cancela la animación
         if (e) e.stopPropagation();
       });
     }
     if (layers.stepTitle) {
       layers.stepTitle.addEventListener('click', (e) => {
-        if (e && e.target && (e.target.closest('#btn-fullscreen') || e.target.closest('#config-modal'))) return;
+        if (isEventOverIgnoredControls(e)) return;
         handleNextAction();
       });
     }
