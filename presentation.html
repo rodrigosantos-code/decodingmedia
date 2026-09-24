@@ -1926,8 +1926,40 @@
       return timeline;
     }
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const stageDeckId = urlParams.get('deck') || (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
+
+    function getInitialStepIndex(stepsLength, targetDeckId) {
+      // 1. Prioridad: parámetro ?step= en la URL
+      const pStep = urlParams.get('step');
+      if (pStep !== null && !isNaN(parseInt(pStep, 10))) {
+        const val = parseInt(pStep, 10);
+        if (val >= 0 && val < stepsLength) return val;
+      }
+      // 2. Almacenamiento local para este deck específico
+      try {
+        const key = targetDeckId ? ('dm_current_step_' + targetDeckId) : 'dm_current_step_default';
+        const saved = localStorage.getItem(key);
+        if (saved !== null && !isNaN(parseInt(saved, 10))) {
+          const val = parseInt(saved, 10);
+          if (val >= 0 && val < stepsLength) return val;
+        }
+      } catch (e) {}
+      // 3. Fallback: último paso enviado desde la sala de control si es reciente (15s)
+      try {
+        const rawStep = localStorage.getItem('dm_stage_set_step');
+        if (rawStep) {
+          const parsed = JSON.parse(rawStep);
+          if (parsed && typeof parsed.step === 'number' && (Date.now() - parsed.time) < 15000) {
+            if (parsed.step >= 0 && parsed.step < stepsLength) return parsed.step;
+          }
+        }
+      } catch (e) {}
+      return 0;
+    }
+
     let STEPS = buildTimeline(deckSlots);
-    let currentStepIndex = 0;
+    let currentStepIndex = getInitialStepIndex(STEPS.length, stageDeckId);
     let currentSlide = 1;
     let hintTimer = null;
     let hasTriggeredEndFade = false;
@@ -2413,6 +2445,12 @@
       if (stepNameEl) stepNameEl.textContent = step.name + (step.speaker ? ` · ${step.speaker}` : '');
       if (stepNumEl) stepNumEl.textContent = (currentStepIndex + 1);
       if (stepTotEl) stepTotEl.textContent = STEPS.length;
+      try {
+        if (typeof stageDeckId !== 'undefined' && stageDeckId) {
+          localStorage.setItem('dm_current_step_' + stageDeckId, String(currentStepIndex));
+        }
+      } catch (e) {}
+      renderSceneDrawer();
 
       // Identificar la capa destino de este paso
       let targetLayer = null;
@@ -2780,6 +2818,11 @@
       stopVideos();
       currentStepIndex = (index >= 0 && index < STEPS.length) ? index : 0;
       currentSlide = 1;
+      try {
+        if (typeof stageDeckId !== 'undefined' && stageDeckId) {
+          localStorage.setItem('dm_current_step_' + stageDeckId, String(currentStepIndex));
+        }
+      } catch (e) {}
       updateStepUI();
       ensureWindowFocus();
     }
@@ -2795,6 +2838,11 @@
       }
       currentStepIndex = 0;
       currentSlide = 1;
+      try {
+        if (typeof stageDeckId !== 'undefined' && stageDeckId) {
+          localStorage.setItem('dm_current_step_' + stageDeckId, '0');
+        }
+      } catch (e) {}
       updateStepUI();
       showHint('Presentación reiniciada desde el inicio', 2000);
     }
@@ -3288,7 +3336,7 @@
         }
       }
       if (!found || currentStepIndex >= STEPS.length) {
-        currentStepIndex = 0;
+        currentStepIndex = getInitialStepIndex(STEPS.length, stageDeckId);
         currentSlide = 1;
       }
 
@@ -3332,7 +3380,9 @@
       }
       // Salto directo a un paso de la línea de tiempo
       else if (data.type === 'SET_STEP' && typeof data.step === 'number') {
-        goToStep(data.step);
+        if (!data.deckId || data.deckId === stageDeckId) {
+          goToStep(data.step);
+        }
       }
       // Comandos remotos
       else if (data.type === 'STAGE_COMMAND') {
@@ -3475,6 +3525,9 @@
     }
 
     broadcastState();
+    try {
+      bus.postMessage({ type: 'REQUEST_CURRENT_STATE', deckId: stageDeckId });
+    } catch(e) {}
   </script>
 </body>
 </html>
