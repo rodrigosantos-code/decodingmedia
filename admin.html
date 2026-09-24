@@ -494,8 +494,8 @@
   // ═══ ALIGNMENT COMPOSITOR ═════════════════════════════════
   // State per element (position as % of canvas)
   const state={
-    a:{ left:0, top:0, width:100, height:100, rot:0, zoom:100 },
-    b:{ left:0, top:0, width:100, height:100, rot:0, zoom:100 },
+    a:{ left:0, top:0, width:100, height:100, rot:0, zoom:100, opacity:100 },
+    b:{ left:0, top:0, width:100, height:100, rot:0, zoom:100, opacity:100 },
   };
   let _activeVideo=null; // reference to whichever video is playing
 
@@ -542,9 +542,11 @@
       container.innerHTML=`<img src="${src}" style="width:100%;height:100%;object-fit:cover;" />`;
     }
 
-    // Apply saved calib if exists
+    // Apply saved calib if exists — preserve current opacity across asset changes
+    const currentOpacity = state[el].opacity ?? 100;
     const saved=getSavedCalib(key);
-    if(saved){ state[el]={...saved}; } else { state[el]={left:0,top:0,width:100,height:100,rot:0}; }
+    if(saved){ state[el]={...saved}; } else { state[el]={left:0,top:0,width:100,height:100,rot:0,zoom:100}; }
+    state[el].opacity = currentOpacity; // never reset opacity on asset change
     applyStateToDOM(el);
     updateInputsFromState(el);
   }
@@ -554,7 +556,7 @@
     const container=document.getElementById('el-'+el);
     const box=document.getElementById('drag-box-'+el);
     const zoom=(s.zoom||100)/100;
-    const style=`left:${s.left}%;top:${s.top}%;width:${s.width}%;height:${s.height}%;transform:rotate(${s.rot}deg) scale(${zoom});transform-origin:center center;`;
+    const style=`left:${s.left}%;top:${s.top}%;width:${s.width}%;height:${s.height}%;transform:rotate(${s.rot}deg) scale(${zoom});transform-origin:center center;opacity:${(s.opacity??100)/100};`;
     container.style.cssText=style+'pointer-events:none;position:absolute;';
     if(box){ box.style.left=s.left+'%'; box.style.top=s.top+'%'; box.style.width=s.width+'%'; box.style.height=s.height+'%'; box.style.transform=`rotate(${s.rot}deg) scale(${zoom})`; }
   }
@@ -564,6 +566,12 @@
     ['left','top','width','height','rot','zoom'].forEach(k=>{
       const inp=document.getElementById(el+'-'+k); if(inp) inp.value=+(s[k]||0).toFixed(2);
     });
+    // Sync opacity slider
+    const opa = s.opacity ?? 100;
+    const slider = document.getElementById('opa-'+el);
+    if(slider) slider.value = opa;
+    const opaVal = document.getElementById('opa-val-'+el);
+    if(opaVal) opaVal.textContent = opa;
   }
 
   function applyInputs(el){
@@ -574,14 +582,17 @@
   }
 
   function setElOpacity(el,v){
+    state[el].opacity=parseInt(v,10);
     document.getElementById('opa-val-'+el).textContent=v;
-    document.getElementById('el-'+el).style.opacity=v/100;
+    applyStateToDOM(el);
   }
 
   function resetEl(el){
     const key=document.getElementById('sel-'+el).value;
-    const def=getSavedCalib(key)||{left:0,top:0,width:100,height:100,rot:0};
-    state[el]={...def}; applyStateToDOM(el); updateInputsFromState(el);
+    const currentOpacity = state[el].opacity ?? 100;
+    const def=getSavedCalib(key)||{left:0,top:0,width:100,height:100,rot:0,zoom:100};
+    state[el]={...def, opacity:currentOpacity};
+    applyStateToDOM(el); updateInputsFromState(el);
   }
 
   function saveCalib(el){
