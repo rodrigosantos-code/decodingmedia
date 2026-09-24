@@ -69,7 +69,7 @@
       box-shadow: none !important;
     }
 
-    /* Capas de cada paso con fundido suave de 1 segundo */
+    /* Capas de cada paso con fundido suave de 2 segundos */
     .stage-layer {
       position: absolute;
       top: 0;
@@ -78,7 +78,7 @@
       height: 100%;
       opacity: 0;
       visibility: hidden;
-      transition: opacity 1s ease-in-out, visibility 1s ease-in-out;
+      transition: opacity 2s ease-in-out, visibility 2s ease-in-out;
       pointer-events: none;
       z-index: 1;
     }
@@ -90,7 +90,7 @@
       z-index: 10;
     }
 
-    /* La capa entrante activa se posiciona en z-index: 20 por encima de la anterior para que su fundido de 1s sea visible */
+    /* La capa entrante activa se posiciona en z-index: 20 por encima de la anterior para que su fundido de 2s sea visible */
     .stage-layer.active.incoming-layer {
       z-index: 20;
     }
@@ -112,7 +112,7 @@
     #layer-step2.fading-out {
       opacity: 0 !important;
       pointer-events: none;
-      transition: opacity 1s ease-in-out !important;
+      transition: opacity 2s ease-in-out !important;
     }
 
 
@@ -3072,11 +3072,11 @@
 
       if (step.type === 'slide') {
         if (!isFirstInit) {
-          // Bloquear brevemente durante el fundido de 1s para asegurar una visualización limpia e ininterrumpida
+          // Bloquear durante el fundido de 2s para asegurar una visualización limpia e ininterrumpida
           isTransitionLocked = true;
           setTimeout(() => {
             isTransitionLocked = false;
-          }, 1000);
+          }, 2000);
         } else {
           isTransitionLocked = false;
         }
@@ -3319,7 +3319,7 @@
             targetLayer.style.zIndex = '30';
           }
 
-          // Tras 1s: retirar completamente el vídeo y restaurar z-index normal de la slide
+          // Tras 2s: retirar completamente el vídeo y restaurar z-index normal de la slide
           setTimeout(() => {
             previousLayers.forEach(layer => {
               layer.classList.remove('active');
@@ -3330,7 +3330,7 @@
               targetLayer.classList.remove('incoming-layer');
               targetLayer.style.zIndex = '';
             }
-          }, 1000);
+          }, 2000);
         }
       }
 
