@@ -3053,20 +3053,23 @@
         selectSlotForCalib(step.slotId, false);
       }
 
-      // Si modo libre, no enviar al escenario real
+      const stepPayload = { type: 'SET_STEP', step: stepIndex, deckId: activeDeckId };
+
+      // Preview del editor: siempre actualizar
+      postToStageIframe(stepPayload);
+
       if (!liveMode) {
+        // Modo libre: solo preview, no escenario real
         showToast(`[Libre] Vista: ${step ? step.name : 'Paso ' + (stepIndex + 1)}`);
         return;
       }
 
-      const stepPayload = { type: 'SET_STEP', step: stepIndex, deckId: activeDeckId };
+      // En directo: enviar al escenario real
       bus.postMessage(stepPayload);
-      postToStageIframe(stepPayload);
       try {
         localStorage.setItem('dm_stage_set_step', JSON.stringify({ step: stepIndex, deckId: activeDeckId, time: Date.now() }));
       } catch (e) { }
 
-      // Emitir comando remoto a través de Supabase Realtime a otros ordenadores
       if (window.DMCloud && DMCloud.isConfigured()) {
         DMCloud.broadcastLiveCommand(stepPayload);
       }
