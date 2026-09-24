@@ -4230,6 +4230,27 @@
         else if (fmt === '9:16') applyFrame916Coords(data.calib);
         else if (fmt === '16:9') applyFrame2Coords(data.calib);
       }
+      // Calibración global desde el panel Admin (admin.html)
+      else if (data.type === 'SLOT_CALIB_UPDATE_GLOBAL' && data.calib && data.frameKey) {
+        const fmtMap = { frame_3x4: '3:4', frame_16x9: '16:9', frame_9x16: '9:16' };
+        const globalFmt = fmtMap[data.frameKey] || data.format;
+        // Actualizar todos los steps que coincidan con el formato
+        STEPS.forEach(st => { if (st.format === globalFmt) st.calib = { ...st.calib, ...data.calib }; });
+        deckSlots.forEach(sl => { if (sl.format === globalFmt) sl.calib = { ...sl.calib, ...data.calib }; });
+        // Persistir en localStorage para que sobreviva a recargas
+        try {
+          const stored = JSON.parse(localStorage.getItem('dm_admin_calib') || '{}');
+          stored[data.frameKey] = data.calib;
+          localStorage.setItem('dm_admin_calib', JSON.stringify(stored));
+        } catch(e) {}
+        // Aplicar inmediatamente si el paso activo es del mismo formato
+        const currentStep = STEPS[currentStepIndex];
+        if (currentStep && currentStep.format === globalFmt) {
+          if (globalFmt === '3:4') applyPhoneCoords(data.calib);
+          else if (globalFmt === '9:16') applyFrame916Coords(data.calib);
+          else if (globalFmt === '16:9') applyFrame2Coords(data.calib);
+        }
+      }
       // Compatibilidad con calibrador legado
       else if (data.type === 'PHONE_COORDS_UPDATE' && data.coords) {
         applyPhoneCoords(data.coords);

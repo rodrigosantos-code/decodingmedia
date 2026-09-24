@@ -674,6 +674,40 @@
       renderProjects(allDecks);
     }
 
+    // ── Preset por proyecto ──────────────────────────────────
+    function loadPresets() {
+      try {
+        const ps = JSON.parse(localStorage.getItem('dm_presets') || '[]');
+        if (!ps.find(p => p.id === 'preset1')) {
+          ps.unshift({ id: 'preset1', name: 'PRESET 1', description: 'Configuracion original' });
+        }
+        return ps;
+      } catch(e) { return [{ id: 'preset1', name: 'PRESET 1' }]; }
+    }
+    function getDeckPreset(deckId) { return localStorage.getItem('dm_deck_preset_' + deckId) || ''; }
+    function setDeckPreset(deckId, presetId) {
+      localStorage.setItem('dm_deck_preset_' + deckId, presetId);
+      // Aplicar los overrides del preset seleccionado
+      try {
+        const ps = loadPresets();
+        const p = ps.find(x => x.id === presetId);
+        if (p && p.assets) {
+          const overrides = {};
+          Object.entries(p.assets).forEach(([k,v]) => { if(v) overrides[k] = v; });
+          localStorage.setItem('dm_asset_overrides', JSON.stringify(overrides));
+        }
+      } catch(e) {}
+    }
+    function getDeckPresetOptions(deckId) {
+      const ps = loadPresets();
+      const current = getDeckPreset(deckId);
+      const none = `<option value="" ${!current ? 'selected' : ''} style="color:#64748b">Sin preset</option>`;
+      return none + ps.map(p =>
+        `<option value="${p.id}" ${p.id === current ? 'selected' : ''}>${p.name}</option>`
+      ).join('');
+    }
+    // ────────────────────────────────────────────────────────
+
     function renderProjects(decksToRender) {
       const grid = document.getElementById('projects-grid');
       if (!grid) return;
@@ -702,6 +736,14 @@
 
               <div class="card-meta">
                 <span>Modificado: ${formattedDate}</span>
+                <select
+                  style="margin-top:6px; width:100%; font-size:11px; font-weight:700; background:#101116; border:1px solid rgba(255,255,255,0.08); color:#f8fafc; border-radius:6px; padding:5px 8px; font-family:inherit; cursor:pointer; outline:none;"
+                  title="Preset de assets para este proyecto"
+                  onchange="setDeckPreset('${deck.id}', this.value)"
+                  id="preset-sel-${deck.id}"
+                >
+                  ${getDeckPresetOptions(deck.id)}
+                </select>
               </div>
             </div>
 

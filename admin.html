@@ -597,10 +597,14 @@
 
   function saveCalib(el){
     const key=document.getElementById('sel-'+el).value;
+    const calib={...state[el]};
     let store={}; try{store=JSON.parse(localStorage.getItem('dm_admin_calib')||'{}');}catch(e){}
-    store[key]={...state[el]}; localStorage.setItem('dm_admin_calib',JSON.stringify(store));
-    try{ const bc=new BroadcastChannel('dm_stage_bus'); bc.postMessage({type:'SLOT_CALIB_UPDATE_GLOBAL',assetKey:key,calib:{...state[el]}}); bc.close(); }catch(e){}
-    showToast('Calibracion guardada para '+key,'ok');
+    store[key]=calib; localStorage.setItem('dm_admin_calib',JSON.stringify(store));
+    // Emitir en ambos canales para cubrir todas las ventanas abiertas
+    ['dm_presentation_bus','dm_stage_bus'].forEach(ch=>{
+      try{ const bc=new BroadcastChannel(ch); bc.postMessage({type:'SLOT_CALIB_UPDATE_GLOBAL',frameKey:key,assetKey:key,calib}); bc.close(); }catch(e){}
+    });
+    showToast('Calibracion guardada y enviada a la presentacion','ok');
   }
   function getSavedCalib(key){ try{const s=JSON.parse(localStorage.getItem('dm_admin_calib')||'{}');return s[key]||null;}catch(e){return null;} }
 
