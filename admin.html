@@ -11,308 +11,223 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg-base:           #0c0d12;
-      --bg-card:           #15161c;
-      --bg-card-hover:     #1a1c24;
-      --bg-input:          #101116;
-      --border-subtle:     rgba(255,255,255,0.05);
-      --border-card:       rgba(255,255,255,0.06);
-      --border-card-hover: rgba(255,255,255,0.14);
-      --accent-300:        #f9a8d4;
-      --accent-400:        #f472b6;
-      --accent-500:        #ec4899;
-      --accent-600:        #db2777;
-      --accent-glow:       rgba(236,72,153,0.22);
-      --accent:            var(--accent-500);
-      --danger:            #f87171;
-      --danger-bg:         rgba(248,113,113,0.12);
-      --danger-border:     rgba(248,113,113,0.25);
-      --text-main:         #f8fafc;
-      --text-muted:        #8e95a5;
-      --text-dim:          #64748b;
-      --success:           #4ade80;
+      --bg-base: #0c0d12; --bg-card: #15161c; --bg-card-hover: #1a1c24; --bg-input: #101116;
+      --border-subtle: rgba(255,255,255,0.05); --border-card: rgba(255,255,255,0.06); --border-card-hover: rgba(255,255,255,0.14);
+      --accent-300: #f9a8d4; --accent-400: #f472b6; --accent-500: #ec4899; --accent-glow: rgba(236,72,153,0.22);
+      --accent: var(--accent-500);
+      --blue: #60a5fa; --blue-dim: rgba(96,165,250,0.18); --blue-border: rgba(96,165,250,0.5);
+      --danger: #f87171; --danger-bg: rgba(248,113,113,0.12); --danger-border: rgba(248,113,113,0.25);
+      --text-main: #f8fafc; --text-muted: #8e95a5; --text-dim: #64748b; --success: #4ade80;
     }
-
-    html, body { height: 100%; }
+    html, body { height: 100%; overflow: hidden; }
     body {
-      background: var(--bg-base);
-      color: var(--text-main);
-      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      font-size: 13px;
-      letter-spacing: -0.01em;
-      -webkit-font-smoothing: antialiased;
+      background: var(--bg-base); color: var(--text-main);
+      font-family: 'Montserrat', -apple-system, sans-serif;
+      font-size: 13px; letter-spacing: -0.01em; -webkit-font-smoothing: antialiased;
       display: flex; flex-direction: column;
-      min-height: 100vh;
     }
 
-    /* ── Header ── */
+    /* Header */
     header {
-      background: #0e0f14;
-      border-bottom: 1px solid var(--border-subtle);
-      padding: 0 24px;
-      height: 50px; min-height: 50px;
+      background: #0e0f14; border-bottom: 1px solid var(--border-subtle);
+      padding: 0 24px; height: 50px; min-height: 50px;
       display: flex; align-items: center; gap: 12px;
-      position: sticky; top: 0; z-index: 100;
-      flex-shrink: 0;
+      position: sticky; top: 0; z-index: 100; flex-shrink: 0;
     }
     .brand-logo-text { font-size: 16px; font-weight: 800; letter-spacing: -0.03em; color: #fff; }
     .brand-sticker-badge {
       background: rgba(236,72,153,0.10); color: #f472b6;
-      padding: 2px 7px; border-radius: 3px;
-      font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
-      border: 1px solid rgba(236,72,153,0.28);
+      padding: 2px 7px; border-radius: 3px; font-size: 9.5px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em; border: 1px solid rgba(236,72,153,0.28);
     }
     .header-spacer { flex: 1; }
     .conn-badge { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text-muted); }
     .conn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-dim); transition: background 0.3s; }
-    .conn-dot.ok   { background: var(--success); box-shadow: 0 0 5px var(--success); }
-    .conn-dot.err  { background: var(--danger); }
-    .conn-dot.warn { background: #fbbf24; }
+    .conn-dot.ok { background: var(--success); box-shadow: 0 0 5px var(--success); }
+    .conn-dot.err { background: var(--danger); } .conn-dot.warn { background: #fbbf24; }
+    .btn-header-link {
+      margin-left: 12px; font-size: 12px; font-weight: 700; color: var(--text-muted);
+      text-decoration: none; padding: 7px 12px; border-radius: 7px;
+      background: var(--bg-input); border: 1px solid var(--border-card);
+      transition: all 0.15s ease;
+    }
+    .btn-header-link:hover { color: var(--text-main); border-color: var(--border-card-hover); }
 
-    /* ── Tab bar ── */
+    /* Tab bar */
     .tab-bar {
-      display: flex; gap: 2px;
-      padding: 16px 24px 0;
+      display: flex; gap: 2px; padding: 16px 24px 0;
       border-bottom: 1px solid var(--border-subtle);
-      background: var(--bg-base);
+      background: var(--bg-base); flex-shrink: 0;
     }
     .tab-btn {
-      font-family: inherit; font-size: 12px; font-weight: 700;
-      letter-spacing: 0.04em; text-transform: uppercase;
-      padding: 8px 16px; border: none; border-radius: 6px 6px 0 0;
-      background: transparent; color: var(--text-dim);
-      cursor: pointer; transition: all 0.15s ease;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
+      font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+      text-transform: uppercase; padding: 8px 16px; border: none; border-radius: 6px 6px 0 0;
+      background: transparent; color: var(--text-dim); cursor: pointer; transition: all 0.15s ease;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
     }
     .tab-btn:hover { color: var(--text-muted); }
     .tab-btn.active { color: var(--text-main); border-bottom-color: var(--accent); background: rgba(236,72,153,0.06); }
 
-    /* ── Panel ── */
-    .panel { display: none; padding: 24px; flex: 1; }
-    .panel.active { display: block; }
-
-    /* ── Section title ── */
+    /* Panels */
+    .panel { display: none; padding: 20px 24px; overflow-y: auto; flex: 1; }
+    .panel.active { display: flex; flex-direction: column; gap: 16px; }
     .section-label {
-      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; color: var(--text-dim);
-      margin-bottom: 14px;
-      display: flex; align-items: center; gap: 10px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-dim); display: flex; align-items: center; gap: 10px;
     }
     .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
-
-    /* ── Info bar ── */
     .info-bar {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border-card);
-      border-radius: 8px;
-      padding: 10px 14px;
-      margin-bottom: 18px;
-      font-size: 12px; color: var(--text-muted); line-height: 1.5;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border-card);
+      border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--text-muted); line-height: 1.5;
     }
     .info-bar strong { color: var(--text-main); font-weight: 700; }
 
-    /* ── Asset grid ── */
+    /* Asset grid (Frames / Transitions / Logos) */
     .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
     .asset-card {
-      background: var(--bg-card); border: 1px solid var(--border-card);
-      border-radius: 10px; overflow: hidden;
-      transition: border-color 0.15s;
-      position: relative;
+      background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 10px;
+      overflow: hidden; transition: border-color 0.15s; position: relative;
     }
     .asset-card:hover { border-color: var(--border-card-hover); }
     .asset-card.drag-over { border-color: var(--accent) !important; box-shadow: 0 0 0 2px var(--accent-glow); }
     .asset-card.overridden { border-color: rgba(236,72,153,0.35); }
-    .asset-preview {
-      width: 100%; aspect-ratio: 16/9;
-      background: #0a0a0f;
-      position: relative; overflow: hidden;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .asset-preview.r34  { aspect-ratio: 3/4; }
-    .asset-preview.r916 { aspect-ratio: 9/16; }
-    .asset-preview.r1   { aspect-ratio: 1/1; }
-    .asset-preview img, .asset-preview video { width: 100%; height: 100%; object-fit: cover; }
-    .override-tag {
-      position: absolute; top: 6px; right: 6px;
-      font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-      padding: 2px 7px; border-radius: 3px;
-      background: rgba(236,72,153,0.85); color: #fff;
-    }
-    .drag-hint {
-      position: absolute; inset: 0;
-      background: rgba(236,72,153,0.10);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
-      color: var(--accent); opacity: 0; pointer-events: none; transition: opacity 0.15s;
-    }
-    .asset-card.drag-over .drag-hint { opacity: 1; }
-    .upload-progress {
-      position: absolute; inset: 0; background: rgba(12,13,18,0.88);
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-      opacity: 0; pointer-events: none; transition: opacity 0.2s;
-    }
-    .upload-progress.active { opacity: 1; pointer-events: all; }
-    .progress-label { font-size: 11px; font-weight: 700; color: var(--text-muted); }
-    .progress-bar-wrap { width: 75%; height: 3px; background: var(--border-card); border-radius: 100px; }
-    .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 100px; width: 0%; transition: width 0.3s; }
-    .asset-info { padding: 11px 12px; }
-    .asset-name { font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .asset-sub  { font-size: 10px; color: var(--text-dim); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .asset-actions { display: flex; gap: 6px; }
-    .file-input-hidden { display: none; }
+    .asset-preview { width:100%; aspect-ratio:16/9; background:#0a0a0f; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+    .asset-preview.r34 { aspect-ratio:3/4; } .asset-preview.r916 { aspect-ratio:9/16; } .asset-preview.r1 { aspect-ratio:1/1; }
+    .asset-preview img, .asset-preview video { width:100%; height:100%; object-fit:cover; }
+    .override-tag { position:absolute; top:6px; right:6px; font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; padding:2px 7px; border-radius:3px; background:rgba(236,72,153,0.85); color:#fff; }
+    .drag-hint { position:absolute; inset:0; background:rgba(236,72,153,0.10); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(--accent); opacity:0; pointer-events:none; transition:opacity 0.15s; }
+    .asset-card.drag-over .drag-hint { opacity:1; }
+    .upload-progress { position:absolute; inset:0; background:rgba(12,13,18,0.88); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+    .upload-progress.active { opacity:1; pointer-events:all; }
+    .progress-label { font-size:11px; font-weight:700; color:var(--text-muted); }
+    .progress-bar-wrap { width:75%; height:3px; background:var(--border-card); border-radius:100px; }
+    .progress-bar-fill { height:100%; background:var(--accent); border-radius:100px; width:0%; transition:width 0.3s; }
+    .asset-info { padding:11px 12px; }
+    .asset-name { font-size:12px; font-weight:700; color:var(--text-main); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .asset-sub { font-size:10px; color:var(--text-dim); margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .asset-actions { display:flex; gap:6px; }
+    .file-input-hidden { display:none; }
 
-    /* ── Buttons ── */
+    /* Buttons */
     .btn-primary {
-      font-family: inherit; font-size: 12px; font-weight: 700;
-      padding: 8px 14px; border-radius: 7px; border: none; cursor: pointer;
-      background: var(--accent-300); color: #000;
-      transition: all 0.15s ease; white-space: nowrap;
+      font-family:inherit; font-size:12px; font-weight:700; padding:8px 14px; border-radius:7px;
+      border:none; cursor:pointer; background:var(--accent-300); color:#000; transition:all 0.15s ease; white-space:nowrap;
     }
-    .btn-primary:hover { background: var(--accent-400); transform: translateY(-1px); }
-    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn-primary:hover { background:var(--accent-400); transform:translateY(-1px); }
+    .btn-primary:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
     .btn-ghost {
-      font-family: inherit; font-size: 12px; font-weight: 700;
-      padding: 8px 12px; border-radius: 7px; cursor: pointer;
-      background: var(--bg-input); color: var(--text-muted);
-      border: 1px solid var(--border-card); transition: all 0.15s ease;
+      font-family:inherit; font-size:12px; font-weight:700; padding:8px 12px; border-radius:7px;
+      cursor:pointer; background:var(--bg-input); color:var(--text-muted); border:1px solid var(--border-card); transition:all 0.15s ease;
     }
-    .btn-ghost:hover { border-color: var(--border-card-hover); color: var(--text-main); }
-    .btn-ghost:disabled { opacity: 0.35; cursor: not-allowed; }
-    .btn-danger-ghost {
-      font-family: inherit; font-size: 12px; font-weight: 700;
-      padding: 8px 12px; border-radius: 7px; cursor: pointer;
-      background: var(--danger-bg); color: var(--danger);
-      border: 1px solid var(--danger-border); transition: all 0.15s ease;
-    }
-    .btn-danger-ghost:hover { background: rgba(248,113,113,0.2); }
-    .btn-full { width: 100%; justify-content: center; display: flex; align-items: center; }
+    .btn-ghost:hover { border-color:var(--border-card-hover); color:var(--text-main); }
+    .btn-ghost:disabled { opacity:0.35; cursor:not-allowed; }
+    .btn-full { width:100%; justify-content:center; display:flex; align-items:center; }
+    .btn-danger-ghost { font-family:inherit; font-size:12px; font-weight:700; padding:8px 12px; border-radius:7px; cursor:pointer; background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-border); transition:all 0.15s ease; }
+    .btn-danger-ghost:hover { background:rgba(248,113,113,0.2); }
 
-    /* ── Alignment Panel ── */
-    .align-layout { display: grid; grid-template-columns: 260px 1fr; gap: 16px; align-items: start; }
-    .align-sidebar {
-      background: var(--bg-card); border: 1px solid var(--border-card);
-      border-radius: 10px; padding: 16px;
-      display: flex; flex-direction: column; gap: 14px;
-    }
-    .form-group { display: flex; flex-direction: column; gap: 5px; }
-    .form-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
-    .form-select, .form-input {
-      background: var(--bg-input); border: 1px solid var(--border-card);
-      color: var(--text-main); border-radius: 7px;
-      padding: 7px 10px; font-family: inherit; font-size: 12px;
-      outline: none; transition: border-color 0.15s;
-    }
-    .form-select:focus, .form-input:focus { border-color: var(--accent); }
-    .form-select { appearance: none; -webkit-appearance: none; cursor: pointer;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238e95a5' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
-    .form-range { width: 100%; accent-color: var(--accent); cursor: pointer; }
-    .val-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .divider { height: 1px; background: var(--border-subtle); margin: 2px 0; }
-
-    .align-main { display: flex; flex-direction: column; gap: 10px; }
+    /* ═══ ALIGNMENT PANEL ═══ */
+    /* Canvas */
     .align-canvas-wrap {
-      position: relative; width: 100%; aspect-ratio: 16/9;
-      background: repeating-conic-gradient(#13131a 0% 25%, #0f0f16 0% 50%) 0 0/18px 18px;
-      border-radius: 10px; overflow: hidden;
-      border: 1px solid var(--border-card);
+      position:relative; width:100%; aspect-ratio:16/9; flex-shrink:0;
+      background:repeating-conic-gradient(#13131a 0% 25%, #0f0f16 0% 50%) 0 0/18px 18px;
+      border-radius:10px; overflow:hidden; border:1px solid var(--border-card);
+      cursor:default;
     }
-    #align-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-    .align-drag-box {
-      position: absolute;
-      border: 1.5px solid rgba(236,72,153,0.85);
-      box-shadow: 0 0 0 1px rgba(236,72,153,0.2) inset;
-      cursor: move; user-select: none;
-      background: rgba(236,72,153,0.04);
-    }
-    .align-drag-box .handle {
-      position: absolute; width: 12px; height: 12px;
-      background: var(--accent); border: 2px solid #fff; border-radius: 2px;
-    }
-    .handle-tl { top:-6px; left:-6px; cursor:nw-resize; }
-    .handle-tr { top:-6px; right:-6px; cursor:ne-resize; }
-    .handle-bl { bottom:-6px; left:-6px; cursor:sw-resize; }
-    .handle-br { bottom:-6px; right:-6px; cursor:se-resize; }
-    .handle-c  { top:50%; left:50%; transform:translate(-50%,-50%); cursor:move; border-radius:50%; width:14px; height:14px; }
-    #align-frame-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    .align-el { position:absolute; pointer-events:none; }
+    .align-el img, .align-el video { width:100%; height:100%; object-fit:cover; display:block; }
 
+    /* Drag boxes */
+    .align-drag-box {
+      position:absolute; cursor:move; user-select:none;
+    }
+    .drag-box-a { border:1.5px solid rgba(236,72,153,0.9); background:rgba(236,72,153,0.05); box-shadow:0 0 0 1px rgba(236,72,153,0.15) inset; }
+    .drag-box-b { border:1.5px solid rgba(96,165,250,0.9); background:rgba(96,165,250,0.05); box-shadow:0 0 0 1px rgba(96,165,250,0.15) inset; }
+    .align-drag-box .h {
+      position:absolute; width:11px; height:11px; border:2px solid #fff; border-radius:2px;
+    }
+    .drag-box-a .h { background:var(--accent); }
+    .drag-box-b .h { background:var(--blue); }
+    .h-tl { top:-5.5px; left:-5.5px; cursor:nw-resize; }
+    .h-tr { top:-5.5px; right:-5.5px; cursor:ne-resize; }
+    .h-bl { bottom:-5.5px; left:-5.5px; cursor:sw-resize; }
+    .h-br { bottom:-5.5px; right:-5.5px; cursor:se-resize; }
+    .h-c  { top:50%; left:50%; transform:translate(-50%,-50%); cursor:move; border-radius:50%; width:13px; height:13px; }
+
+    /* Timeline */
     .timeline-bar {
-      background: var(--bg-card); border: 1px solid var(--border-card);
-      border-radius: 8px; padding: 8px 12px;
-      display: flex; align-items: center; gap: 10px;
+      background:var(--bg-card); border:1px solid var(--border-card);
+      border-radius:8px; padding:8px 12px; display:flex; align-items:center; gap:10px; flex-shrink:0;
     }
     .btn-play-pause {
-      width: 30px; height: 30px; border-radius: 50%;
-      background: var(--accent-300); color: #000;
-      border: none; cursor: pointer; font-size: 11px; font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; transition: all 0.15s ease;
+      width:28px; height:28px; border-radius:50%; background:var(--accent-300); color:#000;
+      border:none; cursor:pointer; font-size:10px; font-weight:700;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.15s ease;
     }
-    .btn-play-pause:hover { background: var(--accent-400); }
-    .tl-scrubber { flex: 1; accent-color: var(--accent); cursor: pointer; }
-    .tl-time { font-size: 10px; font-weight: 700; color: var(--text-dim); white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 72px; text-align: right; }
+    .btn-play-pause:hover { background:var(--accent-400); }
+    .tl-scrubber { flex:1; accent-color:var(--accent); cursor:pointer; }
+    .tl-time { font-size:10px; font-weight:700; color:var(--text-dim); white-space:nowrap; font-variant-numeric:tabular-nums; min-width:72px; text-align:right; }
 
-    /* ── Presets ── */
-    .presets-topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-    .presets-topbar h2 { font-size: 13px; font-weight: 700; color: var(--text-main); }
-    .presets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; }
-    .preset-card {
-      background: var(--bg-card); border: 1px solid var(--border-card);
-      border-radius: 10px; padding: 16px;
-      position: relative; transition: border-color 0.15s;
+    /* Two-column controls */
+    .align-controls {
+      display:grid; grid-template-columns:1fr 1fr; gap:12px; flex-shrink:0;
     }
-    .preset-card:hover { border-color: var(--border-card-hover); }
-    .preset-card.active-preset { border-color: rgba(236,72,153,0.5); background: rgba(236,72,153,0.03); }
-    .preset-badge-active {
-      position: absolute; top: 12px; right: 12px;
-      font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-      padding: 2px 7px; border-radius: 3px;
-      background: rgba(236,72,153,0.15); color: var(--accent-300);
-      border: 1px solid rgba(236,72,153,0.3);
+    .ctrl-panel {
+      background:var(--bg-card); border:1px solid var(--border-card);
+      border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:10px;
     }
-    .preset-badge-default {
-      position: absolute; top: 12px; right: 70px;
-      font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-      padding: 2px 7px; border-radius: 3px;
-      background: rgba(255,255,255,0.05); color: var(--text-dim);
-      border: 1px solid var(--border-card);
+    .ctrl-panel.panel-a { border-top:2px solid rgba(236,72,153,0.6); }
+    .ctrl-panel.panel-b { border-top:2px solid rgba(96,165,250,0.6); }
+    .ctrl-header {
+      display:flex; align-items:center; gap:8px;
+      font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted);
     }
-    .preset-name-input {
-      background: transparent; border: none; border-bottom: 1px solid transparent;
-      color: var(--text-main); font-family: inherit;
-      font-size: 15px; font-weight: 800; outline: none; width: calc(100% - 120px);
-      padding: 2px 0; margin-bottom: 4px; letter-spacing: -0.02em;
-      transition: border-color 0.15s;
+    .el-badge {
+      width:20px; height:20px; border-radius:4px; display:flex; align-items:center; justify-content:center;
+      font-size:10px; font-weight:800; letter-spacing:0; flex-shrink:0;
     }
-    .preset-name-input:not([readonly]):hover { border-bottom-color: var(--border-card-hover); }
-    .preset-name-input:not([readonly]):focus { border-bottom-color: var(--accent); }
-    .preset-desc { font-size: 11px; color: var(--text-dim); margin-bottom: 12px; }
-    .preset-thumbs { display: flex; gap: 4px; margin-bottom: 12px; }
-    .preset-thumb { width: 36px; height: 36px; border-radius: 5px; object-fit: cover; border: 1px solid var(--border-card); background: var(--bg-input); }
-    .preset-actions { display: flex; gap: 6px; }
-    .btn-activate { flex: 1; font-family: inherit; font-size: 11px; font-weight: 700; padding: 7px; border-radius: 6px; border: none; cursor: pointer; background: var(--accent-300); color: #000; transition: all 0.15s ease; }
-    .btn-activate:hover { background: var(--accent-400); }
-    .btn-activate:disabled { opacity: 0.35; cursor: default; }
-    .btn-del-preset { font-family: inherit; font-size: 11px; font-weight: 700; padding: 7px 10px; border-radius: 6px; cursor: pointer; background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); transition: all 0.15s ease; }
-    .btn-del-preset:hover { background: rgba(248,113,113,0.2); }
+    .el-badge-a { background:rgba(236,72,153,0.2); color:var(--accent-300); border:1px solid rgba(236,72,153,0.4); }
+    .el-badge-b { background:rgba(96,165,250,0.2); color:var(--blue); border:1px solid rgba(96,165,250,0.4); }
+    .form-group { display:flex; flex-direction:column; gap:4px; }
+    .form-label { font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim); }
+    .form-select, .form-input {
+      background:var(--bg-input); border:1px solid var(--border-card); color:var(--text-main);
+      border-radius:7px; padding:6px 10px; font-family:inherit; font-size:12px; outline:none; transition:border-color 0.15s;
+    }
+    .form-select:focus, .form-input:focus { border-color:var(--accent); }
+    .form-select { appearance:none; -webkit-appearance:none; cursor:pointer;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238e95a5' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat:no-repeat; background-position:right 10px center; padding-right:28px; }
+    .form-range { width:100%; accent-color:var(--accent); cursor:pointer; }
+    .val-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+    .divider { height:1px; background:var(--border-subtle); }
 
-    /* ── Toast ── */
-    #toast {
-      position: fixed; bottom: 20px; right: 20px;
-      background: var(--bg-card); border: 1px solid var(--border-card);
-      border-radius: 8px; padding: 10px 16px;
-      font-size: 12px; font-weight: 700;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-      transform: translateY(60px); opacity: 0;
-      transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
-      z-index: 9999; pointer-events: none;
-    }
-    #toast.show { transform: translateY(0); opacity: 1; }
-    #toast.ok  { border-color: rgba(74,222,128,0.35); color: var(--success); }
-    #toast.err { border-color: var(--danger-border); color: var(--danger); }
+    /* Presets */
+    .presets-topbar { display:flex; align-items:center; gap:12px; }
+    .presets-topbar h2 { font-size:13px; font-weight:700; color:var(--text-main); }
+    .presets-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(270px, 1fr)); gap:12px; }
+    .preset-card { background:var(--bg-card); border:1px solid var(--border-card); border-radius:10px; padding:16px; position:relative; transition:border-color 0.15s; }
+    .preset-card:hover { border-color:var(--border-card-hover); }
+    .preset-card.active-preset { border-color:rgba(236,72,153,0.5); background:rgba(236,72,153,0.03); }
+    .preset-badge-active { position:absolute; top:12px; right:12px; font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; padding:2px 7px; border-radius:3px; background:rgba(236,72,153,0.15); color:var(--accent-300); border:1px solid rgba(236,72,153,0.3); }
+    .preset-badge-default { position:absolute; top:12px; right:70px; font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; padding:2px 7px; border-radius:3px; background:rgba(255,255,255,0.05); color:var(--text-dim); border:1px solid var(--border-card); }
+    .preset-name-input { background:transparent; border:none; border-bottom:1px solid transparent; color:var(--text-main); font-family:inherit; font-size:15px; font-weight:800; outline:none; width:calc(100% - 120px); padding:2px 0; margin-bottom:4px; letter-spacing:-0.02em; transition:border-color 0.15s; }
+    .preset-name-input:not([readonly]):hover { border-bottom-color:var(--border-card-hover); }
+    .preset-name-input:not([readonly]):focus { border-bottom-color:var(--accent); }
+    .preset-desc { font-size:11px; color:var(--text-dim); margin-bottom:12px; }
+    .preset-thumbs { display:flex; gap:4px; margin-bottom:12px; }
+    .preset-thumb { width:36px; height:36px; border-radius:5px; object-fit:cover; border:1px solid var(--border-card); background:var(--bg-input); }
+    .preset-actions { display:flex; gap:6px; }
+    .btn-activate { flex:1; font-family:inherit; font-size:11px; font-weight:700; padding:7px; border-radius:6px; border:none; cursor:pointer; background:var(--accent-300); color:#000; transition:all 0.15s ease; }
+    .btn-activate:hover { background:var(--accent-400); } .btn-activate:disabled { opacity:0.35; cursor:default; }
+    .btn-del-preset { font-family:inherit; font-size:11px; font-weight:700; padding:7px 10px; border-radius:6px; cursor:pointer; background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-border); transition:all 0.15s ease; }
+    .btn-del-preset:hover { background:rgba(248,113,113,0.2); }
+
+    /* Toast */
+    #toast { position:fixed; bottom:20px; right:20px; background:var(--bg-card); border:1px solid var(--border-card); border-radius:8px; padding:10px 16px; font-size:12px; font-weight:700; box-shadow:0 8px 24px rgba(0,0,0,0.5); transform:translateY(60px); opacity:0; transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1); z-index:9999; pointer-events:none; }
+    #toast.show { transform:translateY(0); opacity:1; }
+    #toast.ok { border-color:rgba(74,222,128,0.35); color:var(--success); }
+    #toast.err { border-color:var(--danger-border); color:var(--danger); }
   </style>
 </head>
 <body>
@@ -323,93 +238,130 @@
     <div class="header-spacer"></div>
     <div class="conn-badge">
       <div class="conn-dot" id="conn-dot"></div>
-      <span id="conn-label">Comprobando…</span>
+      <span id="conn-label">Comprobando...</span>
     </div>
-    <a href="editor.html" style="margin-left:12px; font-size:12px; font-weight:700; color:var(--text-muted); text-decoration:none; padding:7px 12px; border-radius:7px; background:var(--bg-input); border:1px solid var(--border-card);">Control Room</a>
+    <a href="editor.html" class="btn-header-link">Control Room</a>
   </header>
 
   <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('frames')">Frames</button>
-    <button class="tab-btn"        onclick="switchTab('transitions')">Transiciones</button>
-    <button class="tab-btn"        onclick="switchTab('logos')">Logos</button>
-    <button class="tab-btn"        onclick="switchTab('align')">Alineacion</button>
-    <button class="tab-btn"        onclick="switchTab('presets')">Presets</button>
+    <button class="tab-btn active"  onclick="switchTab('frames')">Frames</button>
+    <button class="tab-btn"         onclick="switchTab('transitions')">Transiciones</button>
+    <button class="tab-btn"         onclick="switchTab('logos')">Logos</button>
+    <button class="tab-btn"         onclick="switchTab('align')">Alineacion</button>
+    <button class="tab-btn"         onclick="switchTab('presets')">Presets</button>
   </div>
 
   <!-- FRAMES -->
   <div class="panel active" id="panel-frames">
-    <div class="info-bar">Arrastra una imagen sobre el frame o haz clic en <strong>Subir</strong>. Los archivos se guardan en Supabase Storage y se aplican automáticamente a la presentación.</div>
+    <div class="info-bar">Arrastra una imagen sobre el frame o haz clic en <strong>Subir</strong>. Los archivos se guardan en Supabase Storage.</div>
     <div class="section-label">Marcos de pantalla</div>
     <div class="asset-grid" id="grid-frames"></div>
   </div>
 
   <!-- TRANSITIONS -->
   <div class="panel" id="panel-transitions">
-    <div class="info-bar">Arrastra un vídeo <strong>MP4</strong> sobre la transición que quieres actualizar. Mantén el mismo formato y duración aproximada del original.</div>
+    <div class="info-bar">Arrastra un <strong>MP4</strong> sobre la transicion a actualizar. Mantén el mismo formato y duracion del original.</div>
     <div class="section-label">Transiciones — 12 archivos</div>
     <div class="asset-grid" id="grid-transitions"></div>
   </div>
 
   <!-- LOGOS -->
   <div class="panel" id="panel-logos">
-    <div class="info-bar">Los logos aparecen en las esquinas de la presentación en todas las escenas excepto <strong>Title</strong>.</div>
+    <div class="info-bar">Los logos aparecen en las esquinas en todas las escenas excepto <strong>Title</strong>.</div>
     <div class="section-label">Logos corporativos</div>
     <div class="asset-grid" id="grid-logos"></div>
   </div>
 
   <!-- ALIGNMENT -->
   <div class="panel" id="panel-align">
-    <div class="info-bar">Reproduce la transición con el frame superpuesto para comprobar la alineación. Arrastra los <strong>manejadores rosas</strong> para posicionar la ventana de vídeo y guarda los valores en el sistema.</div>
-    <div class="align-layout">
-      <div class="align-sidebar">
-        <div class="form-group">
-          <label class="form-label">Frame fijo</label>
-          <select class="form-select" id="align-frame-sel" onchange="initAlignmentPreview()">
-            <option value="frame_3x4">Marco 3:4 Movil</option>
-            <option value="frame_16x9">Marco 16:9 Escenario</option>
-            <option value="frame_9x16">Marco 9:16 Vertical</option>
-          </select>
+    <div class="info-bar">Selecciona dos elementos cualesquiera (frames, transiciones, logos...) y alinealos visualmente. Cada elemento tiene sus propios manejadores. Los cambios de posicion se pueden guardar como calibracion.</div>
+
+    <!-- Canvas grande -->
+    <div class="align-canvas-wrap" id="align-canvas">
+      <!-- Elemento A (fondo) -->
+      <div class="align-el" id="el-a" style="left:0;top:0;width:100%;height:100%;"></div>
+      <!-- Elemento B (encima) -->
+      <div class="align-el" id="el-b" style="left:0;top:0;width:100%;height:100%;"></div>
+      <!-- Drag box A (rosa) -->
+      <div class="align-drag-box drag-box-a" id="drag-box-a">
+        <div class="h h-tl" data-el="a" data-h="tl"></div>
+        <div class="h h-tr" data-el="a" data-h="tr"></div>
+        <div class="h h-bl" data-el="a" data-h="bl"></div>
+        <div class="h h-br" data-el="a" data-h="br"></div>
+        <div class="h h-c"  data-el="a" data-h="c"></div>
+      </div>
+      <!-- Drag box B (azul) -->
+      <div class="align-drag-box drag-box-b" id="drag-box-b">
+        <div class="h h-tl" data-el="b" data-h="tl"></div>
+        <div class="h h-tr" data-el="b" data-h="tr"></div>
+        <div class="h h-bl" data-el="b" data-h="bl"></div>
+        <div class="h h-br" data-el="b" data-h="br"></div>
+        <div class="h h-c"  data-el="b" data-h="c"></div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline-bar" id="timeline-bar">
+      <button class="btn-play-pause" id="btn-align-play" onclick="toggleAlignPlay()">&#9654;</button>
+      <input type="range" class="tl-scrubber" id="tl-scrubber" min="0" max="100" value="0" step="0.01" oninput="scrubVideo(this.value)">
+      <span class="tl-time" id="tl-time">0:00 / 0:00</span>
+    </div>
+
+    <!-- Controles en dos columnas -->
+    <div class="align-controls">
+
+      <!-- Panel A -->
+      <div class="ctrl-panel panel-a">
+        <div class="ctrl-header">
+          <span class="el-badge el-badge-a">A</span>
+          Elemento A
         </div>
         <div class="form-group">
-          <label class="form-label">Transicion</label>
-          <select class="form-select" id="align-trans-sel" onchange="initAlignmentPreview()"></select>
+          <label class="form-label">Asset</label>
+          <select class="form-select" id="sel-a" onchange="loadElement('a')"></select>
         </div>
         <div class="form-group">
-          <label class="form-label">Opacidad del frame — <span id="opacity-val">80</span>%</label>
-          <input type="range" class="form-range" id="frame-opacity" min="0" max="100" value="80" oninput="setFrameOpacity(this.value)">
+          <label class="form-label">Opacidad — <span id="opa-val-a">100</span>%</label>
+          <input type="range" class="form-range" id="opa-a" min="0" max="100" value="100" oninput="setElOpacity('a',this.value)">
         </div>
         <div class="divider"></div>
-        <div class="section-label" style="margin-bottom:10px">Posicion ventana de video</div>
+        <div class="section-label" style="margin:0">Posicion</div>
         <div class="val-grid">
-          <div class="form-group"><label class="form-label">Left %</label><input type="number" class="form-input" id="v-left"   step="0.01" onchange="applyInputsToBox()"></div>
-          <div class="form-group"><label class="form-label">Top %</label><input type="number"  class="form-input" id="v-top"    step="0.01" onchange="applyInputsToBox()"></div>
-          <div class="form-group"><label class="form-label">Width %</label><input type="number" class="form-input" id="v-width"  step="0.01" onchange="applyInputsToBox()"></div>
-          <div class="form-group"><label class="form-label">Height %</label><input type="number" class="form-input" id="v-height" step="0.01" onchange="applyInputsToBox()"></div>
-          <div class="form-group"><label class="form-label">Rotacion</label><input type="number" class="form-input" id="v-rot"   step="0.1" onchange="applyInputsToBox()"></div>
-          <div class="form-group"><label class="form-label">Zoom %</label><input type="number"   class="form-input" id="v-zoom"  step="1"   onchange="applyInputsToBox()"></div>
+          <div class="form-group"><label class="form-label">Left %</label><input type="number" class="form-input" id="a-left"   step="0.01" onchange="applyInputs('a')"></div>
+          <div class="form-group"><label class="form-label">Top %</label><input type="number"  class="form-input" id="a-top"    step="0.01" onchange="applyInputs('a')"></div>
+          <div class="form-group"><label class="form-label">Width %</label><input type="number" class="form-input" id="a-width"  step="0.01" onchange="applyInputs('a')"></div>
+          <div class="form-group"><label class="form-label">Height %</label><input type="number" class="form-input" id="a-height" step="0.01" onchange="applyInputs('a')"></div>
+          <div class="form-group"><label class="form-label">Rotacion</label><input type="number" class="form-input" id="a-rot"   step="0.1"  onchange="applyInputs('a')"></div>
         </div>
-        <div class="divider"></div>
-        <button class="btn-primary btn-full" onclick="applyAlignToCalib()">Guardar calibracion</button>
-        <button class="btn-ghost   btn-full" onclick="resetAlignToDefaults()" style="margin-top:6px">Restaurar valores originales</button>
+        <button class="btn-primary btn-full" onclick="saveCalib('a')">Guardar calibracion A</button>
+        <button class="btn-ghost   btn-full" onclick="resetEl('a')" style="margin-top:4px">Restaurar posicion</button>
       </div>
 
-      <div class="align-main">
-        <div class="align-canvas-wrap" id="align-canvas">
-          <video id="align-video" muted loop playsinline></video>
-          <div class="align-drag-box" id="align-drag-box">
-            <div class="handle handle-tl" data-h="tl"></div>
-            <div class="handle handle-tr" data-h="tr"></div>
-            <div class="handle handle-bl" data-h="bl"></div>
-            <div class="handle handle-br" data-h="br"></div>
-            <div class="handle handle-c"  data-h="c"></div>
-          </div>
-          <img id="align-frame-img" class="align-frame-img" />
+      <!-- Panel B -->
+      <div class="ctrl-panel panel-b">
+        <div class="ctrl-header">
+          <span class="el-badge el-badge-b">B</span>
+          Elemento B
         </div>
-        <div class="timeline-bar">
-          <button class="btn-play-pause" id="btn-align-play" onclick="toggleAlignPlay()">&#9654;</button>
-          <input type="range" class="tl-scrubber" id="tl-scrubber" min="0" max="100" value="0" step="0.01" oninput="scrubVideo(this.value)">
-          <span class="tl-time" id="tl-time">0:00 / 0:00</span>
+        <div class="form-group">
+          <label class="form-label">Asset</label>
+          <select class="form-select" id="sel-b" onchange="loadElement('b')"></select>
         </div>
+        <div class="form-group">
+          <label class="form-label">Opacidad — <span id="opa-val-b">100</span>%</label>
+          <input type="range" class="form-range" id="opa-b" min="0" max="100" value="100" oninput="setElOpacity('b',this.value)">
+        </div>
+        <div class="divider"></div>
+        <div class="section-label" style="margin:0">Posicion</div>
+        <div class="val-grid">
+          <div class="form-group"><label class="form-label">Left %</label><input type="number" class="form-input" id="b-left"   step="0.01" onchange="applyInputs('b')"></div>
+          <div class="form-group"><label class="form-label">Top %</label><input type="number"  class="form-input" id="b-top"    step="0.01" onchange="applyInputs('b')"></div>
+          <div class="form-group"><label class="form-label">Width %</label><input type="number" class="form-input" id="b-width"  step="0.01" onchange="applyInputs('b')"></div>
+          <div class="form-group"><label class="form-label">Height %</label><input type="number" class="form-input" id="b-height" step="0.01" onchange="applyInputs('b')"></div>
+          <div class="form-group"><label class="form-label">Rotacion</label><input type="number" class="form-input" id="b-rot"   step="0.1"  onchange="applyInputs('b')"></div>
+        </div>
+        <button class="btn-primary btn-full" style="background:var(--blue);color:#000;" onclick="saveCalib('b')">Guardar calibracion B</button>
+        <button class="btn-ghost   btn-full" onclick="resetEl('b')" style="margin-top:4px">Restaurar posicion</button>
       </div>
     </div>
   </div>
@@ -420,7 +372,7 @@
       <h2>Presets de presentacion</h2>
       <button class="btn-primary" onclick="createPreset()">Nuevo preset</button>
     </div>
-    <div class="info-bar">Cada preset guarda los frames, transiciones y logos activos. <strong>PRESET 1</strong> es la configuracion original.</div>
+    <div class="info-bar">Cada preset guarda los frames, transiciones y logos activos. <strong>PRESET 1</strong> es la configuracion original por defecto.</div>
     <div class="presets-grid" id="presets-grid"></div>
   </div>
 
@@ -429,12 +381,12 @@
   <script src="supabase-config.js"></script>
   <script src="supabase-client.js"></script>
   <script>
-  // ─── ASSET REGISTRY ───────────────────────────────────────
+  // ═══ ASSET REGISTRY ═══════════════════════════════════════
   const FRAMES = [
-    { key:'frame_3x4',   label:'Marco 3:4',     sub:'Movil',     src:'Frame%20fijos/3x4.png',    type:'image', ratio:'r34',  accept:'image/*' },
-    { key:'frame_16x9',  label:'Marco 16:9',    sub:'Escenario', src:'Frame%20fijos/16x9.png',   type:'image', ratio:'',     accept:'image/*' },
-    { key:'frame_9x16',  label:'Marco 9:16',    sub:'Vertical',  src:'Frame%20fijos/9x16.png',   type:'image', ratio:'r916', accept:'image/*' },
-    { key:'frame_title', label:'Portada Title',  sub:'Estatica',  src:'Frame%20fijos/title.jpeg', type:'image', ratio:'',     accept:'image/*' },
+    { key:'frame_3x4',   label:'Marco 3:4',    sub:'Movil',     src:'Frame%20fijos/3x4.png',    type:'image', ratio:'r34',  accept:'image/*' },
+    { key:'frame_16x9',  label:'Marco 16:9',   sub:'Escenario', src:'Frame%20fijos/16x9.png',   type:'image', ratio:'',     accept:'image/*' },
+    { key:'frame_9x16',  label:'Marco 9:16',   sub:'Vertical',  src:'Frame%20fijos/9x16.png',   type:'image', ratio:'r916', accept:'image/*' },
+    { key:'frame_title', label:'Portada Title', sub:'Estatica',  src:'Frame%20fijos/title.jpeg', type:'image', ratio:'',     accept:'image/*' },
   ];
   const TRANSITIONS = [
     { key:'trans_title_3x4',     label:'Title — 3:4',   src:'Transitions/title_to_3x4.mp4',          type:'video' },
@@ -454,44 +406,38 @@
     { key:'logo_left',  label:'Logo Izquierda', sub:'Esquina izda', src:'logo_izquierda.png', type:'image', ratio:'r1', accept:'image/*' },
     { key:'logo_right', label:'Logo Derecha',   sub:'Esquina dcha', src:'logo_derecha.png',   type:'image', ratio:'r1', accept:'image/*' },
   ];
-  const DEFAULT_CALIB = {
-    frame_3x4:  { left:28.55, top:-2.85,  width:47.7,  height:111.45, rot:-0.8, zoom:100 },
-    frame_16x9: { left:7.2,   top:15.45,  width:85.85, height:66.7,   rot:0,    zoom:141 },
-    frame_9x16: { left:41.88, top:8.45,   width:19.17, height:95.15,  rot:0,    zoom:119 },
-  };
-  function getAllAssets() { return [...FRAMES,...TRANSITIONS,...LOGOS]; }
-  function getAsset(k) { return getAllAssets().find(a=>a.key===k); }
+  const ALL_ASSETS = [...FRAMES,...TRANSITIONS,...LOGOS];
+  function getAsset(k){ return ALL_ASSETS.find(a=>a.key===k); }
 
-  // ─── OVERRIDES ────────────────────────────────────────────
-  const OVR_KEY = 'dm_asset_overrides';
-  let overrides = {};
-  function loadOverrides() { try{ overrides=JSON.parse(localStorage.getItem(OVR_KEY)||'{}'); }catch(e){ overrides={}; } }
-  function saveOverrides() { localStorage.setItem(OVR_KEY, JSON.stringify(overrides)); }
+  // ═══ OVERRIDES ════════════════════════════════════════════
+  const OVR_KEY='dm_asset_overrides';
+  let overrides={};
+  function loadOverrides(){ try{overrides=JSON.parse(localStorage.getItem(OVR_KEY)||'{}');}catch(e){overrides={};} }
+  function saveOverrides(){ localStorage.setItem(OVR_KEY,JSON.stringify(overrides)); }
+  function effectiveSrc(key){ return overrides[key]||(getAsset(key)?.src)||''; }
 
-  // ─── TABS ─────────────────────────────────────────────────
-  const TABS = ['frames','transitions','logos','align','presets'];
-  function switchTab(tab) {
+  // ═══ TABS ═════════════════════════════════════════════════
+  const TABS=['frames','transitions','logos','align','presets'];
+  function switchTab(tab){
     document.querySelectorAll('.tab-btn').forEach((t,i)=>t.classList.toggle('active',TABS[i]===tab));
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-    document.getElementById('panel-'+tab).classList.add('active');
-    if(tab==='align') initAlignmentPreview();
+    const panel=document.getElementById('panel-'+tab);
+    panel.classList.add('active');
     if(tab==='presets') renderPresets();
   }
 
-  // ─── ASSET CARDS ─────────────────────────────────────────
-  function buildCard(asset) {
-    const isOvr = !!overrides[asset.key];
-    const src   = overrides[asset.key] || asset.src;
-    const card  = document.createElement('div');
-    card.className = 'asset-card'+(isOvr?' overridden':'');
-    card.id = 'card-'+asset.key;
-    const preview = asset.type==='image'
-      ? `<img src="${src}" onerror="this.style.display='none'" />`
-      : `<video src="${src}" muted preload="metadata" controls style="pointer-events:auto"></video>`;
-    card.innerHTML = `
+  // ═══ ASSET CARDS ══════════════════════════════════════════
+  function buildCard(asset){
+    const isOvr=!!overrides[asset.key];
+    const src=overrides[asset.key]||asset.src;
+    const card=document.createElement('div');
+    card.className='asset-card'+(isOvr?' overridden':''); card.id='card-'+asset.key;
+    const preview=asset.type==='image'
+      ?`<img src="${src}" onerror="this.style.display='none'" />`
+      :`<video src="${src}" muted preload="metadata" controls style="pointer-events:auto"></video>`;
+    card.innerHTML=`
       <div class="asset-preview ${asset.ratio||''}" id="prev-${asset.key}">
-        ${preview}
-        ${isOvr?'<span class="override-tag">custom</span>':''}
+        ${preview}${isOvr?'<span class="override-tag">custom</span>':''}
         <div class="drag-hint">Suelta aqui</div>
         <div class="upload-progress" id="prog-${asset.key}">
           <div class="progress-label" id="plabel-${asset.key}">Subiendo...</div>
@@ -500,143 +446,196 @@
       </div>
       <div class="asset-info">
         <div class="asset-name">${asset.label}</div>
-        <div class="asset-sub">${isOvr?'Personalizado — Supabase Storage':(asset.sub||asset.src)}</div>
+        <div class="asset-sub">${isOvr?'Personalizado — Supabase':(asset.sub||asset.src)}</div>
         <div class="asset-actions">
           <button class="btn-primary" id="btn-${asset.key}" onclick="triggerUpload('${asset.key}')">Subir</button>
-          <button class="btn-ghost"   id="rst-${asset.key}" onclick="restoreAsset('${asset.key}')" ${isOvr?'':'disabled'}>Restaurar</button>
+          <button class="btn-ghost" id="rst-${asset.key}" onclick="restoreAsset('${asset.key}')" ${isOvr?'':'disabled'}>Restaurar</button>
         </div>
       </div>
       <input type="file" class="file-input-hidden" id="fi-${asset.key}" accept="${asset.accept||'video/mp4,image/*'}" onchange="handleInput(event,'${asset.key}')" />
     `;
-    const prev = card.querySelector('.asset-preview');
-    prev.addEventListener('dragover', e=>{e.preventDefault();card.classList.add('drag-over');});
-    prev.addEventListener('dragleave', ()=>card.classList.remove('drag-over'));
-    prev.addEventListener('drop', e=>{e.preventDefault();card.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)uploadAsset(asset.key,f);});
+    const prev=card.querySelector('.asset-preview');
+    prev.addEventListener('dragover',e=>{e.preventDefault();card.classList.add('drag-over');});
+    prev.addEventListener('dragleave',()=>card.classList.remove('drag-over'));
+    prev.addEventListener('drop',e=>{e.preventDefault();card.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)uploadAsset(asset.key,f);});
     return card;
   }
-  function renderGrid(id, assets) { const g=document.getElementById(id); g.innerHTML=''; assets.forEach(a=>g.appendChild(buildCard(a))); }
-  function triggerUpload(k) { document.getElementById('fi-'+k)?.click(); }
-  function handleInput(e,k) { const f=e.target.files[0]; if(f) uploadAsset(k,f); e.target.value=''; }
-
-  async function uploadAsset(key, file) {
+  function renderGrid(id,assets){ const g=document.getElementById(id); g.innerHTML=''; assets.forEach(a=>g.appendChild(buildCard(a))); }
+  function triggerUpload(k){ document.getElementById('fi-'+k)?.click(); }
+  function handleInput(e,k){ const f=e.target.files[0]; if(f) uploadAsset(k,f); e.target.value=''; }
+  async function uploadAsset(key,file){
     const asset=getAsset(key); if(!asset) return;
-    const btn=document.getElementById('btn-'+key);
-    const prog=document.getElementById('prog-'+key);
-    const fill=document.getElementById('pfill-'+key);
-    const lbl=document.getElementById('plabel-'+key);
+    const btn=document.getElementById('btn-'+key); const prog=document.getElementById('prog-'+key);
+    const fill=document.getElementById('pfill-'+key); const lbl=document.getElementById('plabel-'+key);
     btn.disabled=true; prog.classList.add('active'); lbl.textContent='Conectando...'; fill.style.width='5%';
-    try {
+    try{
       if(!window.DMCloud||!DMCloud.isConfigured()) throw new Error('Supabase no configurado');
       const sc=DMCloud._getClient(); if(!sc) throw new Error('Cliente no disponible');
       const ext=file.name.split('.').pop();
       lbl.textContent='Subiendo...'; fill.style.width='40%';
       const {error:upErr}=await sc.storage.from('dm_assets').upload(`assets/${key}.${ext}`,file,{upsert:true,contentType:file.type});
       if(upErr) throw upErr;
-      fill.style.width='85%'; lbl.textContent='Generando URL...';
+      fill.style.width='85%'; lbl.textContent='URL...';
       const {data:ud}=sc.storage.from('dm_assets').getPublicUrl(`assets/${key}.${ext}`);
       overrides[key]=ud.publicUrl+'?t='+Date.now(); saveOverrides();
       fill.style.width='100%'; lbl.textContent='Listo';
-      setTimeout(()=>{ prog.classList.remove('active'); btn.disabled=false; document.getElementById('card-'+key)?.replaceWith(buildCard(asset)); showToast(asset.label+' actualizado','ok'); },700);
-    } catch(err) {
-      prog.classList.remove('active'); btn.disabled=false;
-      showToast('Error: '+(err.message||err),'err');
-    }
+      setTimeout(()=>{prog.classList.remove('active');btn.disabled=false;document.getElementById('card-'+key)?.replaceWith(buildCard(asset));showToast(asset.label+' actualizado','ok');},700);
+    }catch(err){prog.classList.remove('active');btn.disabled=false;showToast('Error: '+(err.message||err),'err');}
   }
-  function restoreAsset(key) {
-    if(!confirm('Restaurar el archivo original de '+key+'?')) return;
+  function restoreAsset(key){
+    if(!confirm('Restaurar el archivo original?')) return;
     delete overrides[key]; saveOverrides();
     document.getElementById('card-'+key)?.replaceWith(buildCard(getAsset(key)));
     showToast(key+' restaurado','ok');
   }
 
-  // ─── ALIGNMENT ────────────────────────────────────────────
-  let alignState = { left:28.55, top:-2.85, width:47.7, height:111.45, rot:-0.8, zoom:100 };
-  let _dActive=null, _dOrigin=null;
+  // ═══ ALIGNMENT COMPOSITOR ═════════════════════════════════
+  // State per element (position as % of canvas)
+  const state={
+    a:{ left:0, top:0, width:100, height:100, rot:0 },
+    b:{ left:0, top:0, width:100, height:100, rot:0 },
+  };
+  let _activeVideo=null; // reference to whichever video is playing
 
-  function populateAlignSelects() {
-    const sel=document.getElementById('align-trans-sel');
-    sel.innerHTML=TRANSITIONS.map(t=>`<option value="${t.key}">${t.label}</option>`).join('');
-  }
-  function initAlignmentPreview() {
-    const fk=document.getElementById('align-frame-sel').value;
-    const tk=document.getElementById('align-trans-sel').value;
-    document.getElementById('align-frame-img').src=overrides[fk]||(FRAMES.find(f=>f.key===fk)?.src||'');
-    const v=document.getElementById('align-video');
-    const tsrc=overrides[tk]||(TRANSITIONS.find(t=>t.key===tk)?.src||'');
-    if(v.getAttribute('data-loaded')!==tsrc){ v.src=tsrc; v.load(); v.setAttribute('data-loaded',tsrc); v.addEventListener('loadedmetadata',setupTimeline,{once:true}); }
-    const saved=getSavedCalib(fk)||DEFAULT_CALIB[fk]||alignState;
-    alignState={...saved}; applyBoxToDOM(); updateInputsFromState();
-  }
-  function applyBoxToDOM() {
-    const b=document.getElementById('align-drag-box'); if(!b) return;
-    b.style.left=alignState.left+'%'; b.style.top=alignState.top+'%';
-    b.style.width=alignState.width+'%'; b.style.height=alignState.height+'%';
-    b.style.transform=`rotate(${alignState.rot||0}deg)`;
-  }
-  function updateInputsFromState() {
-    ['left','top','width','height','rot','zoom'].forEach(k=>{
-      const el=document.getElementById('v-'+k); if(el) el.value=+(alignState[k]||0).toFixed(2);
+  function populateAlignSelects(){
+    const groups=[
+      { label:'Frames', assets:FRAMES },
+      { label:'Transiciones', assets:TRANSITIONS },
+      { label:'Logos', assets:LOGOS },
+    ];
+    ['sel-a','sel-b'].forEach((id,idx)=>{
+      const sel=document.getElementById(id);
+      sel.innerHTML=groups.map(g=>`<optgroup label="${g.label}">${
+        g.assets.map(a=>`<option value="${a.key}">${a.label}</option>`).join('')
+      }</optgroup>`).join('');
+      // Different default selection for A and B
+      if(id==='sel-a') sel.value='frame_3x4';
+      if(id==='sel-b') sel.value='trans_title_3x4';
+      loadElement(idx===0?'a':'b');
     });
   }
-  function applyInputsToBox() {
-    ['left','top','width','height','rot','zoom'].forEach(k=>{
-      const el=document.getElementById('v-'+k); if(el) alignState[k]=parseFloat(el.value)||0;
+
+  function loadElement(el){
+    const key=document.getElementById('sel-'+el).value;
+    const asset=getAsset(key); if(!asset) return;
+    const src=effectiveSrc(key);
+    const container=document.getElementById('el-'+el);
+
+    // Remove previous video listener
+    if(_activeVideo){
+      _activeVideo.removeEventListener('timeupdate',updateTimeline);
+      _activeVideo.pause();
+    }
+
+    if(asset.type==='video'){
+      container.innerHTML=`<video src="${src}" muted loop playsinline style="width:100%;height:100%;object-fit:cover;"></video>`;
+      const v=container.querySelector('video');
+      _activeVideo=v;
+      v.addEventListener('loadedmetadata',()=>{
+        document.getElementById('tl-time').textContent=`0:00 / ${fmt(v.duration)}`;
+        document.getElementById('timeline-bar').style.opacity='1';
+      });
+      v.addEventListener('timeupdate',updateTimeline);
+    } else {
+      container.innerHTML=`<img src="${src}" style="width:100%;height:100%;object-fit:cover;" />`;
+    }
+
+    // Apply saved calib if exists
+    const saved=getSavedCalib(key);
+    if(saved){ state[el]={...saved}; } else { state[el]={left:0,top:0,width:100,height:100,rot:0}; }
+    applyStateToDOM(el);
+    updateInputsFromState(el);
+  }
+
+  function applyStateToDOM(el){
+    const s=state[el];
+    const container=document.getElementById('el-'+el);
+    const box=document.getElementById('drag-box-'+el);
+    const style=`left:${s.left}%;top:${s.top}%;width:${s.width}%;height:${s.height}%;transform:rotate(${s.rot}deg);`;
+    container.style.cssText=style+'pointer-events:none;position:absolute;';
+    if(box){ box.style.left=s.left+'%'; box.style.top=s.top+'%'; box.style.width=s.width+'%'; box.style.height=s.height+'%'; box.style.transform=`rotate(${s.rot}deg)`; }
+  }
+
+  function updateInputsFromState(el){
+    const s=state[el];
+    ['left','top','width','height','rot'].forEach(k=>{
+      const inp=document.getElementById(el+'-'+k); if(inp) inp.value=+(s[k]||0).toFixed(2);
     });
-    applyBoxToDOM();
   }
-  function setFrameOpacity(v) { document.getElementById('opacity-val').textContent=v; document.getElementById('align-frame-img').style.opacity=v/100; }
-  function toggleAlignPlay() {
-    const v=document.getElementById('align-video'); const btn=document.getElementById('btn-align-play');
-    if(v.paused){v.play();btn.innerHTML='&#9646;&#9646;';}else{v.pause();btn.innerHTML='&#9654;';}
+
+  function applyInputs(el){
+    ['left','top','width','height','rot'].forEach(k=>{
+      const inp=document.getElementById(el+'-'+k); if(inp) state[el][k]=parseFloat(inp.value)||0;
+    });
+    applyStateToDOM(el);
   }
-  function scrubVideo(val) { const v=document.getElementById('align-video'); if(v.duration) v.currentTime=(val/100)*v.duration; }
-  function setupTimeline() {
-    const v=document.getElementById('align-video'); const sc=document.getElementById('tl-scrubber'); const te=document.getElementById('tl-time');
-    v.addEventListener('timeupdate',()=>{ if(v.duration){sc.value=(v.currentTime/v.duration)*100; te.textContent=`${fmt(v.currentTime)} / ${fmt(v.duration)}`;} });
-    te.textContent=`0:00 / ${fmt(v.duration||0)}`;
+
+  function setElOpacity(el,v){
+    document.getElementById('opa-val-'+el).textContent=v;
+    document.getElementById('el-'+el).style.opacity=v/100;
   }
-  function fmt(s){const m=Math.floor(s/60);return`${m}:${String(Math.floor(s%60)).padStart(2,'0')}`;}
-  function resetAlignToDefaults() {
-    const fk=document.getElementById('align-frame-sel').value;
-    alignState={...(DEFAULT_CALIB[fk]||{left:28.55,top:-2.85,width:47.7,height:111.45,rot:-0.8,zoom:100})};
-    applyBoxToDOM(); updateInputsFromState(); showToast('Valores originales restaurados','ok');
+
+  function resetEl(el){
+    const key=document.getElementById('sel-'+el).value;
+    const def=getSavedCalib(key)||{left:0,top:0,width:100,height:100,rot:0};
+    state[el]={...def}; applyStateToDOM(el); updateInputsFromState(el);
   }
-  function applyAlignToCalib() {
-    const fk=document.getElementById('align-frame-sel').value;
+
+  function saveCalib(el){
+    const key=document.getElementById('sel-'+el).value;
     let store={}; try{store=JSON.parse(localStorage.getItem('dm_admin_calib')||'{}');}catch(e){}
-    store[fk]={...alignState}; localStorage.setItem('dm_admin_calib',JSON.stringify(store));
-    try { const bc=new BroadcastChannel('dm_stage_bus'); bc.postMessage({type:'SLOT_CALIB_UPDATE_GLOBAL',frameKey:fk,calib:{...alignState}}); bc.close(); } catch(e){}
-    showToast('Calibracion guardada para '+fk,'ok');
+    store[key]={...state[el]}; localStorage.setItem('dm_admin_calib',JSON.stringify(store));
+    try{ const bc=new BroadcastChannel('dm_stage_bus'); bc.postMessage({type:'SLOT_CALIB_UPDATE_GLOBAL',assetKey:key,calib:{...state[el]}}); bc.close(); }catch(e){}
+    showToast('Calibracion guardada para '+key,'ok');
   }
-  function getSavedCalib(fk) { try{const s=JSON.parse(localStorage.getItem('dm_admin_calib')||'{}');return s[fk]||null;}catch(e){return null;} }
+  function getSavedCalib(key){ try{const s=JSON.parse(localStorage.getItem('dm_admin_calib')||'{}');return s[key]||null;}catch(e){return null;} }
 
-  // ── Drag handles ──
-  function initDragHandles() {
-    document.getElementById('align-drag-box')?.querySelectorAll('.handle').forEach(h=>{
+  // Timeline
+  function updateTimeline(){
+    if(!_activeVideo||!_activeVideo.duration) return;
+    const pct=(_activeVideo.currentTime/_activeVideo.duration)*100;
+    document.getElementById('tl-scrubber').value=pct;
+    document.getElementById('tl-time').textContent=`${fmt(_activeVideo.currentTime)} / ${fmt(_activeVideo.duration)}`;
+  }
+  function toggleAlignPlay(){
+    const btn=document.getElementById('btn-align-play');
+    if(!_activeVideo) return;
+    if(_activeVideo.paused){_activeVideo.play();btn.innerHTML='&#9646;&#9646;';}
+    else{_activeVideo.pause();btn.innerHTML='&#9654;';}
+  }
+  function scrubVideo(val){ if(_activeVideo&&_activeVideo.duration) _activeVideo.currentTime=(val/100)*_activeVideo.duration; }
+  function fmt(s){const m=Math.floor(s/60);return`${m}:${String(Math.floor(s%60)).padStart(2,'0')}`;}
+
+  // Drag handles
+  let _dEl=null,_dHandle=null,_dOrigin=null;
+  function initDragHandles(){
+    document.querySelectorAll('.h').forEach(h=>{
       h.addEventListener('pointerdown',e=>{
         e.preventDefault(); e.stopPropagation();
-        _dActive=h.dataset.h; _dOrigin={x:e.clientX,y:e.clientY,state:{...alignState}};
-        document.addEventListener('pointermove',onDM); document.addEventListener('pointerup',onDU);
+        _dEl=h.dataset.el; _dHandle=h.dataset.h;
+        _dOrigin={x:e.clientX,y:e.clientY,state:{...state[_dEl]}};
+        document.addEventListener('pointermove',onDragMove);
+        document.addEventListener('pointerup',onDragUp);
       });
     });
   }
-  function onDM(e) {
-    if(!_dActive||!_dOrigin) return;
+  function onDragMove(e){
+    if(!_dEl||!_dOrigin) return;
     const r=document.getElementById('align-canvas').getBoundingClientRect();
     const dx=(e.clientX-_dOrigin.x)/r.width*100, dy=(e.clientY-_dOrigin.y)/r.height*100;
-    const s=_dOrigin.state;
-    if(_dActive==='c'){alignState.left=s.left+dx;alignState.top=s.top+dy;}
-    else if(_dActive==='br'){alignState.width=Math.max(2,s.width+dx);alignState.height=Math.max(2,s.height+dy);}
-    else if(_dActive==='tl'){alignState.left=s.left+dx;alignState.top=s.top+dy;alignState.width=Math.max(2,s.width-dx);alignState.height=Math.max(2,s.height-dy);}
-    else if(_dActive==='tr'){alignState.top=s.top+dy;alignState.width=Math.max(2,s.width+dx);alignState.height=Math.max(2,s.height-dy);}
-    else if(_dActive==='bl'){alignState.left=s.left+dx;alignState.width=Math.max(2,s.width-dx);alignState.height=Math.max(2,s.height+dy);}
-    applyBoxToDOM(); updateInputsFromState();
+    const s=_dOrigin.state; const st=state[_dEl];
+    if(_dHandle==='c'){st.left=s.left+dx;st.top=s.top+dy;}
+    else if(_dHandle==='br'){st.width=Math.max(1,s.width+dx);st.height=Math.max(1,s.height+dy);}
+    else if(_dHandle==='tl'){st.left=s.left+dx;st.top=s.top+dy;st.width=Math.max(1,s.width-dx);st.height=Math.max(1,s.height-dy);}
+    else if(_dHandle==='tr'){st.top=s.top+dy;st.width=Math.max(1,s.width+dx);st.height=Math.max(1,s.height-dy);}
+    else if(_dHandle==='bl'){st.left=s.left+dx;st.width=Math.max(1,s.width-dx);st.height=Math.max(1,s.height+dy);}
+    applyStateToDOM(_dEl); updateInputsFromState(_dEl);
   }
-  function onDU(){_dActive=null;_dOrigin=null;document.removeEventListener('pointermove',onDM);document.removeEventListener('pointerup',onDU);}
+  function onDragUp(){_dEl=null;_dHandle=null;_dOrigin=null;document.removeEventListener('pointermove',onDragMove);document.removeEventListener('pointerup',onDragUp);}
 
-  // ─── PRESETS ──────────────────────────────────────────────
-  const PS_KEY='dm_presets', PS_ACTIVE='dm_active_preset';
-  function defaultPreset1(){ const a={}; getAllAssets().forEach(x=>{a[x.key]=null;}); return{id:'preset1',name:'PRESET 1',description:'Configuracion original por defecto',locked:true,createdAt:Date.now(),assets:a}; }
+  // ═══ PRESETS ══════════════════════════════════════════════
+  const PS_KEY='dm_presets',PS_ACTIVE='dm_active_preset';
+  function defaultPreset1(){ const a={}; ALL_ASSETS.forEach(x=>{a[x.key]=null;}); return{id:'preset1',name:'PRESET 1',description:'Configuracion original por defecto',locked:true,createdAt:Date.now(),assets:a}; }
   function loadPresets(){ try{let p=JSON.parse(localStorage.getItem(PS_KEY)||'[]');if(!p.find(x=>x.id==='preset1'))p.unshift(defaultPreset1());return p;}catch(e){return[defaultPreset1()];} }
   function savePresets(ps){localStorage.setItem(PS_KEY,JSON.stringify(ps));}
   function getActivePsId(){return localStorage.getItem(PS_ACTIVE)||'preset1';}
@@ -645,7 +644,7 @@
     const nm=prompt('Nombre del preset:','PRESET 2'); if(!nm) return;
     const ps=loadPresets();
     const np={id:'ps_'+Date.now(),name:nm.toUpperCase(),description:'Basado en overrides actuales',locked:false,createdAt:Date.now(),assets:{...overrides}};
-    getAllAssets().forEach(a=>{if(!(a.key in np.assets))np.assets[a.key]=null;});
+    ALL_ASSETS.forEach(a=>{if(!(a.key in np.assets))np.assets[a.key]=null;});
     ps.push(np); savePresets(ps); renderPresets(); showToast('Preset "'+np.name+'" creado','ok');
   }
   function activatePreset(id){
@@ -677,9 +676,7 @@
         <div class="preset-desc">${p.description}</div>
         <div class="preset-thumbs">${thumbs}</div>
         <div class="preset-actions">
-          <button class="btn-activate" onclick="activatePreset('${p.id}')" ${isActive?'disabled':''}>
-            ${isActive?'Activo':'Activar'}
-          </button>
+          <button class="btn-activate" onclick="activatePreset('${p.id}')" ${isActive?'disabled':''}>${isActive?'Activo':'Activar'}</button>
           ${!p.locked?`<button class="btn-del-preset" onclick="deletePreset('${p.id}')">Eliminar</button>`:''}
         </div>
       `;
@@ -687,7 +684,7 @@
     });
   }
 
-  // ─── CONNECTION ───────────────────────────────────────────
+  // ═══ CONNECTION ═══════════════════════════════════════════
   async function checkConnection(){
     const dot=document.getElementById('conn-dot'); const lbl=document.getElementById('conn-label');
     try{
@@ -699,11 +696,11 @@
     }catch(e){dot.className='conn-dot err';lbl.textContent='Error de conexion';}
   }
 
-  // ─── TOAST ────────────────────────────────────────────────
+  // ═══ TOAST ════════════════════════════════════════════════
   let _tt;
   function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='show '+(type||'');clearTimeout(_tt);_tt=setTimeout(()=>t.className='',3500);}
 
-  // ─── INIT ─────────────────────────────────────────────────
+  // ═══ INIT ════════════════════════════════════════════════
   if(window.DMCloud&&!DMCloud._getClient) DMCloud._getClient=()=>null;
   loadOverrides();
   renderGrid('grid-frames',FRAMES);
