@@ -241,7 +241,10 @@
       transform: rotate(var(--frame916-rot, 0deg));
     }
 
-    /* Iframes incrustados con fundido suave de 1s */
+    /* === DOUBLE-BUFFER para Google Slides: la diapositiva anterior se mantiene visible
+       mientras la nueva carga en segundo plano, luego crossfade suave === */
+
+    /* Iframe principal (diapositiva actual, siempre visible) */
     .screen-iframe {
       width: 100%;
       height: 100%;
@@ -250,24 +253,30 @@
       display: block;
       pointer-events: none;
       opacity: 1;
+      position: relative;
+      z-index: 1;
     }
 
-    /* Overlay de carga de diapositiva: oculta el parpadeo blanco de Google Slides */
-    .slide-load-overlay {
+    /* Iframe buffer (carga la siguiente diapositiva en segundo plano) */
+    .screen-iframe-buf {
       position: absolute;
       inset: 0;
-      background: #000;
-      z-index: 5;
-      opacity: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: transparent;
+      display: none;
       pointer-events: none;
-      transition: opacity 0.5s ease-in-out;
-    }
-    .slide-load-overlay.loading {
-      opacity: 1;
-      transition: none; /* aparición instantánea */
+      opacity: 0;
+      z-index: 3;
+      transition: opacity 0.4s ease-in-out;
     }
 
     #phone-screen-slot .screen-iframe {
+      transform: scale(var(--phone-zoom, 1));
+      transform-origin: center center;
+    }
+    #phone-screen-slot .screen-iframe-buf {
       transform: scale(var(--phone-zoom, 1));
       transform-origin: center center;
     }
@@ -276,8 +285,16 @@
       transform: scale(var(--frame2-zoom, 1.41));
       transform-origin: center center;
     }
+    #frame2-screen-slot .screen-iframe-buf {
+      transform: scale(var(--frame2-zoom, 1.41));
+      transform-origin: center center;
+    }
 
     #frame916-screen-slot .screen-iframe {
+      transform: scale(var(--frame916-zoom, 1.19));
+      transform-origin: center center;
+    }
+    #frame916-screen-slot .screen-iframe-buf {
       transform: scale(var(--frame916-zoom, 1.19));
       transform-origin: center center;
     }
@@ -1718,8 +1735,13 @@
           allowfullscreen="true"
           style="display: none;"
         ></iframe>
-        <!-- Overlay para disimular la carga entre diapositivas (3:4) -->
-        <div class="slide-load-overlay" id="overlay-slides1"></div>
+        <!-- Buffer para congelación de diapositiva anterior (3:4) -->
+        <iframe
+          id="iframe-slides1-buf"
+          class="screen-iframe-buf"
+          src=""
+          allowfullscreen="true"
+        ></iframe>
       </div>
       <!-- 3x4.png como Marco frontal con dedos y bordes naturales -->
       <img class="frame-overlay" src="Frame%20fijos/3x4.png?v=20260922_1143" alt="Marco Móvil" />
@@ -1767,8 +1789,13 @@
           allowfullscreen="true"
           style="display: none;"
         ></iframe>
-        <!-- Overlay para disimular la carga entre diapositivas (16:9) -->
-        <div class="slide-load-overlay" id="overlay-slides2"></div>
+        <!-- Buffer para congelación de diapositiva anterior (16:9) -->
+        <iframe
+          id="iframe-slides2-buf"
+          class="screen-iframe-buf"
+          src=""
+          allowfullscreen="true"
+        ></iframe>
       </div>
       <!-- 16x9.png como Marco frontal -->
       <img class="frame-overlay" src="Frame%20fijos/16x9.png?v=20260922_1143" alt="Marco 2" />
@@ -1806,8 +1833,13 @@
           allowfullscreen="true"
           style="display: none;"
         ></iframe>
-        <!-- Overlay para disimular la carga entre diapositivas (9:16) -->
-        <div class="slide-load-overlay" id="overlay-slides916"></div>
+        <!-- Buffer para congelación de diapositiva anterior (9:16) -->
+        <iframe
+          id="iframe-slides916-buf"
+          class="screen-iframe-buf"
+          src=""
+          allowfullscreen="true"
+        ></iframe>
       </div>
       <!-- 9x16.png como Marco frontal -->
       <img class="frame-overlay" src="Frame%20fijos/9x16.png?v=20260924_1312" alt="Marco 9x16" />
@@ -2814,39 +2846,67 @@
 
 
 
+    // Timers de fallback para double-buffer (evitar que el buffer se quede colgado)
+    const bufFallbackTimers = new Map();
+
     function navigateSlide(iframe, baseUrl, slideNum) {
       if (!iframe || !baseUrl || baseUrl.includes('Placeholder')) return;
       const targetUrl = getSlideUrl(baseUrl, slideNum);
       if (!targetUrl) return;
 
-      const loadedUrl = iframe.getAttribute('data-loaded-url');
-      if (loadedUrl === targetUrl) {
-        // Misma URL: ya cargado, no hacer nada
-        iframe.style.opacity = '1';
+      // Si ya muestra esa URL, no hacer nada
+      if (iframe.getAttribute('data-loaded-url') === targetUrl) return;
+
+      const bufIframe = document.getElementById(iframe.id + '-buf');
+
+      if (!bufIframe) {
+        // Fallback sin buffer: navegación directa
+        iframe.setAttribute('data-loaded-url', targetUrl);
+        iframe.src = targetUrl;
         return;
       }
 
-      // Mostrar overlay al instante para ocultar el parpadeo de carga
-      const overlayId = iframe.id.replace('iframe-', 'overlay-');
-      const overlay = document.getElementById(overlayId);
-      if (overlay) {
-        overlay.classList.add('loading');
-        // Quitar el overlay una vez el iframe haya cargado (con fade)
-        const onLoad = () => {
-          iframe.removeEventListener('load', onLoad);
-          // Esperar 400ms para que Google Slides acabe de renderizar la diapositiva
-          setTimeout(() => {
-            if (overlay) overlay.classList.remove('loading');
-          }, 400);
-        };
-        iframe.addEventListener('load', onLoad, { once: true });
-        // Fallback: quitar overlay máximo en 3s por si onload no dispara
-        setTimeout(() => { if (overlay) overlay.classList.remove('loading'); }, 3000);
+      // Marcar URL destino para evitar dobles cargas
+      iframe.setAttribute('data-loaded-url', targetUrl);
+
+      // Cancelar fallback anterior si lo hay
+      if (bufFallbackTimers.has(iframe.id)) {
+        clearTimeout(bufFallbackTimers.get(iframe.id));
       }
 
-      iframe.setAttribute('data-loaded-url', targetUrl);
-      iframe.src = targetUrl;
-      iframe.style.opacity = '1';
+      // Preparar buffer: oculto, cargando la nueva URL
+      bufIframe.style.display = 'block';
+      bufIframe.style.opacity = '0';
+      bufIframe.src = targetUrl;
+
+      const doSwap = () => {
+        // Esperar 350ms a que Google Slides acabe de renderizar antes del crossfade
+        setTimeout(() => {
+          // Fundido de entrada del buffer (nueva diapositiva)
+          bufIframe.style.opacity = '1';
+
+          // Tras el crossfade (400ms), el iframe principal toma la URL y el buffer se oculta
+          setTimeout(() => {
+            iframe.src = targetUrl;
+            setTimeout(() => {
+              bufIframe.style.opacity = '0';
+              setTimeout(() => {
+                bufIframe.style.display = 'none';
+                bufIframe.src = '';
+              }, 50);
+            }, 100); // breve delay para que iframe principal cargue sin parpadeo
+          }, 420);
+        }, 350);
+      };
+
+      bufIframe.addEventListener('load', doSwap, { once: true });
+
+      // Fallback de seguridad: activar swap máximo en 3.5s
+      const fallback = setTimeout(() => {
+        bufIframe.removeEventListener('load', doSwap);
+        doSwap();
+      }, 3500);
+      bufFallbackTimers.set(iframe.id, fallback);
 
       try {
         if (iframe.contentWindow) {
