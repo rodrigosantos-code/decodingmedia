@@ -4402,5 +4402,116 @@
       }
     })();
   </script>
+
+  <script>
+    // ═══════════════════════════════════════════════════════
+    //  PRECARGA DE ACTIVOS EN SEGUNDO PLANO
+    //  Mete todas las transiciones e imágenes en el caché del
+    //  navegador para que no haya tiempos de carga durante el show.
+    // ═══════════════════════════════════════════════════════
+    (function preloadAssets() {
+      const ASSETS = [
+        // Vídeos de transición (12 archivos)
+        'Transitions/title_to_3x4.mp4',
+        'Transitions/title_to_3x4_reverse.mp4',
+        'Transitions/title_to_9x16.mp4',
+        'Transitions/title_to_9x16_reverse.mp4',
+        'Transitions/title_to_16x9.mp4',
+        'Transitions/title_to_16x9_reverse.mp4',
+        'Transitions/3x4_to_16x9.mp4',
+        'Transitions/3x4_to_16x9_reverse.mp4',
+        'Transitions/9x16_to_16x9.mp4',
+        'Transitions/9x16_to_16x9_reverse.mp4',
+        'Transitions/9x16_to_3x4.mp4',
+        'Transitions/9x16_to_3x4_reverse.mp4',
+        // Marcos e imágenes estáticas
+        'Frame%20fijos/3x4.png',
+        'Frame%20fijos/16x9.png',
+        'Frame%20fijos/9x16.png',
+        'Frame%20fijos/title.jpeg',
+        'logo_izquierda.png',
+        'logo_derecha.png',
+      ];
+
+      const total = ASSETS.length;
+      let done = 0;
+
+      // Indicador de progreso pequeño (esquina inferior izquierda)
+      const indicator = document.createElement('div');
+      indicator.id = 'preload-indicator';
+      indicator.style.cssText = `
+        position: fixed; bottom: 14px; left: 14px;
+        background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+        color: #94a3b8; font: 600 11px/1 'Montserrat', sans-serif;
+        padding: 6px 10px; border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.08);
+        z-index: 9998; pointer-events: none;
+        opacity: 0; transition: opacity 0.3s ease;
+      `;
+      document.body.appendChild(indicator);
+
+      function updateIndicator() {
+        const pct = Math.round((done / total) * 100);
+        indicator.textContent = `⬇ Precargando activos… ${pct}%`;
+        if (indicator.style.opacity === '0') indicator.style.opacity = '1';
+      }
+
+      function onAssetDone() {
+        done++;
+        updateIndicator();
+        if (done >= total) {
+          // Todo listo: ocultar indicador suavemente
+          indicator.textContent = '✓ Activos precargados';
+          setTimeout(() => { indicator.style.opacity = '0'; }, 1200);
+          setTimeout(() => { indicator.remove(); }, 1600);
+          console.log('[Preload] Todos los activos están en caché.');
+        }
+      }
+
+      // Iniciamos la precarga 2s después del arranque para no competir
+      // con el render inicial de la presentación
+      setTimeout(() => {
+        ASSETS.forEach(url => {
+          if (url.endsWith('.mp4')) {
+            // Para vídeos: fetch() mete el archivo en el caché HTTP
+            // + elemento <video> con preload="auto" como refuerzo
+            fetch(url, { cache: 'force-cache' })
+              .then(r => {
+                if (!r.ok) throw new Error(r.status);
+                return r.blob(); // asegura que el body se descarga completo
+              })
+              .then(() => {
+                // Segundo nivel: hidden <video> para que el motor de media
+                // tenga el archivo decodificado y listo
+                const v = document.createElement('video');
+                v.preload = 'auto';
+                v.muted = true;
+                v.src = url;
+                v.load();
+                v.addEventListener('canplaythrough', () => v.remove(), { once: true });
+                // Limpiar si tarda más de 10s
+                setTimeout(() => v.remove(), 10000);
+                onAssetDone();
+              })
+              .catch(() => {
+                // Si fetch falla (offline, CORS), intentar solo con <video>
+                const v = document.createElement('video');
+                v.preload = 'auto';
+                v.muted = true;
+                v.src = url;
+                v.load();
+                onAssetDone();
+              });
+          } else {
+            // Para imágenes: <link rel="preload"> + Image()
+            const img = new Image();
+            img.onload = onAssetDone;
+            img.onerror = onAssetDone; // contar aunque falle
+            img.src = url;
+          }
+        });
+      }, 2000);
+    })();
+  </script>
 </body>
 </html>
