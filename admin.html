@@ -598,9 +598,13 @@
   function saveCalib(el){
     const key=document.getElementById('sel-'+el).value;
     const calib={...state[el]};
+    // 1. Guardar en localStorage (dispara storage event en otras pestañas)
     let store={}; try{store=JSON.parse(localStorage.getItem('dm_admin_calib')||'{}');}catch(e){}
-    store[key]=calib; localStorage.setItem('dm_admin_calib',JSON.stringify(store));
-    // Emitir en ambos canales para cubrir todas las ventanas abiertas
+    store[key]=calib;
+    localStorage.setItem('dm_admin_calib', JSON.stringify(store));
+    // 2. Timestamp auxiliar para forzar el storage event si el valor no cambió
+    localStorage.setItem('dm_admin_calib_ts', JSON.stringify({ key, calib, t: Date.now() }));
+    // 3. BroadcastChannel en ambos canales
     ['dm_presentation_bus','dm_stage_bus'].forEach(ch=>{
       try{ const bc=new BroadcastChannel(ch); bc.postMessage({type:'SLOT_CALIB_UPDATE_GLOBAL',frameKey:key,assetKey:key,calib}); bc.close(); }catch(e){}
     });

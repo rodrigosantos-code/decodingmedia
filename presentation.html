@@ -2193,6 +2193,18 @@
             if (migrated) {
               try { localStorage.setItem('dm_deck_slots', JSON.stringify(parsed)); } catch(e) {}
             }
+            // Fusionar calibraciones del panel Admin (dm_admin_calib)
+            try {
+              const adminCalib = JSON.parse(localStorage.getItem('dm_admin_calib') || '{}');
+              const fmtMap = { frame_3x4: '3:4', frame_16x9: '16:9', frame_9x16: '9:16' };
+              parsed.forEach(s => {
+                Object.entries(fmtMap).forEach(([key, fmt]) => {
+                  if (s.format === fmt && adminCalib[key]) {
+                    s.calib = { ...(s.calib || {}), ...adminCalib[key] };
+                  }
+                });
+              });
+            } catch(e) {}
             return parsed;
           }
         }
@@ -4151,9 +4163,39 @@
             else if (fmt === '9:16') applyFrame916Coords(calibData.calib);
             else if (fmt === '16:9') applyFrame2Coords(calibData.calib);
           }
+        } else if (e.key === 'dm_admin_calib') {
+          // Calibración global desde admin.html — aplica a todos los slots del formato correspondiente
+          try {
+            const adminCalib = JSON.parse(e.newValue || '{}');
+            Object.entries(adminCalib).forEach(([key, calib]) => {
+              _applyAdminCalibByKey(key, calib);
+            });
+          } catch(err2) {}
+        } else if (e.key === 'dm_admin_calib_ts') {
+          // Ruta alternativa: payload directo con {key, calib, t}
+          try {
+            const ts = JSON.parse(e.newValue || '{}');
+            if (ts.key && ts.calib) _applyAdminCalibByKey(ts.key, ts.calib);
+          } catch(err2) {}
         }
       } catch(err) {}
     });
+
+    // ── Calibración global desde admin.html vía localStorage ──
+    // (funciona aunque BroadcastChannel no llegue por timing o recargas)
+    const _applyAdminCalibByKey = (key, calib) => {
+      const fmtMap = { frame_3x4: '3:4', frame_16x9: '16:9', frame_9x16: '9:16' };
+      const fmt = fmtMap[key];
+      if (!fmt || !calib) return;
+      deckSlots.forEach(sl => { if (sl.format === fmt) sl.calib = { ...(sl.calib || {}), ...calib }; });
+      STEPS.forEach(st => { if (st.format === fmt) st.calib = { ...(st.calib || {}), ...calib }; });
+      const cur = STEPS[currentStepIndex];
+      if (cur && cur.format === fmt) {
+        if (fmt === '3:4') applyPhoneCoords(calib);
+        else if (fmt === '9:16') applyFrame916Coords(calib);
+        else if (fmt === '16:9') applyFrame2Coords(calib);
+      }
+    };
 
     function reloadSlotsFromData(newSlots) {
       if (!Array.isArray(newSlots) || newSlots.length === 0) return;
