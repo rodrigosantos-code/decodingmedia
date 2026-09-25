@@ -598,17 +598,83 @@
   function saveCalib(el){
     const key=document.getElementById('sel-'+el).value;
     const calib={...state[el]};
-    // 1. Guardar en localStorage (dispara storage event en otras pestañas)
-    let store={}; try{store=JSON.parse(localStorage.getItem('dm_admin_calib')||'{}');}catch(e){}
-    store[key]=calib;
-    localStorage.setItem('dm_admin_calib', JSON.stringify(store));
-    // 2. Timestamp auxiliar para forzar el storage event si el valor no cambió
-    localStorage.setItem('dm_admin_calib_ts', JSON.stringify({ key, calib, t: Date.now() }));
-    // 3. BroadcastChannel en ambos canales
-    ['dm_presentation_bus','dm_stage_bus'].forEach(ch=>{
-      try{ const bc=new BroadcastChannel(ch); bc.postMessage({type:'SLOT_CALIB_UPDATE_GLOBAL',frameKey:key,assetKey:key,calib}); bc.close(); }catch(e){}
+    const fmtMap={frame_3x4:'3:4',frame_16x9:'16:9',frame_9x16:'9:16'};
+    const fmt=fmtMap[key];
+
+    // ── 1. Guardar en dm_admin_calib ──────────────────────────────────
+    let adminCalib={}; try{adminCalib=JSON.parse(localStorage.getItem('dm_admin_calib')||'{}');}catch(e){}
+    adminCalib[key]=calib;
+    localStorage.setItem('dm_admin_calib',JSON.stringify(adminCalib));
+    // Marcar version de calib para evitar que presentation lo pise con defaults
+    localStorage.setItem('dm_calib_version','20260923_def_v2');
+
+    // ── 2. Guardar en el preset activo ────────────────────────────────
+    const activePsId=localStorage.getItem('dm_active_preset')||'preset1';
+    let presets=[]; try{presets=JSON.parse(localStorage.getItem('dm_presets')||'[]');}catch(e){}
+    if(!presets.find(p=>p.id==='preset1')) presets.unshift({id:'preset1',name:'PRESET 1',locked:true,assets:{},calib:{}});
+    let activePs=presets.find(p=>p.id===activePsId)||presets[0];
+    if(!activePs.calib) activePs.calib={};
+    activePs.calib[key]=calib;
+    localStorage.setItem('dm_presets',JSON.stringify(presets));
+
+    // ── 3. Actualizar todos los decks con este preset ──────────────────
+    // Recorrer todas las claves de localStorage buscando dm_deck_preset_*
+    const affectedDeckIds=[];
+    for(let i=0;i<localStorage.length;i++){
+      const lk=localStorage.key(i);
+      if(lk&&lk.startsWith('dm_deck_preset_')){
+        if(localStorage.getItem(lk)===activePsId){
+          affectedDeckIds.push(lk.replace('dm_deck_preset_',''));
+        }
+      }
+    }
+    // Siempre incluir el deck "default" si no hay preset asignado
+    if(!affectedDeckIds.includes('default')) affectedDeckIds.push('default');
+
+    let lastUpdatedSlots=null;
+    affectedDeckIds.forEach(deckId=>{
+      const slotKey='dm_deck_slots_'+deckId;
+      try{
+        const raw=localStorage.getItem(slotKey)||localStorage.getItem('dm_deck_slots');
+        if(!raw) return;
+        const slots=JSON.parse(raw);
+        if(!Array.isArray(slots)) return;
+        let changed=false;
+        slots.forEach(s=>{
+          if(fmt&&s.format===fmt){
+            // Mantener radius si ya existe; fusionar encima
+            s.calib={...(s.calib||{}),left:calib.left,top:calib.top,width:calib.width,height:calib.height,rot:calib.rot,zoom:calib.zoom};
+            changed=true;
+          }
+        });
+        if(changed){
+          localStorage.setItem(slotKey,JSON.stringify(slots));
+          lastUpdatedSlots=slots;
+        }
+      }catch(e){}
     });
-    showToast('Calibracion guardada y enviada a la presentacion','ok');
+
+    // ── 4. Disparar sincronización via dm_deck_slots_sync (presentation lo escucha) ──
+    if(lastUpdatedSlots){
+      const payload={time:Date.now(),slots:lastUpdatedSlots};
+      localStorage.setItem('dm_deck_slots_sync',JSON.stringify(payload));
+      // También el key genérico como fallback
+      localStorage.setItem('dm_deck_slots',JSON.stringify(lastUpdatedSlots));
+    }
+    // Timestamp auxiliar para dm_admin_calib listener
+    localStorage.setItem('dm_admin_calib_ts',JSON.stringify({key,calib,t:Date.now()}));
+
+    // ── 5. BroadcastChannel como respaldo ─────────────────────────────
+    ['dm_presentation_bus','dm_stage_bus'].forEach(ch=>{
+      try{
+        const bc=new BroadcastChannel(ch);
+        bc.postMessage({type:'SLOT_CALIB_UPDATE_GLOBAL',frameKey:key,assetKey:key,calib,format:fmt});
+        if(lastUpdatedSlots) bc.postMessage({type:'DECK_SLOTS_UPDATED',slots:lastUpdatedSlots,time:Date.now()});
+        bc.close();
+      }catch(e){}
+    });
+
+    showToast('Guardado en preset "'+activePs.name+'" y aplicado a '+affectedDeckIds.length+' proyecto(s)','ok');
   }
   function getSavedCalib(key){ try{const s=JSON.parse(localStorage.getItem('dm_admin_calib')||'{}');return s[key]||null;}catch(e){return null;} }
 
