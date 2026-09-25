@@ -4197,6 +4197,21 @@
       }
     };
 
+    // ── Polling garantizado: lee dm_admin_calib cada 1.5s ──────────────
+    // Funciona aunque BroadcastChannel y StorageEvent fallen (file://)
+    let _lastAdminCalibSig = '';
+    setInterval(() => {
+      try {
+        const raw = localStorage.getItem('dm_admin_calib');
+        if (!raw || raw === _lastAdminCalibSig) return;
+        _lastAdminCalibSig = raw;
+        const adminCalib = JSON.parse(raw);
+        Object.entries(adminCalib).forEach(([key, calib]) => {
+          _applyAdminCalibByKey(key, calib);
+        });
+      } catch(e) {}
+    }, 1500);
+
     function reloadSlotsFromData(newSlots) {
       if (!Array.isArray(newSlots) || newSlots.length === 0) return;
       const CALIB_VERSION = '20260923_def_v2';
