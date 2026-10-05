@@ -72,3 +72,33 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 COMMENT ON TABLE public.dm_decks IS 'Almacén de escenas (slots), calibraciones y configuraciones de Decoding Media';
+
+-- 6. Crear bucket de Storage para assets y diapositivas (dm_assets)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('dm_assets', 'dm_assets', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- Políticas de Storage para dm_assets
+DROP POLICY IF EXISTS "Lectura pública de dm_assets" ON storage.objects;
+CREATE POLICY "Lectura pública de dm_assets"
+    ON storage.objects FOR SELECT
+    TO anon, authenticated
+    USING (bucket_id = 'dm_assets');
+
+DROP POLICY IF EXISTS "Subida pública a dm_assets" ON storage.objects;
+CREATE POLICY "Subida pública a dm_assets"
+    ON storage.objects FOR INSERT
+    TO anon, authenticated
+    WITH CHECK (bucket_id = 'dm_assets');
+
+DROP POLICY IF EXISTS "Actualización pública en dm_assets" ON storage.objects;
+CREATE POLICY "Actualización pública en dm_assets"
+    ON storage.objects FOR UPDATE
+    TO anon, authenticated
+    USING (bucket_id = 'dm_assets');
+
+DROP POLICY IF EXISTS "Eliminación pública en dm_assets" ON storage.objects;
+CREATE POLICY "Eliminación pública en dm_assets"
+    ON storage.objects FOR DELETE
+    TO anon, authenticated
+    USING (bucket_id = 'dm_assets');

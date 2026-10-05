@@ -443,6 +443,9 @@
     },
 
     // Acceso directo al cliente Supabase (para admin panel y Storage)
+    get supabase() {
+      return client;
+    },
     _getClient: function() {
       return client;
     }

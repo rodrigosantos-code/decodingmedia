@@ -15,6 +15,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="supabase-client.js"></script>
+  <!-- PDF Processor en Cliente (Web / Offline / Cloud) -->
+  <script src="vendor/pdf.min.js"></script>
+  <script src="pdf-processor.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -2497,9 +2500,24 @@
     }
 
     function saveSlotsAndBroadcast() {
-      localStorage.setItem('dm_deck_slots', JSON.stringify(slots));
+      try {
+        localStorage.setItem('dm_deck_slots', JSON.stringify(slots));
+      } catch (e) {
+        console.warn('[Storage] QuotaExceeded on dm_deck_slots, guardando copia ligera:', e);
+        try {
+          const lightweight = slots.map(s => {
+            if (s.slideImages && s.slideImages.length > 3 && s.slideImages[0].startsWith('data:')) {
+              return { ...s, slideImages: [s.slideImages[0]] };
+            }
+            return s;
+          });
+          localStorage.setItem('dm_deck_slots', JSON.stringify(lightweight));
+        } catch (e2) {}
+      }
       if (typeof activeDeckId !== 'undefined') {
-        localStorage.setItem('dm_deck_slots_' + activeDeckId, JSON.stringify(slots));
+        try {
+          localStorage.setItem('dm_deck_slots_' + activeDeckId, JSON.stringify(slots));
+        } catch (e) {}
       }
       currentTimeline = buildTimeline(slots);
 
@@ -2965,66 +2983,75 @@
       const slot = slots.find(s => s.id === slotId);
       if (!slot) return;
 
-      showToast(`Procesando ${file.name}... Convirtiendo páginas a diapositivas HD...`, 5000);
+      const dId = (typeof activeDeckId !== 'undefined') ? activeDeckId : (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
 
-      const reader = new FileReader();
-      reader.onload = async function(e) {
-        const base64Data = e.target.result;
-        const dId = (typeof activeDeckId !== 'undefined') ? activeDeckId : (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
+      showToast(`Procesando ${file.name}... Analizando PDF...`, 3000);
 
+      // 1. Si estamos en entorno local (no HTTPS) y con microservicio disponible, intentar sincronización local rápida
+      if (window.location.protocol !== 'https:' && window.DMPdfProcessor && DMPdfProcessor.tryLocalDaemonUpload) {
         try {
-          const resp = await fetch('http://127.0.0.1:8765/upload-pdf', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              slotId: slotId,
-              deckId: dId,
-              fileName: file.name,
-              fileData: base64Data
-            })
-          });
+          const localData = await DMPdfProcessor.tryLocalDaemonUpload(slotId, dId, file);
+          if (localData && localData.slideImages && localData.slideImages.length > 0) {
+            slot.slidesCount = localData.slidesCount;
+            slot.slideImages = localData.slideImages;
+            slot.pdfFileName = localData.pdfFileName || file.name;
+            slot.pdfHash = localData.pdfHash;
+            slot.sourceType = 'pdf';
+            slot.lastSync = new Date().toISOString();
 
-          if (resp.ok) {
-            const json = await resp.json();
-            if (json.success && json.data) {
-              slot.slidesCount = json.data.slidesCount;
-              slot.slideImages = json.data.slideImages;
-              slot.pdfFileName = json.data.pdfFileName;
-              slot.pdfHash = json.data.pdfHash;
-              slot.sourceType = 'pdf';
-              slot.lastSync = new Date().toISOString();
-
-              saveSlotsAndBroadcast();
-              showToast(`✓ PDF procesado: ${json.data.slidesCount} diapositivas HD generadas`, 3500);
-              return;
-            }
+            saveSlotsAndBroadcast();
+            showToast(`✓ PDF procesado: ${localData.slidesCount} diapositivas HD generadas`, 3500);
+            return;
           }
-          throw new Error('El servicio local no pudo procesar el archivo');
-        } catch (err) {
-          console.warn('Local daemon failed, falling back:', err);
-          if (window.DMCloud && DMCloud.supabase) {
-            try {
-              const sc = DMCloud.supabase;
-              const ext = file.name.split('.').pop() || 'pdf';
-              const storagePath = `decks/${dId}/${slotId}.${ext}`;
-              const { error: upErr } = await sc.storage.from('dm_assets').upload(storagePath, file, { upsert: true, contentType: file.type });
-              if (!upErr) {
-                const { data: ud } = sc.storage.from('dm_assets').getPublicUrl(storagePath);
-                slot.pdfFileName = file.name;
-                slot.sourceType = 'pdf';
-                slot.url = ud.publicUrl;
-                saveSlotsAndBroadcast();
-                showToast(`PDF subido a la nube: ${file.name}`, 3500);
-                return;
-              }
-            } catch (e2) {
-              console.error(e2);
-            }
-          }
-          showToast(`Error al procesar PDF. Asegúrate de ejecutar el servicio local en el puerto 8765.`, 5000);
+        } catch (e) {
+          console.warn('[PDF] Demonio local no disponible, pasando a motor web:', e);
         }
-      };
-      reader.readAsDataURL(file);
+      }
+
+      // 2. Procesamiento de alto rendimiento en el navegador (Web / Cloud / Offline)
+      try {
+        if (!window.DMPdfProcessor) {
+          throw new Error('El motor PDF no ha cargado correctamente');
+        }
+
+        showToast(`Convirtiendo páginas de ${file.name} a diapositivas HD...`, 4000);
+
+        const result = await DMPdfProcessor.processPdf(file, {
+          onProgress: (current, total, statusText) => {
+            showToast(statusText || `Procesando diapositiva ${current} de ${total}...`, 2000);
+          }
+        });
+
+        if (!result || !result.slideImages || result.slideImages.length === 0) {
+          throw new Error('No se detectaron diapositivas legibles en el PDF');
+        }
+
+        let finalImages = result.slideImages;
+
+        // 3. Intentar subir las diapositivas a Supabase Storage para sincronización en tiempo real
+        if (window.DMPdfProcessor.tryUploadToSupabaseStorage && result.slideBlobs && result.slideBlobs.length > 0) {
+          showToast(`Sincronizando ${result.slidesCount} diapositivas en la nube...`, 4000);
+          const cloudUrls = await DMPdfProcessor.tryUploadToSupabaseStorage(dId, slotId, result.slideBlobs, (cur, tot, msg) => {
+            showToast(msg, 1500);
+          });
+          if (cloudUrls && cloudUrls.length === result.slidesCount) {
+            finalImages = cloudUrls;
+            console.log('[PDF] Diapositivas alojadas en Supabase Storage');
+          }
+        }
+
+        slot.slidesCount = result.slidesCount;
+        slot.slideImages = finalImages;
+        slot.pdfFileName = file.name;
+        slot.sourceType = 'pdf';
+        slot.lastSync = new Date().toISOString();
+
+        saveSlotsAndBroadcast();
+        showToast(`✓ PDF procesado con éxito: ${result.slidesCount} diapositivas HD listas`, 4000);
+      } catch (err) {
+        console.error('[PDF] Error procesando PDF en navegador:', err);
+        showToast(`Error al procesar PDF: ${err.message || 'Archivo no compatible'}`, 5000);
+      }
     }
 
     function updateSlotSlidesCount(id, val) {
