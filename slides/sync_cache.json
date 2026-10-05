@@ -173,5 +173,41 @@
     "pdf_filename": "EVENTO MS & Netflix.pdf",
     "source_type": "pdf",
     "updated_at": 1790868886.332475
+  },
+  "slot-1790179393161": {
+    "sha": "48b1c1083b511235a12c04ae31a422a5c89944f1a4255657698105f24c195786",
+    "page_count": 1,
+    "slide_images": [
+      "slides/slot-1790179393161/slide_1.jpg"
+    ],
+    "updated_at": 1791190434.79119
+  },
+  "slot-1790243634711": {
+    "sha": "4e832493e08906fc360b7e62e89665486558905057fdc918425beafe08dbef80",
+    "page_count": 3,
+    "slide_images": [
+      "slides/slot-1790243634711/slide_1.jpg",
+      "slides/slot-1790243634711/slide_2.jpg",
+      "slides/slot-1790243634711/slide_3.jpg"
+    ],
+    "updated_at": 1791190437.080725
+  },
+  "slot-1790246665463": {
+    "sha": "c92e2536451ab8335b03cde7444b9ec3d1be096de3a9c210e7b0fda9cafc942f",
+    "page_count": 1,
+    "slide_images": [
+      "slides/slot-1790246665463/slide_1.jpg"
+    ],
+    "updated_at": 1791190438.6295402
+  },
+  "slot-1790248054592": {
+    "sha": "4e832493e08906fc360b7e62e89665486558905057fdc918425beafe08dbef80",
+    "page_count": 3,
+    "slide_images": [
+      "slides/slot-1790248054592/slide_1.jpg",
+      "slides/slot-1790248054592/slide_2.jpg",
+      "slides/slot-1790248054592/slide_3.jpg"
+    ],
+    "updated_at": 1791190440.091241
   }
 }
