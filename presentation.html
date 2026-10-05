@@ -1621,16 +1621,7 @@
 </head>
 <body tabindex="-1" style="outline: none;">
 
-  <!-- Overlay de arranque: negro que se desvanece en 1s al cargar -->
-  <div id="startup-overlay" style="
-    position: fixed;
-    inset: 0;
-    background: #000;
-    z-index: 9999;
-    opacity: 1;
-    transition: opacity 1s ease-in-out;
-    pointer-events: none;
-  "></div>
+  <!-- Overlay de arranque deshabilitado para que la escena inicial sea visible de inmediato -->
 
   <!-- Botón Desplegable Flotante Lateral (Izquierda) -->
   <button id="drawer-toggle-btn" class="drawer-toggle-btn" onclick="toggleScenesDrawer()" title="Ver Escenas (E)">
@@ -2722,36 +2713,47 @@
     const stageDeckId = urlParams.get('deck') || (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
 
     function getInitialStepIndex(stepsLength, targetDeckId) {
-      // 1. Prioridad: parámetro ?step= en la URL
+      // 1. Prioridad: parámetro ?step= explícito en la URL (ej. preview de una escena desde el editor)
       const pStep = urlParams.get('step');
       if (pStep !== null && !isNaN(parseInt(pStep, 10))) {
-        const val = parseInt(pStep, 10);
-        if (val >= 0 && val < stepsLength) return val;
-      }
-      // 2. Almacenamiento local para este deck específico
-      try {
-        const key = targetDeckId ? ('dm_current_step_' + targetDeckId) : 'dm_current_step_default';
-        const saved = localStorage.getItem(key);
-        if (saved !== null && !isNaN(parseInt(saved, 10))) {
-          const val = parseInt(saved, 10);
-          if (val >= 0 && val < stepsLength) return val;
+        let val = parseInt(pStep, 10);
+        if (val >= 0 && val < stepsLength) {
+          // Si el paso pedido es de vídeo, ajustar al slide siguiente o inicial para no arrancar en negro
+          if (STEPS && STEPS[val] && STEPS[val].type === 'video') {
+            val = (val + 1 < stepsLength) ? (val + 1) : 0;
+          }
+          return val;
         }
-      } catch (e) {}
-      // 3. Fallback: último paso enviado desde la sala de control si es reciente (15s)
+      }
+
+      // 2. Control en vivo activo: si la sala de control envió una orden en los últimos 15s
       try {
         const rawStep = localStorage.getItem('dm_stage_set_step');
         if (rawStep) {
           const parsed = JSON.parse(rawStep);
           if (parsed && typeof parsed.step === 'number' && (Date.now() - parsed.time) < 15000) {
-            if (parsed.step >= 0 && parsed.step < stepsLength) return parsed.step;
+            let val = parsed.step;
+            if (val >= 0 && val < stepsLength) {
+              if (STEPS && STEPS[val] && STEPS[val].type === 'video') {
+                val = (val + 1 < stepsLength) ? (val + 1) : 0;
+              }
+              return val;
+            }
           }
         }
       } catch (e) {}
+
+      // 3. Por defecto al abrir el escenario: SIEMPRE arrancar en la diapositiva inicial (Paso 0).
+      // Nunca restaurar un paso intermedio o un vídeo de transición guardado en sesiones previas,
+      // ya que los vídeos pausados en carga inicial dejan la pantalla totalmente negra.
       return 0;
     }
 
     let STEPS = buildTimeline(deckSlots);
     let currentStepIndex = getInitialStepIndex(STEPS.length, stageDeckId);
+    if (STEPS[currentStepIndex] && STEPS[currentStepIndex].type === 'video') {
+      currentStepIndex = 0;
+    }
     let currentSlide = 1;
     let hintTimer = null;
     let hasTriggeredEndFade = false;
@@ -3387,10 +3389,14 @@
       }
     }
 
-    function updateStepUI() {
+    function updateStepUI(preserveVisuals = false) {
       if (!STEPS || STEPS.length === 0) return;
       applyPresetFrameImages();
       if (currentStepIndex >= STEPS.length) currentStepIndex = 0;
+      // Seguridad: si por cualquier motivo el paso actual es un vídeo y no estamos en reproducción, situarse en el slide
+      if (isInitialLoad && STEPS[currentStepIndex] && STEPS[currentStepIndex].type === 'video') {
+        currentStepIndex = 0;
+      }
       const step = STEPS[currentStepIndex];
 
       // Logos: visibles siempre excepto en portada title y durante transición title → X
@@ -3492,7 +3498,7 @@
 
 
       const isFirstInit = isInitialLoad;
-      if (isInitialLoad) {
+      if (isInitialLoad || preserveVisuals) {
         isInitialLoad = false;
         Object.keys(layers).forEach(k => {
           if (layers[k]) {
@@ -4700,6 +4706,10 @@
         currentSlide = 1;
       }
 
+      if (STEPS[currentStepIndex] && STEPS[currentStepIndex].type === 'video') {
+        currentStepIndex = 0;
+      }
+
       const activeStep = STEPS[currentStepIndex];
       if (activeStep && activeStep.calib) {
         if (activeStep.format === '3:4') applyPhoneCoords(activeStep.calib);
@@ -4711,7 +4721,7 @@
         else applyVideoHue(activeStep.hue);
       }
 
-      updateStepUI();
+      updateStepUI(true);
       updateSlideCounters();
     }
 
@@ -4911,23 +4921,7 @@
     } catch(e) {}
   </script>
 
-  <script>
-    // Fade-in de arranque: desvanece el overlay negro en 1s al cargar
-    (function() {
-      const overlay = document.getElementById('startup-overlay');
-      if (overlay) {
-        // Pequeño delay para asegurar que el primer frame esté pintado
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            overlay.style.opacity = '0';
-            setTimeout(() => {
-              overlay.remove();
-            }, 1100);
-          });
-        });
-      }
-    })();
-  </script>
+
 
   <script>
     // ═══════════════════════════════════════════════════════
