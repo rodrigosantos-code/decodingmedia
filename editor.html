@@ -1250,6 +1250,42 @@
       box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.18);
     }
 
+    .btn-upload-pdf-slot {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(236, 72, 153, 0.12);
+      border: 1px solid rgba(236, 72, 153, 0.35);
+      color: #f472b6;
+      padding: 5px 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .btn-upload-pdf-slot:hover {
+      background: rgba(236, 72, 153, 0.22);
+      border-color: #ec4899;
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .slot-pdf-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+      background: rgba(236, 72, 153, 0.08);
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      padding: 5px 9px;
+      border-radius: 6px;
+    }
+
     .slot-slides-wrap {
       display: flex;
       align-items: center;
@@ -1397,6 +1433,10 @@
 
       <button type="button" class="btn-header-box" onclick="openShareDeckModal()" title="Obtener enlace de presentación">
         Obtener link
+      </button>
+
+      <button type="button" class="btn-header-box" id="btn-sync-slides" onclick="triggerSlideSync(true)" title="Sincronizar automáticamente presentaciones de Google Slides a imágenes locales y Supabase" style="display: inline-flex; align-items: center; border-color: rgba(236,72,153,0.4); color: #f472b6;">
+        <span id="sync-slides-text" style="font-weight: 700;">Sincronizar Diapositivas</span>
       </button>
 
       <a href="presentation.html" id="open-stage-btn" target="_blank" class="btn-stage-pink">
@@ -1652,11 +1692,31 @@
       <div class="form-group" style="margin-bottom: 14px;" id="modal-url-group">
         <label class="form-label"
           style="display: block; font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;">
-          URL de Presentación (Google Slides / PPT)
+          Presentación de la Escena
         </label>
-        <input type="text" id="new-slot-url" class="form-input text-input"
-          style="width: 100%; font-family: ui-monospace, monospace; font-size: 12px; border-radius: 4px;"
-          placeholder="https://docs.google.com/presentation/d/.../embed" />
+        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+          <button type="button" id="tab-source-url" class="btn-source-tab" onclick="setNewSlotSourceType('url')" style="flex: 1; padding: 6px 10px; font-size: 11px; font-weight: 700; border-radius: 6px; cursor: pointer; border: 1px solid #ec4899; background: rgba(236,72,153,0.18); color: #fff; transition: all 0.15s;">
+            🔗 Enlace Google Slides / PPT
+          </button>
+          <button type="button" id="tab-source-pdf" class="btn-source-tab" onclick="setNewSlotSourceType('pdf')" style="flex: 1; padding: 6px 10px; font-size: 11px; font-weight: 700; border-radius: 6px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: #94a3b8; transition: all 0.15s;">
+            📄 Subir Archivo PDF
+          </button>
+        </div>
+
+        <div id="modal-url-input-wrap">
+          <input type="text" id="new-slot-url" class="form-input text-input"
+            style="width: 100%; font-family: ui-monospace, monospace; font-size: 12px; border-radius: 4px;"
+            placeholder="https://docs.google.com/presentation/d/.../embed" />
+        </div>
+
+        <div id="modal-pdf-input-wrap" style="display: none;">
+          <div onclick="document.getElementById('new-slot-pdf-file').click()" style="border: 2px dashed rgba(236,72,153,0.4); background: rgba(236,72,153,0.06); border-radius: 8px; padding: 14px; text-align: center; cursor: pointer; transition: all 0.2s;">
+            <svg style="width: 24px; height: 24px; color: #f472b6; margin-bottom: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+            <div id="new-slot-pdf-label" style="font-size: 12px; font-weight: 700; color: #f1f5f9;">Haz clic para seleccionar tu archivo PDF</div>
+            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">Se convertirán todas las páginas a diapositivas HD automáticamente</div>
+          </div>
+          <input type="file" id="new-slot-pdf-file" accept=".pdf,application/pdf" style="display: none;" onchange="handleNewSlotPdfPicked(this)" />
+        </div>
       </div>
 
       <div class="form-group" style="margin-bottom: 18px;" id="modal-slides-group">
@@ -1777,6 +1837,14 @@
         </label>
         <input type="text" id="new-deck-name-input" class="form-input text-input"
           style="width: 100%; border-radius: 10px;" placeholder="Ej: Mesa Redonda - Sesión Tarde" />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 18px;">
+        <label class="form-label" style="display: block; font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;">
+          Preset de Marcos y Transiciones
+        </label>
+        <select id="new-deck-preset-select" class="form-input" style="width: 100%; border-radius: 10px; background: #1a1d24; color: #fff; font-weight: 700; padding: 10px 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.08);">
+        </select>
       </div>
 
       <div class="form-group" style="margin-bottom: 18px;">
@@ -1911,6 +1979,32 @@
       if (format === '9:16') return { ...DEFAULT_FRAME916_COORDS };
       if (format === 'title') return { left: 0, width: 100, top: 0, height: 100, radius: 0, rot: 0, zoom: 100 };
       return { ...DEFAULT_COORDS };
+    }
+
+    function getHueColor(hue) {
+      const h = (typeof hue === 'number') ? hue : (parseInt(hue) || 0);
+      if (h === 0) return '#ec4899'; // Rosa original
+      if (h === 30) return '#dc2626'; // Rojo
+      if (h === 60) return '#f97316'; // Naranja
+      if (h === 95) return '#eab308'; // Amarillo
+      if (h === 150) return '#22c55e'; // Verde
+      if (h === 200) return '#06b6d4'; // Cian
+      if (h === 240) return '#3b82f6'; // Azul
+      if (h === 280) return '#a855f7'; // Morado
+      return `hsl(${(330 + h) % 360}, 85%, 60%)`;
+    }
+
+    function getHueName(hue) {
+      const h = (typeof hue === 'number') ? hue : (parseInt(hue) || 0);
+      if (h === 0) return 'Rosa';
+      if (h === 30) return 'Rojo';
+      if (h === 60) return 'Naranja';
+      if (h === 95) return 'Amarillo';
+      if (h === 150) return 'Verde';
+      if (h === 200) return 'Cian';
+      if (h === 240) return 'Azul';
+      if (h === 280) return 'Morado';
+      return `${h}°`;
     }
 
     function getFormatTagClass(fmt) {
@@ -2161,6 +2255,10 @@
           shortName: `1. ${formatLabel(s.format)}`,
           url: s.url,
           slidesCount: parseInt(s.slidesCount) || 1,
+          slideImages: s.slideImages || null,
+          interactiveSlides: Array.isArray(s.interactiveSlides) ? s.interactiveSlides : [],
+          hue: (typeof s.hue === 'number') ? s.hue : 0,
+          color: getHueColor(s.hue),
           calib: s.calib ? { ...calibDefault, ...s.calib } : calibDefault,
           speaker: s.speaker,
           slotIndex: 0
@@ -2173,7 +2271,9 @@
             videoType: 'forward',
             src: 'Transitions/3x4_to_16x9.mp4',
             name: `Transición 3:4 ➔ 16:9`,
-            shortName: `Video ➔ 16:9`
+            shortName: `Video ➔ 16:9`,
+            hue: 0,
+            color: '#f472b6'
           });
           timeline.push({
             id: `step_trans_${s.id}_in`,
@@ -2181,7 +2281,9 @@
             videoType: 'reverse',
             src: 'Transitions/3x4_to_16x9_reverse.mp4',
             name: `Transición Inversa ➔ 3:4`,
-            shortName: `Video ➔ 3:4`
+            shortName: `Video ➔ 3:4`,
+            hue: 0,
+            color: '#f472b6'
           });
         } else if (s.format === '9:16') {
           timeline.push({
@@ -2190,7 +2292,9 @@
             videoType: 'forward',
             src: 'Transitions/9x16_to_16x9.mp4',
             name: `Transición 9:16 ➔ 16:9`,
-            shortName: `Video ➔ 16:9`
+            shortName: `Video ➔ 16:9`,
+            hue: 0,
+            color: '#f472b6'
           });
           timeline.push({
             id: `step_trans_${s.id}_in`,
@@ -2198,7 +2302,9 @@
             videoType: 'reverse',
             src: 'Transitions/9x16_to_16x9_reverse.mp4',
             name: `Transición 16:9 ➔ 9:16 (Inversa)`,
-            shortName: `Video ➔ 9:16`
+            shortName: `Video ➔ 9:16`,
+            hue: 0,
+            color: '#f472b6'
           });
         } else if (s.format === '16:9') {
           timeline.push({
@@ -2207,7 +2313,9 @@
             videoType: 'reverse',
             src: 'Transitions/3x4_to_16x9_reverse.mp4',
             name: `Transición Inversa ➔ 3:4`,
-            shortName: `Video ➔ 3:4`
+            shortName: `Video ➔ 3:4`,
+            hue: 0,
+            color: '#f472b6'
           });
           timeline.push({
             id: `step_trans_${s.id}_in`,
@@ -2215,7 +2323,9 @@
             videoType: 'forward',
             src: 'Transitions/3x4_to_16x9.mp4',
             name: `Transición 3:4 ➔ 16:9`,
-            shortName: `Video ➔ 16:9`
+            shortName: `Video ➔ 16:9`,
+            hue: 0,
+            color: '#f472b6'
           });
         } else if (s.format === 'title') {
           timeline.push({
@@ -2224,7 +2334,9 @@
             videoType: 'forward',
             src: 'Transitions/title_to_16x9.mp4',
             name: `Transición Title ➔ 16:9`,
-            shortName: `Video ➔ 16:9`
+            shortName: `Video ➔ 16:9`,
+            hue: 0,
+            color: '#f472b6'
           });
           timeline.push({
             id: `step_trans_${s.id}_in`,
@@ -2232,7 +2344,9 @@
             videoType: 'reverse',
             src: 'Transitions/title_to_16x9_reverse.mp4',
             name: `Transición 16:9 ➔ Title (Inversa)`,
-            shortName: `Video ➔ Title`
+            shortName: `Video ➔ Title`,
+            hue: 0,
+            color: '#f472b6'
           });
         }
         return timeline;
@@ -2250,6 +2364,10 @@
           shortName: `${i + 1}. ${formatLabel(s.format)}`,
           url: s.url,
           slidesCount: parseInt(s.slidesCount) || 1,
+          slideImages: s.slideImages || null,
+          interactiveSlides: Array.isArray(s.interactiveSlides) ? s.interactiveSlides : [],
+          hue: (typeof s.hue === 'number') ? s.hue : 0,
+          color: getHueColor(s.hue),
           calib: s.calib ? { ...calibDefault, ...s.calib } : calibDefault,
           speaker: s.speaker,
           slotIndex: i
@@ -2265,7 +2383,11 @@
               videoType: (trans.src.includes('reverse') ? 'reverse' : 'forward'),
               src: trans.src,
               name: trans.name,
-              shortName: trans.shortName
+              shortName: trans.shortName,
+              hue: 0,
+              color: '#f472b6',
+              fromSlotId: s.id,
+              toSlotId: next.id
             });
           }
         } else if (i === slotsArr.length - 1) {
@@ -2276,7 +2398,9 @@
               videoType: 'forward',
               src: 'Transitions/3x4_to_16x9.mp4',
               name: `Transición 3:4 ➔ 16:9`,
-              shortName: `Video ➔ 16:9`
+              shortName: `Video ➔ 16:9`,
+              hue: 0,
+              color: '#f472b6'
             });
             timeline.push({
               id: `step_trans_loop_reverse`,
@@ -2284,7 +2408,9 @@
               videoType: 'reverse',
               src: 'Transitions/3x4_to_16x9_reverse.mp4',
               name: `Transición Inversa ➔ 3:4`,
-              shortName: `Video ➔ 3:4`
+              shortName: `Video ➔ 3:4`,
+              hue: 0,
+              color: '#f472b6'
             });
           } else if (s.format === '9:16') {
             timeline.push({
@@ -2293,7 +2419,9 @@
               videoType: 'forward',
               src: 'Transitions/9x16_to_16x9.mp4',
               name: `Transición 9:16 ➔ 16:9`,
-              shortName: `Video ➔ 16:9`
+              shortName: `Video ➔ 16:9`,
+              hue: 0,
+              color: '#f472b6'
             });
             timeline.push({
               id: `step_trans_loop_reverse`,
@@ -2301,7 +2429,9 @@
               videoType: 'reverse',
               src: 'Transitions/9x16_to_16x9_reverse.mp4',
               name: `Transición 16:9 ➔ 9:16 (Inversa)`,
-              shortName: `Video ➔ 9:16`
+              shortName: `Video ➔ 9:16`,
+              hue: 0,
+              color: '#f472b6'
             });
           } else if (s.format === 'title') {
             timeline.push({
@@ -2310,7 +2440,9 @@
               videoType: 'forward',
               src: 'Transitions/title_to_16x9.mp4',
               name: `Transición Title ➔ 16:9`,
-              shortName: `Video ➔ 16:9`
+              shortName: `Video ➔ 16:9`,
+              hue: 0,
+              color: '#f472b6'
             });
             timeline.push({
               id: `step_trans_loop_reverse`,
@@ -2318,7 +2450,9 @@
               videoType: 'reverse',
               src: 'Transitions/title_to_16x9_reverse.mp4',
               name: `Transición 16:9 ➔ Title (Inversa)`,
-              shortName: `Video ➔ Title`
+              shortName: `Video ➔ Title`,
+              hue: 0,
+              color: '#f472b6'
             });
           }
         }
@@ -2414,6 +2548,15 @@
       const heightPx = isMini ? (is34 ? 42 : (is916 ? 42 : 36)) : (is34 ? 56 : (is916 ? 56 : 44));
       const thumbClass = is34 ? 'thumb-34' : (is916 ? 'thumb-916' : 'thumb-169');
 
+      if (slot.slideImages && Array.isArray(slot.slideImages) && slot.slideImages.length > 0) {
+        return `
+          <div class="slide-thumb-wrap ${thumbClass}" style="width:${widthPx}px; height:${heightPx}px; overflow:hidden;" title="${escapeHtml(slot.name)} (${slot.slideImages.length} diapositivas HD)">
+            <img src="${escapeHtml(slot.slideImages[0])}" style="width:100%; height:100%; object-fit:cover; border-radius:3px;" />
+            <div class="slide-thumb-shield"></div>
+          </div>
+        `;
+      }
+
       if (hasUrl) {
         const baseW = is34 ? 300 : (is916 ? 270 : 480);
         const baseH = is34 ? 400 : (is916 ? 480 : 270);
@@ -2460,11 +2603,24 @@
         slotEl.innerHTML = `
           <div class="slot-header">
             <div class="slot-title-area">
-              <div class="slot-num-badge">#${i + 1}</div>
+              <div class="slot-num-badge" style="border-color:${getHueColor(s.hue)}66; color:${getHueColor(s.hue)}; background:${getHueColor(s.hue)}18;">#${i + 1}</div>
               <button type="button" class="slot-format-tag ${formatTagClass}" onclick="event.stopPropagation(); toggleSlotFormat('${s.id}')" title="Clic para alternar formato (3:4 / 9:16 / 16:9 / Title)" style="cursor: pointer; border: none;">
                 ${s.format === 'title' ? 'Title' : s.format}
               </button>
               <input class="slot-name-input" value="${escapeHtml(s.name)}" onchange="updateSlotName('${s.id}', this.value)" title="Clic para editar nombre" />
+              
+              <div class="slot-hue-pill" onclick="event.stopPropagation();" title="Cambiar color del marco para esta escena" style="display: inline-flex; align-items: center; background: rgba(0,0,0,0.45); border: 1px solid ${getHueColor(s.hue)}55; border-radius: 6px; padding: 2px 8px; flex-shrink: 0;">
+                <select class="slot-hue-select" onchange="updateSlotHue('${s.id}', this.value)" style="background: transparent; border: none; color: ${getHueColor(s.hue)}; font-size: 11px; font-weight: 700; outline: none; cursor: pointer; padding: 1px 0;">
+                  <option value="0" ${(!s.hue || s.hue === 0) ? 'selected' : ''} style="background:#11141f; color:#f472b6;">Rosa</option>
+                  <option value="30" ${s.hue === 30 ? 'selected' : ''} style="background:#11141f; color:#dc2626;">Rojo</option>
+                  <option value="60" ${s.hue === 60 ? 'selected' : ''} style="background:#11141f; color:#f97316;">Naranja</option>
+                  <option value="95" ${s.hue === 95 ? 'selected' : ''} style="background:#11141f; color:#eab308;">Amarillo</option>
+                  <option value="150" ${s.hue === 150 ? 'selected' : ''} style="background:#11141f; color:#22c55e;">Verde</option>
+                  <option value="200" ${s.hue === 200 ? 'selected' : ''} style="background:#11141f; color:#06b6d4;">Cian</option>
+                  <option value="240" ${s.hue === 240 ? 'selected' : ''} style="background:#11141f; color:#3b82f6;">Azul</option>
+                  <option value="280" ${s.hue === 280 ? 'selected' : ''} style="background:#11141f; color:#a855f7;">Morado</option>
+                </select>
+              </div>
             </div>
             <div class="slot-actions">
               <button class="btn-icon-mini" onclick="event.stopPropagation(); moveSlot('${s.id}', -1)" title="Subir orden" ${i === 0 ? 'disabled style="opacity:0.25;cursor:default;"' : ''}>
@@ -2487,13 +2643,56 @@
               <span style="font-size: 12px; color: #64748b; font-style: italic;">Sin presentación adjunta (portada estática)</span>
             ` : `
               ${getSlideThumbnailHtml(s, false)}
-              <input class="slot-url-input" placeholder="URL Google Slides / PPT de esta escena..." value="${escapeHtml(s.url || '')}" onchange="updateSlotUrl('${s.id}', this.value)" title="Enlace de la presentación" />
-              <div class="slot-slides-wrap" title="Total diapositivas antes de pasar al vídeo">
-                <span style="font-size: 11px; color: #94a3b8; font-weight: 600; white-space: nowrap;">Slides:</span>
-                <input type="number" class="slot-slides-input" min="1" max="200" value="${s.slidesCount || 1}" onchange="updateSlotSlidesCount('${s.id}', this.value)" oninput="updateSlotSlidesCount('${s.id}', this.value)" />
+              ${(s.pdfFileName || s.sourceType === 'pdf') ? `
+                <div class="slot-pdf-badge" title="${escapeHtml(s.pdfFileName || 'PDF subido')}">
+                  <svg style="width:16px;height:16px;color:#f472b6;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                  <div style="min-width:0; flex:1;">
+                    <div style="font-size:11.5px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(s.pdfFileName || 'Presentación.pdf')}</div>
+                    <div style="font-size:10px; color:#f472b6;">PDF local · ${s.slidesCount} diapositivas HD</div>
+                  </div>
+                  <button type="button" onclick="event.stopPropagation(); triggerSlotPdfUpload('${s.id}')" title="Subir otro PDF para esta escena" style="font-size:10px; font-weight:700; padding:3px 7px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:4px; cursor:pointer;">
+                    Cambiar PDF
+                  </button>
+                  <button type="button" onclick="event.stopPropagation(); switchToUrlMode('${s.id}')" title="Cambiar a enlace URL Google Slides" style="font-size:10px; padding:3px 6px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:#94a3b8; border-radius:4px; cursor:pointer;">
+                    Usar URL
+                  </button>
+                </div>
+              ` : `
+                <input class="slot-url-input" placeholder="URL Google Slides / PPT de esta escena..." value="${escapeHtml(s.url || '')}" onchange="updateSlotUrl('${s.id}', this.value)" title="Enlace de la presentación" />
+                <button type="button" class="btn-upload-pdf-slot" onclick="event.stopPropagation(); triggerSlotPdfUpload('${s.id}')" title="Subir presentación en archivo PDF">
+                  <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                  Subir PDF
+                </button>
+              `}
+              <div class="slot-slides-wrap" title="Total diapositivas detectadas">
+                ${s.slideImages && s.slideImages.length > 0 
+                  ? `<span style="font-size: 11px; color: #10b981; font-weight: 700; white-space: nowrap;">✓ ${s.slidesCount} HD</span>` 
+                  : `<span style="font-size: 11px; color: #94a3b8; font-weight: 600; white-space: nowrap;">Slides:</span>`}
+                <input type="number" class="slot-slides-input" min="1" max="200" value="${s.slidesCount || 1}" onchange="updateSlotSlidesCount('${s.id}', this.value)" oninput="updateSlotSlidesCount('${s.id}', this.value)" ${s.slideImages ? 'style="border-color: rgba(16,185,129,0.3);"' : ''} />
               </div>
             `}
           </div>
+          ${(s.format !== 'title' && (s.slidesCount > 1 || (s.slideImages && s.slideImages.length > 0))) ? `
+            <div class="slot-interactive-slides-row" style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center;" title="Selecciona si alguna diapositiva tiene vídeo incrustado para reproducirlo en directo">
+                Vídeo incrustado:
+              </span>
+              <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                ${Array.from({ length: s.slidesCount || 1 }, (_, idx) => idx + 1).map(num => {
+                  const isVid = Array.isArray(s.interactiveSlides) && s.interactiveSlides.includes(num);
+                  return `
+                    <button type="button" 
+                      class="btn-slide-mode ${isVid ? 'active' : ''}" 
+                      onclick="event.stopPropagation(); toggleInteractiveSlide('${s.id}', ${num})" 
+                      title="${isVid ? `Diapositiva ${num}: Modo VÍDEO interactivo (reproduce Google Slides). Clic para volver a imagen HD.` : `Diapositiva ${num}: Modo Imagen HD. Clic para activar reproductor de vídeo interactivo.`}"
+                      style="background: ${isVid ? 'rgba(236,72,153,0.22)' : 'rgba(255,255,255,0.04)'}; border: 1px solid ${isVid ? '#ec4899' : 'rgba(255,255,255,0.08)'}; color: ${isVid ? '#f472b6' : '#94a3b8'}; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; transition: all 0.15s ease;">
+                      Diapo ${num} ${isVid ? '(Vídeo)' : '(HD)'}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
         `;
 
         container.appendChild(slotEl);
@@ -2503,7 +2702,6 @@
         const isLast = (i === slots.length - 1);
         const connectorRow = document.createElement('div');
         connectorRow.className = 'transition-connector-row';
-
         if (s.format !== next.format) {
           const prefix = isLast ? 'Bucle: ' : '';
           connectorRow.innerHTML = `
@@ -2579,11 +2777,12 @@
           node.className = `tl-node ${idx === currentStep ? 'active' : ''}`;
           node.setAttribute('data-step', idx);
           node.onclick = () => sendStep(idx);
+          const nodeColor = getHueColor(step.hue);
 
           node.innerHTML = `
-            <div class="tl-shape ${fmtClass(step)}"></div>
+            <div class="tl-shape ${fmtClass(step)}" style="${step.hue ? `border-color:${nodeColor}; box-shadow: 0 0 8px ${nodeColor}55;` : ''}"></div>
             <span class="tl-name" title="${escapeHtml(step.name || '')}">${escapeHtml(step.name || 'Escena')}</span>
-            <span class="tl-fmt">${fmtLabel(step)}</span>
+            <span class="tl-fmt" style="${step.hue ? `color:${nodeColor};` : ''}">${fmtLabel(step)}</span>
           `;
           container.appendChild(node);
         }
@@ -2735,12 +2934,129 @@
       showToast(`URL de presentación actualizada`);
     }
 
+    let currentSlotUploadingPdf = null;
+
+    function triggerSlotPdfUpload(slotId) {
+      currentSlotUploadingPdf = slotId;
+      const picker = document.getElementById('slot-pdf-file-picker');
+      if (picker) {
+        picker.value = '';
+        picker.click();
+      }
+    }
+
+    async function handleSlotPdfPicked(input) {
+      const file = input && input.files && input.files[0];
+      if (!file || !currentSlotUploadingPdf) return;
+      const slotId = currentSlotUploadingPdf;
+      await uploadAndProcessPdf(slotId, file);
+    }
+
+    function switchToUrlMode(slotId) {
+      const slot = slots.find(s => s.id === slotId);
+      if (!slot) return;
+      delete slot.pdfFileName;
+      slot.sourceType = 'url';
+      saveSlotsAndBroadcast();
+      showToast('Cambiado a modo URL (Google Slides / PPT)');
+    }
+
+    async function uploadAndProcessPdf(slotId, file) {
+      const slot = slots.find(s => s.id === slotId);
+      if (!slot) return;
+
+      showToast(`Procesando ${file.name}... Convirtiendo páginas a diapositivas HD...`, 5000);
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const base64Data = e.target.result;
+        const dId = (typeof activeDeckId !== 'undefined') ? activeDeckId : (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
+
+        try {
+          const resp = await fetch('http://127.0.0.1:8765/upload-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              slotId: slotId,
+              deckId: dId,
+              fileName: file.name,
+              fileData: base64Data
+            })
+          });
+
+          if (resp.ok) {
+            const json = await resp.json();
+            if (json.success && json.data) {
+              slot.slidesCount = json.data.slidesCount;
+              slot.slideImages = json.data.slideImages;
+              slot.pdfFileName = json.data.pdfFileName;
+              slot.pdfHash = json.data.pdfHash;
+              slot.sourceType = 'pdf';
+              slot.lastSync = new Date().toISOString();
+
+              saveSlotsAndBroadcast();
+              showToast(`✓ PDF procesado: ${json.data.slidesCount} diapositivas HD generadas`, 3500);
+              return;
+            }
+          }
+          throw new Error('El servicio local no pudo procesar el archivo');
+        } catch (err) {
+          console.warn('Local daemon failed, falling back:', err);
+          if (window.DMCloud && DMCloud.supabase) {
+            try {
+              const sc = DMCloud.supabase;
+              const ext = file.name.split('.').pop() || 'pdf';
+              const storagePath = `decks/${dId}/${slotId}.${ext}`;
+              const { error: upErr } = await sc.storage.from('dm_assets').upload(storagePath, file, { upsert: true, contentType: file.type });
+              if (!upErr) {
+                const { data: ud } = sc.storage.from('dm_assets').getPublicUrl(storagePath);
+                slot.pdfFileName = file.name;
+                slot.sourceType = 'pdf';
+                slot.url = ud.publicUrl;
+                saveSlotsAndBroadcast();
+                showToast(`PDF subido a la nube: ${file.name}`, 3500);
+                return;
+              }
+            } catch (e2) {
+              console.error(e2);
+            }
+          }
+          showToast(`Error al procesar PDF. Asegúrate de ejecutar el servicio local en el puerto 8765.`, 5000);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
     function updateSlotSlidesCount(id, val) {
       const slot = slots.find(s => s.id === id);
       if (!slot) return;
       slot.slidesCount = parseInt(val) || 1;
       saveSlotsAndBroadcast();
       showToast(`Escenas guardadas: ${slot.slidesCount}`);
+    }
+
+    function toggleInteractiveSlide(id, slideNum) {
+      const slot = slots.find(s => s.id === id);
+      if (!slot) return;
+      if (!Array.isArray(slot.interactiveSlides)) slot.interactiveSlides = [];
+      const num = parseInt(slideNum) || 1;
+      const idx = slot.interactiveSlides.indexOf(num);
+      if (idx > -1) {
+        slot.interactiveSlides.splice(idx, 1);
+        showToast(`✓ Diapositiva ${num} en modo imagen HD`);
+      } else {
+        slot.interactiveSlides.push(num);
+        showToast(`Diapositiva ${num} activada con vídeo interactivo`);
+      }
+      saveSlotsAndBroadcast();
+    }
+
+    function updateSlotHue(id, val) {
+      const slot = slots.find(s => s.id === id);
+      if (!slot) return;
+      slot.hue = parseInt(val) || 0;
+      saveSlotsAndBroadcast();
+      showToast(`Color de escena cambiado a ${getHueName(slot.hue)}`);
     }
 
     function toggleSlotFormat(id) {
@@ -2790,9 +3106,69 @@
 
     let pendingFormat = '3:4';
 
+    let newSlotSourceType = 'url';
+    let newSlotPendingPdfFile = null;
+
+    function setNewSlotSourceType(type) {
+      newSlotSourceType = type;
+      const tabUrl = document.getElementById('tab-source-url');
+      const tabPdf = document.getElementById('tab-source-pdf');
+      const wrapUrl = document.getElementById('modal-url-input-wrap');
+      const wrapPdf = document.getElementById('modal-pdf-input-wrap');
+
+      if (type === 'url') {
+        if (tabUrl) {
+          tabUrl.style.background = 'rgba(236, 72, 153, 0.18)';
+          tabUrl.style.borderColor = '#ec4899';
+          tabUrl.style.color = '#fff';
+        }
+        if (tabPdf) {
+          tabPdf.style.background = 'rgba(255, 255, 255, 0.04)';
+          tabPdf.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+          tabPdf.style.color = '#94a3b8';
+        }
+        if (wrapUrl) wrapUrl.style.display = 'block';
+        if (wrapPdf) wrapPdf.style.display = 'none';
+      } else {
+        if (tabPdf) {
+          tabPdf.style.background = 'rgba(236, 72, 153, 0.18)';
+          tabPdf.style.borderColor = '#ec4899';
+          tabPdf.style.color = '#fff';
+        }
+        if (tabUrl) {
+          tabUrl.style.background = 'rgba(255, 255, 255, 0.04)';
+          tabUrl.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+          tabUrl.style.color = '#94a3b8';
+        }
+        if (wrapUrl) wrapUrl.style.display = 'none';
+        if (wrapPdf) wrapPdf.style.display = 'block';
+      }
+    }
+
+    function handleNewSlotPdfPicked(input) {
+      const file = input && input.files && input.files[0];
+      if (!file) return;
+      newSlotPendingPdfFile = file;
+      const label = document.getElementById('new-slot-pdf-label');
+      if (label) label.textContent = `✓ ${file.name}`;
+      const nameInput = document.getElementById('new-slot-name');
+      if (nameInput && (!nameInput.value || nameInput.value.startsWith('Escena '))) {
+        const cleanName = file.name.replace(/\.[^/.]+$/, "");
+        nameInput.value = cleanName;
+      }
+    }
+
     function openAddSlotModal() {
       pendingFormat = '3:4';
       chooseFormat('3:4');
+      newSlotSourceType = 'url';
+      newSlotPendingPdfFile = null;
+      setNewSlotSourceType('url');
+      const pdfLabel = document.getElementById('new-slot-pdf-label');
+      if (pdfLabel) pdfLabel.textContent = 'Haz clic para seleccionar tu archivo PDF';
+      const pdfFileInput = document.getElementById('new-slot-pdf-file');
+      if (pdfFileInput) pdfFileInput.value = '';
+
       const nameInput = document.getElementById('new-slot-name');
       const urlInput = document.getElementById('new-slot-url');
       if (nameInput) nameInput.value = `Escena ${slots.length + 1}`;
@@ -2806,6 +3182,7 @@
     function closeAddSlotModal() {
       const modal = document.getElementById('add-slot-modal');
       if (modal) modal.style.display = 'none';
+      newSlotPendingPdfFile = null;
     }
 
     function chooseFormat(fmt) {
@@ -2855,10 +3232,13 @@
       const nameInput = document.getElementById('new-slot-name');
       const urlInput = document.getElementById('new-slot-url');
       const name = nameInput && nameInput.value.trim() ? nameInput.value.trim() : `Escena ${slots.length + 1}`;
-      const url = (pendingFormat === 'title') ? '' : (urlInput ? cleanSlidesUrl(urlInput.value.trim()) : '');
+      const url = (pendingFormat === 'title' || newSlotSourceType === 'pdf') ? '' : (urlInput ? cleanSlidesUrl(urlInput.value.trim()) : '');
 
       const slidesInput = document.getElementById('new-slot-slides');
       const slidesCountVal = (pendingFormat === 'title') ? 1 : (slidesInput ? (parseInt(slidesInput.value) || 1) : 1);
+
+      const isPdfMode = (pendingFormat !== 'title' && newSlotSourceType === 'pdf' && newSlotPendingPdfFile);
+      const pdfFileToUpload = isPdfMode ? newSlotPendingPdfFile : null;
 
       const newSlot = {
         id: 'slot-' + Date.now(),
@@ -2867,7 +3247,8 @@
         speaker: '',
         url: url,
         slidesCount: slidesCountVal,
-        calib: getDefaultCoords(pendingFormat)
+        calib: getDefaultCoords(pendingFormat),
+        sourceType: isPdfMode ? 'pdf' : 'url'
       };
 
       slots.push(newSlot);
@@ -2876,6 +3257,10 @@
       selectSlotForCalib(newSlot.id);
       closeAddSlotModal();
       showToast(`¡${name} (${pendingFormat}) añadida!`);
+
+      if (pdfFileToUpload) {
+        uploadAndProcessPdf(newSlot.id, pdfFileToUpload);
+      }
     }
 
     function configureSliderRanges(format) {
@@ -3223,7 +3608,7 @@
       });
     }
 
-    // Escalar el iframe de preview a resolución nativa (1920x1080) dentro del preview-box
+    // Escalar el iframe de preview a resolución nativa (1920x1080) centrado dentro del preview-box
     function scalePreviewIframe() {
       const iframe = document.getElementById('preview-stage-iframe');
       if (!iframe || !previewBox) return;
@@ -3231,7 +3616,10 @@
       const boxH = previewBox.clientHeight;
       if (!boxW || !boxH) return;
       const scale = Math.min(boxW / 1920, boxH / 1080);
-      iframe.style.transform = `scale(${scale})`;
+      const offsetX = (boxW - 1920 * scale) / 2;
+      const offsetY = (boxH - 1080 * scale) / 2;
+      iframe.style.transformOrigin = '0 0';
+      iframe.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
     }
 
     function syncIframeFullState() {
@@ -3781,6 +4169,15 @@
         const count = deckSelector ? deckSelector.options.length + 1 : 2;
         newDeckNameInput.value = `Presentación ${count}`;
       }
+      const presetSel = document.getElementById('new-deck-preset-select');
+      if (presetSel) {
+        let ps = [];
+        try { ps = JSON.parse(localStorage.getItem('dm_presets') || '[]'); } catch(e) {}
+        if (!ps.find(p => p.id === 'preset1')) ps.unshift({ id: 'preset1', name: 'PRESET 1' });
+        if (!ps.find(p => p.id === 'preset2')) ps.push({ id: 'preset2', name: 'PRESET 2 (Nuevos)' });
+        const curPs = localStorage.getItem('dm_deck_preset_' + activeDeckId) || localStorage.getItem('dm_active_preset') || 'preset2';
+        presetSel.innerHTML = ps.map(p => `<option value="${p.id}" ${p.id === curPs ? 'selected' : ''}>${p.name}</option>`).join('');
+      }
       if (newDeckModal) newDeckModal.style.display = 'flex';
       if (newDeckNameInput) newDeckNameInput.focus();
     }
@@ -3792,6 +4189,8 @@
     async function confirmCreateNewDeck() {
       const name = (newDeckNameInput ? newDeckNameInput.value.trim() : '') || 'Nueva Presentación';
       const templateChoice = document.querySelector('input[name="new-deck-template"]:checked')?.value || 'copy';
+      const presetSel = document.getElementById('new-deck-preset-select');
+      const chosenPreset = (presetSel ? presetSel.value : '') || 'preset2';
       
       let initialSlots = [];
       if (templateChoice === 'copy') {
@@ -3833,8 +4232,10 @@
       }
 
       const newId = 'deck-' + Date.now();
+      localStorage.setItem('dm_deck_preset_' + newId, chosenPreset);
+      localStorage.setItem('dm_active_preset', chosenPreset);
       closeNewDeckModal();
-      showToast(`Creando ${name}...`);
+      showToast(`Creando ${name} (${chosenPreset})...`);
 
       if (window.DMCloud) {
         await DMCloud.createDeck(newId, name, initialSlots);
@@ -3901,7 +4302,7 @@
     }
 
     async function confirmDeleteCurrentDeck() {
-      if (activeDeckId === 'default') {
+      if (!activeDeckId || activeDeckId === 'default') {
         alert('La "Presentación Principal" no se puede eliminar.');
         return;
       }
@@ -3912,13 +4313,17 @@
 
       showToast('Eliminando...');
       try {
-        // 1. Borrar del índice local INMEDIATAMENTE para que no reaparezca
+        // 1. Borrar del índice local y almacenamiento inmediatamente
         try {
-          const localList = JSON.parse(localStorage.getItem('dm_decks_index') || '[]');
-          const filtered = localList.filter(d => d.id !== idToDelete);
-          localStorage.setItem('dm_decks_index', JSON.stringify(filtered));
+          ['dm_local_decks_index', 'dm_decks_index'].forEach(k => {
+            const list = JSON.parse(localStorage.getItem(k) || '[]');
+            if (Array.isArray(list)) {
+              localStorage.setItem(k, JSON.stringify(list.filter(d => d.id !== idToDelete)));
+            }
+          });
         } catch(e) {}
         localStorage.removeItem('dm_deck_slots_' + idToDelete);
+        localStorage.removeItem('dm_deck_preset_' + idToDelete);
 
         // 2. Borrar de Supabase
         if (window.DMCloud) {
@@ -3974,7 +4379,49 @@
     renderStepGrid();
     selectSlotForCalib(activeCalibSlotId, false);
     updateStepButtons();
+
+    // Sincronización automática de diapositivas al cargar el Producer
+    async function triggerSlideSync(manual = false) {
+      const btn = document.getElementById('btn-sync-slides');
+      const txt = document.getElementById('sync-slides-text');
+      if (btn) btn.style.opacity = '0.7';
+      if (txt) txt.textContent = 'Sincronizando...';
+
+      const dId = activeDeckId || 'default';
+
+      try {
+        const res = await fetch(`http://127.0.0.1:8765/sync?deck=${encodeURIComponent(dId)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.slots && Array.isArray(data.slots)) {
+            slots = data.slots;
+            try { localStorage.setItem('dm_deck_slots_' + dId, JSON.stringify(slots)); } catch(e){}
+            try { localStorage.setItem('dm_deck_slots', JSON.stringify(slots)); } catch(e){}
+            renderSlotList();
+            renderStepGrid();
+            renderCalibSlotSelector();
+            renderPreview();
+            broadcastDeckChange();
+            const totalCount = slots.reduce((acc, s) => acc + (s.slidesCount || 0), 0);
+            const changedCount = data.results ? data.results.filter(r => r.updated).length : 0;
+            showToast(changedCount > 0 
+              ? `✓ ${changedCount} presentaciones actualizadas (${totalCount} diapositivas HD)`
+              : `✓ Diapositivas al día (${totalCount} diapositivas HD)`);
+          }
+        } else {
+          if (manual) showToast('Servicio local no respondió. Ejecuta python3 scripts/sync_slides.py --server', 3500);
+        }
+      } catch(e) {
+        if (manual) showToast('Iniciando servicio de sincronización...', 2000);
+      } finally {
+        if (btn) btn.style.opacity = '1';
+        if (txt) txt.textContent = 'Sincronizar Diapositivas';
+      }
+    }
+
+    setTimeout(() => { triggerSlideSync(false); }, 600);
   </script>
+  <input type="file" id="slot-pdf-file-picker" accept=".pdf,application/pdf" style="display:none;" onchange="handleSlotPdfPicked(this)" />
 </body>
 
 </html>

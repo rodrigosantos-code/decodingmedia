@@ -69,7 +69,7 @@
       box-shadow: none !important;
     }
 
-    /* Capas de cada paso con fundido suave de 2 segundos */
+    /* Capas de cada paso con fundido suave de 0.5 segundos */
     .stage-layer {
       position: absolute;
       top: 0;
@@ -78,7 +78,7 @@
       height: 100%;
       opacity: 0;
       visibility: hidden;
-      transition: opacity 2s ease-in-out, visibility 2s ease-in-out;
+      transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
       pointer-events: none;
       z-index: 1;
     }
@@ -90,14 +90,15 @@
       z-index: 10;
     }
 
-    /* La capa entrante activa se posiciona en z-index: 20 por encima de la anterior para que su fundido de 2s sea visible */
+    /* La capa entrante activa se posiciona en z-index: 30 por encima de la anterior para que su fundido de 0.5s sea visible */
     .stage-layer.active.incoming-layer {
-      z-index: 20;
+      z-index: 30;
+      transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
     }
 
-    /* Capa de vídeo de transición: cambio limpio e instantáneo sobre el fotograma de la escena anterior */
+    /* Capa de vídeo de transición: fundido de 0.5s sobre la capa inferior */
     #layer-step2 {
-      transition: none !important;
+      transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
     }
 
     #layer-step2.active {
@@ -105,14 +106,19 @@
       visibility: visible;
       pointer-events: auto;
       z-index: 25;
-      transition: none !important;
+      transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
     }
 
-    /* Fundido de salida del vídeo: se aplica al terminar la transición para cross-fadear con la slide entrante */
+    #layer-step2.active.incoming-layer {
+      z-index: 30;
+      transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+    }
+
+    /* Fundido de salida del vídeo tras transición */
     #layer-step2.fading-out {
       opacity: 0 !important;
       pointer-events: none;
-      transition: opacity 2s ease-in-out !important;
+      transition: opacity 0.5s ease-in-out !important;
     }
 
 
@@ -125,7 +131,7 @@
       pointer-events: none;
     }
 
-    /* Marco superpuesto transparente */
+    /* Marco fijo base (pantalla sólida) */
     .frame-overlay {
       position: absolute;
       top: 0;
@@ -134,7 +140,21 @@
       height: 100%;
       object-fit: cover;
       pointer-events: none;
-      z-index: 10;
+      z-index: 5;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    /* Marco sin fondo superpuesto (pantalla transparente): aparece instantáneo encima */
+    .frame-overlay-sinfondo {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      z-index: 12;
+      opacity: 0;
     }
 
     /* Logos en esquinas superiores (Izquierda: Making Science, Derecha: Decoding Media) */
@@ -203,7 +223,8 @@
       top: var(--phone-top, -2.85%);
       width: var(--phone-width, 47.7%);
       height: var(--phone-height, 111.45%);
-      z-index: 5;
+      z-index: 8;
+      transition: opacity 0.5s ease-in-out;
       background: #000;
       overflow: hidden;
       transform-origin: center center;
@@ -218,7 +239,8 @@
       top: var(--frame2-top, 15.45%);
       width: var(--frame2-width, 85.85%);
       height: var(--frame2-height, 66.7%);
-      z-index: 5;
+      z-index: 8;
+      transition: opacity 0.5s ease-in-out;
       background: #000;
       overflow: hidden;
       border-radius: var(--frame2-radius, 12px);
@@ -233,7 +255,8 @@
       top: var(--frame916-top, 8.45%);
       width: var(--frame916-width, 19.17%);
       height: var(--frame916-height, 95.15%);
-      z-index: 5;
+      z-index: 8;
+      transition: opacity 0.5s ease-in-out;
       background: #000;
       overflow: hidden;
       border-radius: var(--frame916-radius, 40px);
@@ -297,6 +320,21 @@
     #frame916-screen-slot .screen-iframe-buf {
       transform: scale(var(--frame916-zoom, 1.19));
       transform-origin: center center;
+    }
+
+    /* Imagen de diapositiva local de alta resolución (extraída de PDF) */
+    .screen-slide-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+      z-index: 6;
+      pointer-events: none;
+      user-select: none;
+      display: none;
     }
 
     /* Presentación Interactiva Nativa (Fallback / Modo Autónomo) con fundido de 1s */
@@ -1742,14 +1780,17 @@
           src=""
           allowfullscreen="true"
         ></iframe>
+        <!-- Diapositiva local en alta resolución (extraída de PDF) -->
+        <img id="img-slides1" class="screen-slide-img" src="" alt="Diapositiva Móvil" style="display: none;" />
       </div>
       <!-- 3x4.png como Marco frontal con dedos y bordes naturales -->
-      <img class="frame-overlay" src="Frame%20fijos/3x4.png?v=20260922_1143" alt="Marco Móvil" />
+      <img id="frame-img-3x4" class="frame-overlay" src="presets/preset2/3x4.png" alt="Marco Móvil Fijo" />
+      <img id="frame-img-3x4-sinfondo" class="frame-overlay-sinfondo" src="presets/preset2/3x4_sinfondo.png" alt="Marco Móvil Sin Fondo" />
     </div>
 
-    <!-- PASO TITLE: Portada / Pantalla Estática (title.jpeg) -->
+    <!-- PASO TITLE: Portada / Pantalla Estática (Title.png) -->
     <div id="layer-title" class="stage-layer">
-      <img class="frame-overlay" src="Frame%20fijos/title.jpeg?v=20260922_1143" alt="Portada" style="width:100%; height:100%; object-fit:cover;" />
+      <img id="frame-img-title" class="frame-overlay" src="presets/preset2/Title.png" alt="Portada" style="width:100%; height:100%; object-fit:cover;" />
     </div>
 
     <!-- PASO 2: Video de Transición -->
@@ -1771,7 +1812,7 @@
             <div class="deck-slide-category" id="deck2-category">ESCENARIO PRINCIPAL</div>
             <h2 class="deck-slide-title" id="deck2-title">Innovación en Gran Formato</h2>
             <p class="deck-slide-desc" id="deck2-desc">Experiencia inmersiva en formato 16:9 con control y teleprompter en directo.</p>
-            <div class="deck-slide-bullets" id="deck2-bullets">
+            <div class="deck-slide-bullets">
               <div class="deck-bullet"><span class="deck-bullet-dot"></span> Renderizado fluido de alta resolución</div>
               <div class="deck-bullet"><span class="deck-bullet-dot"></span> Teleprompter y cronómetro inteligente sincronizado</div>
               <div class="deck-bullet"><span class="deck-bullet-dot"></span> Bucle bidireccional con video de retorno invertido</div>
@@ -1796,9 +1837,12 @@
           src=""
           allowfullscreen="true"
         ></iframe>
+        <!-- Diapositiva local en alta resolución (extraída de PDF) -->
+        <img id="img-slides2" class="screen-slide-img" src="" alt="Diapositiva 16:9" style="display: none;" />
       </div>
       <!-- 16x9.png como Marco frontal -->
-      <img class="frame-overlay" src="Frame%20fijos/16x9.png?v=20260922_1143" alt="Marco 2" />
+      <img id="frame-img-16x9" class="frame-overlay" src="presets/preset2/16x9.png" alt="Marco 2 Fijo" />
+      <img id="frame-img-16x9-sinfondo" class="frame-overlay-sinfondo" src="presets/preset2/16x9_sinfondo.png" alt="Marco 2 Sin Fondo" />
     </div>
 
     <!-- PASO 9:16: Imagen 9x16 con Presentación (Aparece inmediatamente dentro del marco) -->
@@ -1840,9 +1884,12 @@
           src=""
           allowfullscreen="true"
         ></iframe>
+        <!-- Diapositiva local en alta resolución (extraída de PDF) -->
+        <img id="img-slides916" class="screen-slide-img" src="" alt="Diapositiva 9:16" style="display: none;" />
       </div>
       <!-- 9x16.png como Marco frontal -->
-      <img class="frame-overlay" src="Frame%20fijos/9x16.png?v=20260924_1312" alt="Marco 9x16" />
+      <img id="frame-img-9x16" class="frame-overlay" src="presets/preset2/9x16.png" alt="Marco 9x16 Fijo" />
+      <img id="frame-img-9x16-sinfondo" class="frame-overlay-sinfondo" src="presets/preset2/9x16_sinfondo.png" alt="Marco 9x16 Sin Fondo" />
     </div>
 
     <!-- PASO 4: Video de Transición Inversa al Móvil -->
@@ -1927,9 +1974,9 @@
 
       <div class="form-group">
         <label class="form-label" style="color: #38bdf8;">
-          URL de Presentación (Google Slides Embed)
+          Presentación de la Diapositiva (Google Slides Embed / Archivo PDF)
         </label>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 8px; align-items: center;">
           <input
             type="text"
             id="modal-slot-url"
@@ -1937,6 +1984,10 @@
             placeholder="https://docs.google.com/presentation/d/.../embed"
             style="flex: 1;"
           />
+          <button type="button" onclick="triggerPresentationModalPdfUpload()" class="btn-secondary" style="font-size: 11px; padding: 8px 12px; color: #f472b6; border-color: rgba(236,72,153,0.4); background: rgba(236,72,153,0.1); white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; border-radius: 8px;">
+            📄 Subir PDF
+          </button>
+          <input type="file" id="modal-slot-pdf-file" accept=".pdf,application/pdf" style="display: none;" onchange="handlePresentationModalPdfPicked(this)" />
           <div style="display: flex; align-items: center; gap: 6px;">
             <label style="font-size: 11px; color: #94a3b8; white-space: nowrap;">Nº Slides:</label>
             <input type="number" id="modal-slot-slides" min="1" max="100" value="10" style="width: 60px; background: #141724; border: 1px solid #282f45; color: #fff; padding: 10px 8px; border-radius: 8px; font-size: 13px; text-align: center;">
@@ -2071,6 +2122,68 @@
       if (format === '16:9') return { ...DEFAULT_COORDS_169 };
       if (format === '9:16') return { ...DEFAULT_COORDS_916 };
       return { ...DEFAULT_COORDS_34 };
+    }
+
+    function getHueColor(hue) {
+      const h = (typeof hue === 'number') ? hue : (parseInt(hue) || 0);
+      if (h === 0) return '#ec4899'; // Rosa original DM
+      if (h === 30) return '#dc2626'; // Rojo
+      if (h === 60) return '#f97316'; // Naranja
+      if (h === 95) return '#eab308'; // Amarillo
+      if (h === 150) return '#22c55e'; // Verde
+      if (h === 200) return '#06b6d4'; // Cian
+      if (h === 240) return '#3b82f6'; // Azul
+      if (h === 280) return '#a855f7'; // Morado
+      return `hsl(${(330 + h) % 360}, 85%, 60%)`;
+    }
+
+    function getHueName(hue) {
+      const h = (typeof hue === 'number') ? hue : (parseInt(hue) || 0);
+      if (h === 0) return 'Rosa';
+      if (h === 30) return 'Rojo';
+      if (h === 60) return 'Naranja';
+      if (h === 95) return 'Amarillo';
+      if (h === 150) return 'Verde';
+      if (h === 200) return 'Cian';
+      if (h === 240) return 'Azul';
+      if (h === 280) return 'Morado';
+      return `${h}°`;
+    }
+
+    const FRAME_CONFIG = [
+      { id: 'frame-img-3x4', file: '3x4.png', baseProp: 'frame_3x4' },
+      { id: 'frame-img-3x4-sinfondo', file: '3x4_sinfondo.png', baseProp: 'frame_3x4_sinfondo' },
+      { id: 'frame-img-16x9', file: '16x9.png', baseProp: 'frame_16x9' },
+      { id: 'frame-img-16x9-sinfondo', file: '16x9_sinfondo.png', baseProp: 'frame_16x9_sinfondo' },
+      { id: 'frame-img-9x16', file: '9x16.png', baseProp: 'frame_9x16' },
+      { id: 'frame-img-9x16-sinfondo', file: '9x16_sinfondo.png', baseProp: 'frame_9x16_sinfondo' },
+      { id: 'frame-img-title', file: 'Title.png', baseProp: 'frame_title' }
+    ];
+
+    function applyFrameHue(hueVal) {
+      const h = (typeof hueVal === 'number') ? hueVal : (parseInt(hueVal) || 0);
+      const a = (typeof getActivePresetAssets === 'function') ? getActivePresetAssets() : {};
+
+      FRAME_CONFIG.forEach(cfg => {
+        const el = document.getElementById(cfg.id);
+        if (!el) return;
+        el.style.filter = ''; // Desactiva filtro tosco global para conservar el color natural de las manos
+        if (h !== 0) {
+          el.src = `presets/preset2/colors/${h}/${cfg.file}`;
+        } else {
+          el.src = a[cfg.baseProp] || `presets/preset2/${cfg.file}`;
+        }
+      });
+      document.documentElement.style.setProperty('--scene-color', getHueColor(h));
+      document.documentElement.style.setProperty('--scene-hue', `${h}deg`);
+    }
+
+    function applyVideoHue(hueVal) {
+      // Las transiciones no se ven afectadas por el cambio de tono (mantienen su color original)
+      const vEl = document.getElementById('video-element');
+      const vRevEl = document.getElementById('video-reverse-element');
+      if (vEl) vEl.style.filter = '';
+      if (vRevEl) vRevEl.style.filter = '';
     }
 
     // Plazas de diapositivas por defecto (sincronizadas con editor.html y ponentes.html)
@@ -2214,19 +2327,81 @@
 
     let deckSlots = getStoredSlots();
 
+    // ═══ GESTOR DE PRESETS / ASSETS EN ESCENARIO ═══
+    function getActivePresetAssets() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetDeck = urlParams.get('deck') || (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
+        let activePsId = urlParams.get('preset') || localStorage.getItem('dm_deck_preset_' + targetDeck);
+        if (!activePsId) {
+          activePsId = localStorage.getItem('dm_active_preset') || 'preset2';
+        }
+
+        let presets = [];
+        try { presets = JSON.parse(localStorage.getItem('dm_presets') || '[]'); } catch(e) {}
+        let preset = presets.find(p => p.id === activePsId);
+        const p2Fallback = {
+          frame_3x4: 'presets/preset2/3x4.png',
+          frame_3x4_sinfondo: 'presets/preset2/3x4_sinfondo.png',
+          frame_16x9: 'presets/preset2/16x9.png',
+          frame_16x9_sinfondo: 'presets/preset2/16x9_sinfondo.png',
+          frame_9x16: 'presets/preset2/9x16.png',
+          frame_9x16_sinfondo: 'presets/preset2/9x16_sinfondo.png',
+          frame_title: 'presets/preset2/Title.png',
+          trans_title_3x4: 'presets/preset2/Title%20a%203x4.mp4?v=2',
+          trans_title_3x4_rev: 'presets/preset2/3x4%20a%20Title.mp4?v=2',
+          trans_title_916: 'presets/preset2/Title%20a%209x16.mp4?v=2',
+          trans_title_916_rev: 'presets/preset2/9x16%20a%20Title.mp4?v=2',
+          trans_title_169: 'presets/preset2/Title%20a%2016x9.mp4?v=2',
+          trans_title_169_rev: 'presets/preset2/16x9%20a%20Title.mp4?v=2',
+          trans_34_169: 'presets/preset2/3x4%20a%2016x9.mp4?v=2',
+          trans_34_169_rev: 'presets/preset2/16x9%20a%203x4.mp4?v=2',
+          trans_916_169: 'presets/preset2/9x16%20a%2016x9.mp4?v=2',
+          trans_916_169_rev: 'presets/preset2/16x9%20a%209x16.mp4?v=2',
+          trans_916_34: 'presets/preset2/9x16%20a%203x4.mp4?v=2',
+          trans_916_34_rev: 'presets/preset2/3x4%20a%209x16.mp4?v=2'
+        };
+        if (!preset && activePsId === 'preset2') {
+          return p2Fallback;
+        }
+        let overrides = {};
+        try { overrides = JSON.parse(localStorage.getItem('dm_asset_overrides') || '{}'); } catch(e) {}
+        if (activePsId === 'preset2') {
+          const cleanOverrides = {};
+          Object.entries(overrides).forEach(([k, v]) => {
+            if (v && !v.includes('Frame fijos') && !v.includes('Frame%20fijos') && !v.includes('Transitions/')) {
+              cleanOverrides[k] = v;
+            }
+          });
+          overrides = cleanOverrides;
+        }
+        const baseAssets = activePsId === 'preset2' ? { ...p2Fallback, ...(preset?.assets || {}) } : (preset?.assets || {});
+        return { ...baseAssets, ...overrides };
+      } catch(e) {
+        return {};
+      }
+    }
+
+    function applyPresetFrameImages() {
+      const activeStep = (typeof STEPS !== 'undefined' && Array.isArray(STEPS) && STEPS[currentStepIndex]) ? STEPS[currentStepIndex] : null;
+      const currentHue = (activeStep && typeof activeStep.hue === 'number') ? activeStep.hue : 0;
+      applyFrameHue(currentHue);
+    }
+
     // ASIGNADOR DINÁMICO DE TRANSICIÓN SEGÚN PAR DE FORMATOS
     function getTransitionForPair(fromFmt, toFmt) {
+      const a = getActivePresetAssets();
       // 1. title <-> 3:4
       if (fromFmt === 'title' && toFmt === '3:4') {
         return {
-          src: 'Transitions/title_to_3x4.mp4',
+          src: a['trans_title_3x4'] || 'Transitions/title_to_3x4.mp4',
           name: 'Transición Title ➔ 3:4',
           shortName: 'Video ➔ 3:4'
         };
       }
       if (fromFmt === '3:4' && toFmt === 'title') {
         return {
-          src: 'Transitions/title_to_3x4_reverse.mp4',
+          src: a['trans_title_3x4_rev'] || 'Transitions/title_to_3x4_reverse.mp4',
           name: 'Transición 3:4 ➔ Title (Inversa)',
           shortName: 'Video ➔ Title'
         };
@@ -2235,14 +2410,14 @@
       // 2. title <-> 9:16
       if (fromFmt === 'title' && toFmt === '9:16') {
         return {
-          src: 'Transitions/title_to_9x16.mp4',
+          src: a['trans_title_916'] || 'Transitions/title_to_9x16.mp4',
           name: 'Transición Title ➔ 9:16',
           shortName: 'Video ➔ 9:16'
         };
       }
       if (fromFmt === '9:16' && toFmt === 'title') {
         return {
-          src: 'Transitions/title_to_9x16_reverse.mp4',
+          src: a['trans_title_916_rev'] || 'Transitions/title_to_9x16_reverse.mp4',
           name: 'Transición 9:16 ➔ Title (Inversa)',
           shortName: 'Video ➔ Title'
         };
@@ -2251,14 +2426,14 @@
       // 3. title <-> 16:9
       if (fromFmt === 'title' && toFmt === '16:9') {
         return {
-          src: 'Transitions/title_to_16x9.mp4',
+          src: a['trans_title_169'] || 'Transitions/title_to_16x9.mp4',
           name: 'Transición Title ➔ 16:9',
           shortName: 'Video ➔ 16:9'
         };
       }
       if (fromFmt === '16:9' && toFmt === 'title') {
         return {
-          src: 'Transitions/title_to_16x9_reverse.mp4',
+          src: a['trans_title_169_rev'] || 'Transitions/title_to_16x9_reverse.mp4',
           name: 'Transición 16:9 ➔ Title (Inversa)',
           shortName: 'Video ➔ Title'
         };
@@ -2267,14 +2442,14 @@
       // 4. 3:4 <-> 16:9
       if (fromFmt === '3:4' && toFmt === '16:9') {
         return {
-          src: 'Transitions/3x4_to_16x9.mp4',
+          src: a['trans_34_169'] || 'Transitions/3x4_to_16x9.mp4',
           name: 'Transición 3:4 ➔ 16:9',
           shortName: 'Video ➔ 16:9'
         };
       }
       if (fromFmt === '16:9' && toFmt === '3:4') {
         return {
-          src: 'Transitions/3x4_to_16x9_reverse.mp4',
+          src: a['trans_34_169_rev'] || 'Transitions/3x4_to_16x9_reverse.mp4',
           name: 'Transición 16:9 ➔ 3:4 (Inversa)',
           shortName: 'Video ➔ 3:4'
         };
@@ -2283,14 +2458,14 @@
       // 5. 9:16 <-> 16:9
       if (fromFmt === '9:16' && toFmt === '16:9') {
         return {
-          src: 'Transitions/9x16_to_16x9.mp4',
+          src: a['trans_916_169'] || 'Transitions/9x16_to_16x9.mp4',
           name: 'Transición 9:16 ➔ 16:9',
           shortName: 'Video ➔ 16:9'
         };
       }
       if (fromFmt === '16:9' && toFmt === '9:16') {
         return {
-          src: 'Transitions/9x16_to_16x9_reverse.mp4',
+          src: a['trans_916_169_rev'] || 'Transitions/9x16_to_16x9_reverse.mp4',
           name: 'Transición 16:9 ➔ 9:16 (Inversa)',
           shortName: 'Video ➔ 9:16'
         };
@@ -2299,14 +2474,14 @@
       // 6. 9:16 <-> 3:4
       if (fromFmt === '9:16' && toFmt === '3:4') {
         return {
-          src: 'Transitions/9x16_to_3x4.mp4',
+          src: a['trans_916_34'] || 'Transitions/9x16_to_3x4.mp4',
           name: 'Transición 9:16 ➔ 3:4',
           shortName: 'Video ➔ 3:4'
         };
       }
       if (fromFmt === '3:4' && toFmt === '9:16') {
         return {
-          src: 'Transitions/9x16_to_3x4_reverse.mp4',
+          src: a['trans_916_34_rev'] || 'Transitions/9x16_to_3x4_reverse.mp4',
           name: 'Transición 3:4 ➔ 9:16 (Inversa)',
           shortName: 'Video ➔ 9:16'
         };
@@ -2334,7 +2509,14 @@
           format: slot.format || '3:4',
           speaker: slot.speaker || '',
           url: slot.url || '',
-          slidesCount: slot.format === 'title' ? 1 : (parseInt(slot.slidesCount) || 1),
+          slidesCount: (slot.slideImages && slot.slideImages.length > 0)
+            ? slot.slideImages.length
+            : (slot.format === 'title' ? 1 : (parseInt(slot.slidesCount) || 1)),
+          slideImages: slot.slideImages || null,
+          interactiveSlides: Array.isArray(slot.interactiveSlides) ? slot.interactiveSlides : [],
+          hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+          color: getHueColor(slot.hue),
+          pdfHash: slot.pdfHash || null,
           calib: slot.calib ? { ...calibDefault, ...slot.calib } : calibDefault
         });
 
@@ -2345,7 +2527,9 @@
             videoType: 'forward',
             name: 'Transición Title ➔ 16:9',
             shortName: 'Video ➔ 16:9',
-            src: 'Transitions/title_to_16x9.mp4'
+            src: 'Transitions/title_to_16x9.mp4',
+            hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+            color: getHueColor(slot.hue)
           });
           timeline.push({
             id: `step_trans_${slot.id}_in`,
@@ -2353,7 +2537,9 @@
             videoType: 'reverse',
             name: 'Transición 16:9 ➔ Title (Inversa)',
             shortName: 'Video ➔ Title',
-            src: 'Transitions/title_to_16x9_reverse.mp4'
+            src: 'Transitions/title_to_16x9_reverse.mp4',
+            hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+            color: getHueColor(slot.hue)
           });
         } else if (slot.format === '3:4') {
           timeline.push({
@@ -2362,7 +2548,9 @@
             videoType: 'forward',
             name: 'Transición 3:4 ➔ 16:9',
             shortName: 'Video ➔ 16:9',
-            src: 'Transitions/3x4_to_16x9.mp4'
+            src: 'Transitions/3x4_to_16x9.mp4',
+            hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+            color: getHueColor(slot.hue)
           });
           timeline.push({
             id: `step_trans_${slot.id}_in`,
@@ -2370,7 +2558,9 @@
             videoType: 'reverse',
             name: 'Transición Inversa ➔ 3:4',
             shortName: 'Video ➔ 3:4',
-            src: 'Transitions/3x4_to_16x9_reverse.mp4'
+            src: 'Transitions/3x4_to_16x9_reverse.mp4',
+            hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+            color: getHueColor(slot.hue)
           });
         } else if (slot.format === '9:16') {
           timeline.push({
@@ -2379,7 +2569,9 @@
             videoType: 'forward',
             name: 'Transición 9:16 ➔ 16:9',
             shortName: 'Video ➔ 16:9',
-            src: 'Transitions/9x16_to_16x9.mp4'
+            src: 'Transitions/9x16_to_16x9.mp4',
+            hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+            color: getHueColor(slot.hue)
           });
           timeline.push({
             id: `step_trans_${slot.id}_in`,
@@ -2387,7 +2579,9 @@
             videoType: 'reverse',
             name: 'Transición 16:9 ➔ 9:16 (Inversa)',
             shortName: 'Video ➔ 9:16',
-            src: 'Transitions/9x16_to_16x9_reverse.mp4'
+            src: 'Transitions/9x16_to_16x9_reverse.mp4',
+            hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+            color: getHueColor(slot.hue)
           });
         } else {
           timeline.push({
@@ -2396,7 +2590,9 @@
             videoType: 'reverse',
             name: 'Transición Inversa ➔ 3:4',
             shortName: 'Video ➔ 3:4',
-            src: 'Transitions/3x4_to_16x9_reverse.mp4'
+            src: 'Transitions/3x4_to_16x9_reverse.mp4',
+            hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+            color: getHueColor(slot.hue)
           });
           timeline.push({
             id: `step_trans_${slot.id}_in`,
@@ -2404,7 +2600,9 @@
             videoType: 'forward',
             name: 'Transición 3:4 ➔ 16:9',
             shortName: 'Video ➔ 16:9',
-            src: 'Transitions/3x4_to_16x9.mp4'
+            src: 'Transitions/3x4_to_16x9.mp4',
+            hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+            color: getHueColor(slot.hue)
           });
         }
         return timeline;
@@ -2421,7 +2619,14 @@
           format: slot.format || '3:4',
           speaker: slot.speaker || '',
           url: slot.url || '',
-          slidesCount: slot.format === 'title' ? 1 : (parseInt(slot.slidesCount) || 1),
+          slidesCount: (slot.slideImages && slot.slideImages.length > 0)
+            ? slot.slideImages.length
+            : (slot.format === 'title' ? 1 : (parseInt(slot.slidesCount) || 1)),
+          slideImages: slot.slideImages || null,
+          interactiveSlides: Array.isArray(slot.interactiveSlides) ? slot.interactiveSlides : [],
+          hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+          color: getHueColor(slot.hue),
+          pdfHash: slot.pdfHash || null,
           calib: slot.calib ? { ...calibDefault, ...slot.calib } : calibDefault
         });
 
@@ -2435,7 +2640,11 @@
               videoType: (trans.src.includes('reverse') ? 'reverse' : 'forward'),
               name: trans.name,
               shortName: trans.shortName,
-              src: trans.src
+              src: trans.src,
+              hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+              color: getHueColor(slot.hue),
+              fromSlotId: slot.id,
+              toSlotId: nextSlot.id
             });
           }
         } else if (idx === slotsArr.length - 1) {
@@ -2446,7 +2655,9 @@
               videoType: 'forward',
               name: 'Transición 3:4 ➔ 16:9',
               shortName: 'Video ➔ 16:9',
-              src: 'Transitions/3x4_to_16x9.mp4'
+              src: 'Transitions/3x4_to_16x9.mp4',
+              hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+              color: getHueColor(slot.hue)
             });
             timeline.push({
               id: 'step_trans_loop_reverse',
@@ -2454,7 +2665,9 @@
               videoType: 'reverse',
               name: 'Transición Inversa ➔ 3:4',
               shortName: 'Video ➔ 3:4',
-              src: 'Transitions/3x4_to_16x9_reverse.mp4'
+              src: 'Transitions/3x4_to_16x9_reverse.mp4',
+              hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+              color: getHueColor(slot.hue)
             });
           } else if (slot.format === '9:16') {
             timeline.push({
@@ -2463,7 +2676,9 @@
               videoType: 'forward',
               name: 'Transición 9:16 ➔ 16:9',
               shortName: 'Video ➔ 16:9',
-              src: 'Transitions/9x16_to_16x9.mp4'
+              src: 'Transitions/9x16_to_16x9.mp4',
+              hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+              color: getHueColor(slot.hue)
             });
             timeline.push({
               id: 'step_trans_loop_reverse',
@@ -2471,7 +2686,9 @@
               videoType: 'reverse',
               name: 'Transición 16:9 ➔ 9:16 (Inversa)',
               shortName: 'Video ➔ 9:16',
-              src: 'Transitions/9x16_to_16x9_reverse.mp4'
+              src: 'Transitions/9x16_to_16x9_reverse.mp4',
+              hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+              color: getHueColor(slot.hue)
             });
           } else if (slot.format === 'title') {
             timeline.push({
@@ -2480,7 +2697,9 @@
               videoType: 'forward',
               name: 'Transición Title ➔ 16:9',
               shortName: 'Video ➔ 16:9',
-              src: 'Transitions/title_to_16x9.mp4'
+              src: 'Transitions/title_to_16x9.mp4',
+              hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+              color: getHueColor(slot.hue)
             });
             timeline.push({
               id: 'step_trans_loop_reverse',
@@ -2488,7 +2707,9 @@
               videoType: 'reverse',
               name: 'Transición 16:9 ➔ Title (Inversa)',
               shortName: 'Video ➔ Title',
-              src: 'Transitions/title_to_16x9_reverse.mp4'
+              src: 'Transitions/title_to_16x9_reverse.mp4',
+              hue: (typeof slot.hue === 'number') ? slot.hue : 0,
+              color: getHueColor(slot.hue)
             });
           }
         }
@@ -3073,8 +3294,102 @@
       return s.includes('title') && s.includes('reverse');
     }
 
+    function getFrameElements(format) {
+      if (format === '3:4') {
+        return {
+          fixedImg: document.getElementById('frame-img-3x4'),
+          sinfondoImg: document.getElementById('frame-img-3x4-sinfondo'),
+          screenSlot: document.getElementById('phone-screen-slot')
+        };
+      } else if (format === '16:9') {
+        return {
+          fixedImg: document.getElementById('frame-img-16x9'),
+          sinfondoImg: document.getElementById('frame-img-16x9-sinfondo'),
+          screenSlot: document.getElementById('frame2-screen-slot')
+        };
+      } else if (format === '9:16') {
+        return {
+          fixedImg: document.getElementById('frame-img-9x16'),
+          sinfondoImg: document.getElementById('frame-img-9x16-sinfondo'),
+          screenSlot: document.getElementById('frame916-screen-slot')
+        };
+      } else if (format === 'title') {
+        return {
+          fixedImg: document.getElementById('frame-img-title'),
+          sinfondoImg: null,
+          screenSlot: null
+        };
+      }
+      return { fixedImg: null, sinfondoImg: null, screenSlot: null };
+    }
+
+    function renderActiveSlotPresentation(fmt, targetStep, slideNum) {
+      let nativeDeck = nativeDeck1;
+      let iframeEl = iframe1;
+      let imgEl = document.getElementById('img-slides1');
+      if (fmt === '16:9') {
+        nativeDeck = nativeDeck2;
+        iframeEl = iframe2;
+        imgEl = document.getElementById('img-slides2');
+      } else if (fmt === '9:16') {
+        nativeDeck = nativeDeck916;
+        iframeEl = iframe916;
+        imgEl = document.getElementById('img-slides916');
+      }
+
+      const hasSlideImages = targetStep.slideImages && Array.isArray(targetStep.slideImages) && targetStep.slideImages.length > 0;
+      const hasExternalUrl = targetStep.url && !targetStep.url.includes('Placeholder') && targetStep.url.trim().length > 10;
+      const isInteractiveSlide = Array.isArray(targetStep.interactiveSlides) && targetStep.interactiveSlides.includes(slideNum);
+
+      if (isInteractiveSlide && hasExternalUrl) {
+        // Modo Híbrido: esta diapositiva específica tiene vídeo incrustado o interactividad
+        if (imgEl) imgEl.style.display = 'none';
+        if (nativeDeck) nativeDeck.style.display = 'none';
+        if (iframeEl) {
+          iframeEl.style.display = 'block';
+          iframeEl.style.opacity = '1';
+          iframeEl.style.pointerEvents = 'auto';
+          navigateSlide(iframeEl, targetStep.url, slideNum);
+        }
+      } else if (hasSlideImages) {
+        if (nativeDeck) nativeDeck.style.display = 'none';
+        if (iframeEl) {
+          iframeEl.style.display = 'none';
+          iframeEl.style.pointerEvents = 'none';
+        }
+        if (imgEl) {
+          imgEl.style.display = 'block';
+          const sIdx = Math.max(0, Math.min(targetStep.slideImages.length - 1, slideNum - 1));
+          imgEl.src = targetStep.slideImages[sIdx];
+          // Preload next slide image
+          if (sIdx + 1 < targetStep.slideImages.length) {
+            const pre = new Image();
+            pre.src = targetStep.slideImages[sIdx + 1];
+          }
+        }
+      } else if (hasExternalUrl) {
+        if (imgEl) imgEl.style.display = 'none';
+        if (nativeDeck) nativeDeck.style.display = 'none';
+        if (iframeEl) {
+          iframeEl.style.display = 'block';
+          iframeEl.style.opacity = '1';
+          iframeEl.style.pointerEvents = 'auto';
+          navigateSlide(iframeEl, targetStep.url, slideNum);
+        }
+      } else {
+        if (imgEl) imgEl.style.display = 'none';
+        if (iframeEl) iframeEl.style.display = 'none';
+        if (nativeDeck) {
+          nativeDeck.style.display = 'flex';
+          nativeDeck.style.opacity = '1';
+          renderNativeSlide(fmt === '3:4' ? 1 : (fmt === '9:16' ? 3 : 2), targetStep, slideNum);
+        }
+      }
+    }
+
     function updateStepUI() {
       if (!STEPS || STEPS.length === 0) return;
+      applyPresetFrameImages();
       if (currentStepIndex >= STEPS.length) currentStepIndex = 0;
       const step = STEPS[currentStepIndex];
 
@@ -3174,6 +3489,8 @@
         }
       });
 
+
+
       const isFirstInit = isInitialLoad;
       if (isInitialLoad) {
         isInitialLoad = false;
@@ -3184,25 +3501,91 @@
         });
         if (targetLayer) {
           targetLayer.classList.add('active');
+          targetLayer.style.opacity = '1';
         }
+        const fe = getFrameElements(step.format);
+        if (step.type === 'slide') {
+          applyFrameHue(step.hue);
+        } else {
+          applyVideoHue(step.hue);
+        }
+        if (fe.fixedImg) { fe.fixedImg.style.transition = 'none'; fe.fixedImg.style.opacity = '1'; }
+        if (fe.sinfondoImg) { fe.sinfondoImg.style.transition = 'none'; fe.sinfondoImg.style.opacity = '1'; }
+        if (fe.screenSlot) { fe.screenSlot.style.transition = 'none'; fe.screenSlot.style.opacity = '1'; }
+        isTransitionLocked = false;
       } else if (step.type === 'slide') {
+        const fe = getFrameElements(step.format);
+        applyFrameHue(step.hue);
+        isTransitionLocked = true;
+        setTimeout(() => { isTransitionLocked = false; }, 1200);
+
         if (targetLayer) {
+          targetLayer.style.zIndex = '30';
+          targetLayer.style.opacity = '1';
           targetLayer.classList.add('active');
           targetLayer.classList.add('incoming-layer');
         }
+
+        // Estado inicial de Fase 1 (t=0s a 0.5s):
+        // El frame fijo entra con fundido de 0 a 100 en 0.5s
+        if (fe.fixedImg) {
+          fe.fixedImg.style.transition = 'none';
+          fe.fixedImg.style.opacity = '0';
+        }
+        if (fe.sinfondoImg) {
+          fe.sinfondoImg.style.transition = 'none';
+          fe.sinfondoImg.style.opacity = '0';
+        }
+        if (fe.screenSlot) {
+          fe.screenSlot.style.transition = 'none';
+          fe.screenSlot.style.opacity = '0';
+        }
+
+        if (targetLayer) void targetLayer.offsetWidth; // Reflow forzado
+
+        // Iniciar fundido de 0 a 100 del frame fijo en 0.5s
+        if (fe.fixedImg) {
+          fe.fixedImg.style.transition = 'opacity 0.5s ease-in-out';
+          fe.fixedImg.style.opacity = '1';
+        }
+
+        // Fase 2: Pasados exactamente 0.5s
+        setTimeout(() => {
+          // Desactivar capas anteriores una vez completada la entrada del frame fijo
+          if (previousLayers.length > 0) {
+            previousLayers.forEach(layer => {
+              layer.classList.remove('active', 'incoming-layer', 'fading-out');
+              layer.style.opacity = '';
+              layer.style.zIndex = '';
+            });
+          }
+
+          // "el mismo frame pero _sinfondo aparece encima de forma instantanea"
+          if (fe.sinfondoImg) {
+            fe.sinfondoImg.style.transition = 'none';
+            fe.sinfondoImg.style.opacity = '1';
+          }
+
+          // "en los 0,5 segundos restantes aparece con un fundido de 0 100 de opacidad la presentacion"
+          if (fe.screenSlot) {
+            void fe.screenSlot.offsetWidth; // Reflow
+            fe.screenSlot.style.transition = 'opacity 0.5s ease-in-out';
+            fe.screenSlot.style.opacity = '1';
+          }
+
+          // Final de los 0.5s restantes (t = 1.0s total):
+          setTimeout(() => {
+            if (targetLayer) {
+              targetLayer.classList.remove('incoming-layer');
+              targetLayer.style.zIndex = '';
+            }
+            isTransitionLocked = false;
+          }, 500);
+        }, 500);
       }
       // Nota: si step.type === 'video', targetLayer (#layer-step2) se activará en beginHoldAndPlay() cuando el fotograma 0 esté listo
 
       if (step.type === 'slide') {
-        if (!isFirstInit) {
-          // Bloquear durante el fundido de 2s para asegurar una visualización limpia e ininterrumpida
-          isTransitionLocked = true;
-          setTimeout(() => {
-            isTransitionLocked = false;
-          }, 2000);
-        } else {
-          isTransitionLocked = false;
-        }
 
         const hasExternalUrl = step.url && !step.url.includes('Placeholder') && step.url.trim().length > 10;
 
@@ -3212,64 +3595,19 @@
 
         } else if (step.format === '3:4') {
           applyPhoneCoords(step.calib);
-
-          if (hasExternalUrl) {
-            if (nativeDeck1) nativeDeck1.style.display = 'none';
-            if (iframe1) {
-              iframe1.style.display = 'block';
-              iframe1.style.opacity = '1';
-              navigateSlide(iframe1, step.url, currentSlide);
-            }
-          } else {
-            if (iframe1) iframe1.style.display = 'none';
-            if (nativeDeck1) {
-              nativeDeck1.style.display = 'flex';
-              nativeDeck1.style.opacity = '1';
-              renderNativeSlide(1, step, currentSlide);
-            }
-          }
+          renderActiveSlotPresentation('3:4', step, currentSlide);
           ensureWindowFocus();
           showHint(`<b>${step.name}</b> (Escena ${currentSlide}/${step.slidesCount}). Pulsa <span class="key-badge">Espacio</span> para avanzar`, 3000);
 
         } else if (step.format === '9:16') {
           applyFrame916Coords(step.calib);
-
-          if (hasExternalUrl) {
-            if (nativeDeck916) nativeDeck916.style.display = 'none';
-            if (iframe916) {
-              iframe916.style.display = 'block';
-              iframe916.style.opacity = '1';
-              navigateSlide(iframe916, step.url, currentSlide);
-            }
-          } else {
-            if (iframe916) iframe916.style.display = 'none';
-            if (nativeDeck916) {
-              nativeDeck916.style.display = 'flex';
-              nativeDeck916.style.opacity = '1';
-              renderNativeSlide(3, step, currentSlide);
-            }
-          }
+          renderActiveSlotPresentation('9:16', step, currentSlide);
           ensureWindowFocus();
           showHint(`<b>${step.name}</b> (Escena ${currentSlide}/${step.slidesCount}). Pulsa <span class="key-badge">Espacio</span> para avanzar`, 3000);
 
         } else {
           applyFrame2Coords(step.calib);
-
-          if (hasExternalUrl) {
-            if (nativeDeck2) nativeDeck2.style.display = 'none';
-            if (iframe2) {
-              iframe2.style.display = 'block';
-              iframe2.style.opacity = '1';
-              navigateSlide(iframe2, step.url, currentSlide);
-            }
-          } else {
-            if (iframe2) iframe2.style.display = 'none';
-            if (nativeDeck2) {
-              nativeDeck2.style.display = 'flex';
-              nativeDeck2.style.opacity = '1';
-              renderNativeSlide(2, step, currentSlide);
-            }
-          }
+          renderActiveSlotPresentation('16:9', step, currentSlide);
           ensureWindowFocus();
           showHint(`<b>${step.name}</b> (Escena ${currentSlide}/${step.slidesCount}). Pulsa <span class="key-badge">Espacio</span> para avanzar`, 3000);
         }
@@ -3286,6 +3624,7 @@
         isTransitionLocked = true;
         hasTriggeredEndFade = false;
         hasTriggeredEndHold = false;
+        applyVideoHue(step.hue);
         if (videoStartTimeout) { clearTimeout(videoStartTimeout); videoStartTimeout = null; }
         if (videoEndTimeout) { clearTimeout(videoEndTimeout); videoEndTimeout = null; }
         if (videoWatchdogTimer) { clearTimeout(videoWatchdogTimer); videoWatchdogTimer = null; }
@@ -3307,9 +3646,16 @@
           // Hacer visible el vídeo con su primer fotograma ya listo
           videoEl.style.opacity = '1';
 
-          // Activar la capa de vídeo sobre la escena anterior exactamente cuando el fotograma 0 está listo
+          // La capa de vídeo entrante se coloca por encima (z-index: 30) y funde de 0 a 100 en 0.5s
           if (targetLayer) {
+            targetLayer.style.zIndex = '30';
+            targetLayer.style.opacity = '0';
             targetLayer.classList.add('active');
+            targetLayer.classList.add('incoming-layer');
+            void targetLayer.offsetWidth; // Reflow para activar la animación
+            targetLayer.style.transition = 'opacity 0.5s ease-in-out';
+            targetLayer.style.opacity = '1';
+            videoEl.style.opacity = '1';
           }
 
           // Logos: al iniciar una transición title → X (salida de portada), ocultar CON fundido
@@ -3318,15 +3664,22 @@
           }
           // En transición X → title (reverse), los logos se ocultarán al llegar a la portada con animate=true
 
-          // Retirar limpiamente las capas anteriores ahora que el vídeo está visible y congelado en fotograma 0
-          if (previousLayers.length > 0) {
-            previousLayers.forEach(layer => {
-              layer.classList.remove('active');
-              layer.classList.remove('incoming-layer');
-            });
-          }
+          // Pasados los 0.5s de fundido, la capa inferior desaparece completamente
+          setTimeout(() => {
+            if (previousLayers.length > 0) {
+              previousLayers.forEach(layer => {
+                layer.classList.remove('active');
+                layer.classList.remove('incoming-layer');
+                layer.style.opacity = '';
+                layer.style.zIndex = '';
+              });
+            }
+            if (targetLayer) {
+              targetLayer.classList.remove('incoming-layer');
+            }
+          }, 500);
 
-          // Pausa de 0.5 segundos en el primer fotograma antes de arrancar la animación
+          // Pausa de 0.5 segundos (coincidente con el fundido de entrada) antes de arrancar la animación
           if (videoStartTimeout) clearTimeout(videoStartTimeout);
           videoStartTimeout = setTimeout(() => {
             const currentStep = STEPS[currentStepIndex];
@@ -3419,44 +3772,6 @@
         showHint(`Reproduciendo ${step.name}...`, 1500);
       }
 
-      // Desactivar capas anteriores de forma limpia al entrar a diapositivas
-      if (previousLayers.length > 0 && step.type !== 'video') {
-        if (IS_STATIC) {
-          previousLayers.forEach(layer => {
-            layer.classList.remove('active');
-            layer.classList.remove('incoming-layer');
-          });
-        } else {
-          // La capa de vídeo (#layer-step2) debe hacer cross-fade de salida (1s) mientras
-          // la slide entrante (incoming-layer, z-index:20) hace su fundido de entrada simultáneo.
-          // Elevamos temporalmente la slide entrante a z-index:30 para que sea visible sobre el vídeo (z-index:25).
-          const videoLayerEl = document.getElementById('layer-step2');
-          previousLayers.forEach(layer => {
-            if (layer === videoLayerEl) {
-              // Iniciar fundido de salida del vídeo (frozen en último frame → opacidad 0 en 1s)
-              layer.classList.add('fading-out');
-            }
-          });
-          // Elevar la capa entrante por encima del vídeo para que el fundido sea visible
-          if (targetLayer) {
-            targetLayer.style.zIndex = '30';
-          }
-
-          // Tras 2s: retirar completamente el vídeo y restaurar z-index normal de la slide
-          setTimeout(() => {
-            previousLayers.forEach(layer => {
-              layer.classList.remove('active');
-              layer.classList.remove('incoming-layer');
-              layer.classList.remove('fading-out');
-            });
-            if (targetLayer) {
-              targetLayer.classList.remove('incoming-layer');
-              targetLayer.style.zIndex = '';
-            }
-          }, 2000);
-        }
-      }
-
       updateSlideCounters();
       renderSceneDrawer();
       muteAllVideos();
@@ -3464,9 +3779,14 @@
     }
 
     function handleNextAction() {
-      if (isTransitionLocked) return;
       if (!STEPS || STEPS.length === 0) return;
       const step = STEPS[currentStepIndex];
+
+      if (step.type === 'video') {
+        // Durante el vídeo, pulsar acción salta inmediatamente a la escena siguiente
+        triggerEndHold(true);
+        return;
+      }
 
       if (step.type === 'slide') {
         if (step.format === 'title') {
@@ -3476,54 +3796,70 @@
         }
         if (currentSlide < step.slidesCount) {
           currentSlide++;
-          const hasExternalUrl = step.url && !step.url.includes('Placeholder') && step.url.trim().length > 10;
-          if (hasExternalUrl) {
-            let targetIfr = iframe1;
-            if (step.format === '16:9') targetIfr = iframe2;
-            else if (step.format === '9:16') targetIfr = iframe916;
-            navigateSlide(targetIfr, step.url, currentSlide);
-          } else {
-            renderNativeSlide(step.format === '3:4' ? 1 : (step.format === '9:16' ? 3 : 2), step, currentSlide);
-          }
+          renderActiveSlotPresentation(step.format, step, currentSlide);
           updateSlideCounters();
           showHint(`Diapositiva ${currentSlide} de ${step.slidesCount}`, 1500);
         } else {
           currentSlide = 1;
           nextStep();
         }
-      } else if (step.type === 'video') {
-        // Bloqueado: no se puede cortar ni saltar la animación de transición
-        return;
       }
     }
 
     function handlePrevAction() {
-      if (isTransitionLocked) return;
       if (!STEPS || STEPS.length === 0) return;
       const step = STEPS[currentStepIndex];
-      if (step.type === 'video') return;
-
-      if (step.type === 'slide' && currentSlide > 1) {
-        currentSlide--;
-        const hasExternalUrl = step.url && !step.url.includes('Placeholder') && step.url.trim().length > 10;
-        if (hasExternalUrl) {
-          let targetIfr = iframe1;
-          if (step.format === '16:9') targetIfr = iframe2;
-          else if (step.format === '9:16') targetIfr = iframe916;
-          navigateSlide(targetIfr, step.url, currentSlide);
-        } else {
-          renderNativeSlide(step.format === '3:4' ? 1 : (step.format === '9:16' ? 3 : 2), step, currentSlide);
-        }
-        updateSlideCounters();
-        showHint(`Diapositiva ${currentSlide} de ${step.slidesCount}`, 2000);
-        ensureWindowFocus();
-      } else {
-        currentSlide = 1;
+      if (step.type === 'video') {
         prevStep();
+        return;
+      }
+
+      if (step.type === 'slide') {
+        if (currentSlide > 1) {
+          currentSlide--;
+          renderActiveSlotPresentation(step.format, step, currentSlide);
+          updateSlideCounters();
+          showHint(`Diapositiva ${currentSlide} de ${step.slidesCount}`, 2000);
+          ensureWindowFocus();
+        } else {
+          currentSlide = 1;
+          prevStep();
+        }
       }
     }
 
-    function advanceToNextStep() {
+    // Al acabar la presentación acaba igual: fundido de 100 a 0 en 0.5s de la presentación y retirada de _sinfondo
+    function advanceToNextStep(skipExitAnimation) {
+      if (!STEPS || STEPS.length === 0) return;
+      const currentStep = STEPS[currentStepIndex];
+
+      // Si estamos en un vídeo, saltar directamente al siguiente paso
+      if (currentStep && currentStep.type === 'video') {
+        isTransitionLocked = false;
+        skipExitAnimation = true;
+      }
+
+      if (!skipExitAnimation && currentStep && currentStep.type === 'slide' && !IS_STATIC) {
+        const fe = getFrameElements(currentStep.format);
+        if (fe.screenSlot && fe.screenSlot.style.opacity !== '0') {
+          isTransitionLocked = true;
+          setTimeout(() => { isTransitionLocked = false; }, 1200);
+
+          fe.screenSlot.style.transition = 'opacity 0.5s ease-in-out';
+          fe.screenSlot.style.opacity = '0';
+          setTimeout(() => {
+            if (fe.sinfondoImg) {
+              fe.sinfondoImg.style.transition = 'none';
+              fe.sinfondoImg.style.opacity = '0';
+            }
+            isTransitionLocked = false;
+            advanceToNextStep(true);
+          }, 500);
+          return;
+        }
+      }
+
+      isTransitionLocked = false;
       stopVideos();
       currentStepIndex = (currentStepIndex + 1) % STEPS.length;
       currentSlide = 1;
@@ -3532,20 +3868,79 @@
     }
 
     function nextStep() {
-      if (isTransitionLocked) return;
+      const step = STEPS[currentStepIndex];
+      if (step && step.type === 'video') {
+        triggerEndHold(true);
+        return;
+      }
       advanceToNextStep();
     }
 
-    function prevStep() {
-      if (isTransitionLocked) return;
+    function prevStep(skipExitAnimation) {
+      if (!STEPS || STEPS.length === 0) return;
+      const currentStep = STEPS[currentStepIndex];
+
+      if (currentStep && currentStep.type === 'video') {
+        isTransitionLocked = false;
+        skipExitAnimation = true;
+      }
+
+      if (!skipExitAnimation && currentStep && currentStep.type === 'slide' && !IS_STATIC) {
+        const fe = getFrameElements(currentStep.format);
+        if (fe.screenSlot && fe.screenSlot.style.opacity !== '0') {
+          isTransitionLocked = true;
+          setTimeout(() => { isTransitionLocked = false; }, 1200);
+
+          fe.screenSlot.style.transition = 'opacity 0.5s ease-in-out';
+          fe.screenSlot.style.opacity = '0';
+          setTimeout(() => {
+            if (fe.sinfondoImg) {
+              fe.sinfondoImg.style.transition = 'none';
+              fe.sinfondoImg.style.opacity = '0';
+            }
+            isTransitionLocked = false;
+            prevStep(true);
+          }, 500);
+          return;
+        }
+      }
+
+      isTransitionLocked = false;
       stopVideos();
-      currentStepIndex = (currentStepIndex - 1 + STEPS.length) % STEPS.length;
+      let prevIdx = (currentStepIndex - 1 + STEPS.length) % STEPS.length;
+      if (STEPS[prevIdx] && STEPS[prevIdx].type === 'video') {
+        prevIdx = (prevIdx - 1 + STEPS.length) % STEPS.length;
+      }
+      currentStepIndex = prevIdx;
       currentSlide = 1;
       updateStepUI();
       ensureWindowFocus();
     }
 
-    function goToStep(index) {
+    function goToStep(index, skipExitAnimation) {
+      if (index === currentStepIndex) return;
+      const currentStep = STEPS[currentStepIndex];
+
+      if (!skipExitAnimation && currentStep && currentStep.type === 'slide' && !IS_STATIC) {
+        const fe = getFrameElements(currentStep.format);
+        if (fe.screenSlot && fe.screenSlot.style.opacity !== '0') {
+          isTransitionLocked = true;
+          setTimeout(() => { isTransitionLocked = false; }, 1200);
+
+          fe.screenSlot.style.transition = 'opacity 0.5s ease-in-out';
+          fe.screenSlot.style.opacity = '0';
+          setTimeout(() => {
+            if (fe.sinfondoImg) {
+              fe.sinfondoImg.style.transition = 'none';
+              fe.sinfondoImg.style.opacity = '0';
+            }
+            isTransitionLocked = false;
+            goToStep(index, true);
+          }, 500);
+          return;
+        }
+      }
+
       isTransitionLocked = false;
       stopVideos();
       currentStepIndex = (index >= 0 && index < STEPS.length) ? index : 0;
@@ -3579,33 +3974,28 @@
       showHint('Presentación reiniciada desde el inicio', 2000);
     }
 
-    function triggerEndHold() {
-      if (hasTriggeredEndHold) return;
+    function triggerEndHold(immediate) {
+      if (hasTriggeredEndHold && !immediate) return;
       hasTriggeredEndHold = true;
       if (videoWatchdogTimer) {
         clearTimeout(videoWatchdogTimer);
         videoWatchdogTimer = null;
       }
+      if (videoStartTimeout) {
+        clearTimeout(videoStartTimeout);
+        videoStartTimeout = null;
+      }
       try { videoEl.pause(); } catch(e) {}
       if (videoEndTimeout) clearTimeout(videoEndTimeout);
 
-      // Logos al final del vídeo:
-      // Si es transición reverse de title (X → title), los logos SALEN MOSTRÁNDOSE
-      // (aparecen al llegar a la portada — en realidad se ocultan porque llega una slide title)
-      // Si es transición title → X (forward), los logos ya se ocultaron al inicio; no hacer nada.
-      // Nota: en ambos casos updateStepUI tomará la decisión correcta al avanzar.
-      const currentVideoStep = STEPS[currentStepIndex];
-      const currentVideoSrc = currentVideoStep ? (currentVideoStep.src || '') : '';
-      const isReverseTitle = isTitleReverseVideoSrc(currentVideoSrc);
-
-      // Pausa de 0.5 segundos en el último fotograma antes de entrar a la siguiente diapositiva
+      const delay = immediate ? 0 : 350;
       videoEndTimeout = setTimeout(() => {
         const step = STEPS[currentStepIndex];
         if (step && step.type === 'video') {
           isTransitionLocked = false;
-          advanceToNextStep();
+          advanceToNextStep(true);
         }
-      }, 500);
+      }, delay);
     }
 
     // Eventos del video de transición unificado (videoEl)
@@ -3631,24 +4021,13 @@
       const step = STEPS[currentStepIndex];
       if (step && step.type === 'video') {
         isTransitionLocked = false;
-        advanceToNextStep();
+        advanceToNextStep(true);
       }
     });
 
-    // Teclado: Espacio pasa slides según conteo, Enter/N salta directo a la fase/vídeo siguiente
+    // Teclado: Espacio/Flecha Derecha avanza, Enter/N avanza escena directa, Clic avanza
     window.addEventListener('keydown', (e) => {
       if (document.getElementById('config-modal') && document.getElementById('config-modal').classList.contains('open')) return;
-
-      // Bloquear teclas de avance y retroceso mientras la animación de transición esté en curso
-      if (isTransitionLocked || (STEPS && STEPS[currentStepIndex] && STEPS[currentStepIndex].type === 'video')) {
-        if (e.code === 'Space' || e.key === ' ' || e.code === 'ArrowRight' || e.code === 'PageDown' ||
-            e.code === 'Enter' || e.key === 'Enter' || e.code === 'KeyN' || e.key === 'n' || e.key === 'N' ||
-            e.code === 'Backspace' || e.code === 'KeyP' || e.key === 'p' || e.key === 'P' ||
-            e.code === 'ArrowLeft' || e.code === 'PageUp') {
-          e.preventDefault();
-          return;
-        }
-      }
 
       if (e.code === 'Enter' || e.key === 'Enter' || e.code === 'KeyN' || e.key === 'n' || e.key === 'N') {
         e.preventDefault();
@@ -3713,18 +4092,20 @@
     }
     if (layers.step2) {
       layers.step2.addEventListener('click', (e) => {
-        if (e) e.stopPropagation();
+        if (isEventOverIgnoredControls(e)) return;
+        triggerEndHold(true);
       });
     }
     if (layers.step3) {
       layers.step3.addEventListener('click', (e) => {
-        if (isTransitionLocked || isEventOverIgnoredControls(e)) return;
+        if (isEventOverIgnoredControls(e)) return;
         handleNextAction();
       });
     }
     if (layers.step4) {
       layers.step4.addEventListener('click', (e) => {
-        if (e) e.stopPropagation();
+        if (isEventOverIgnoredControls(e)) return;
+        handleNextAction();
       });
     }
     if (layers.stepTitle) {
@@ -3886,12 +4267,13 @@
       const calib = slot.calib || getDefaultCoords(slot.format);
       if (calib.zoom === undefined) calib.zoom = 100;
 
-      modalSlotUrl.value = slot.url || '';
+      modalSlotUrl.value = (slot.pdfFileName || slot.sourceType === 'pdf') ? (slot.pdfFileName || 'PDF subido') : (slot.url || '');
       modalSlotSlides.value = slot.slidesCount || 10;
       const fmtColor = slot.format === '3:4' ? '#f472b6' : (slot.format === '9:16' ? '#38bdf8' : '#c084fc');
       modalSlotInfoBadge.innerHTML = `
         <span style="background: ${fmtColor}; color: #000; font-weight: 800; padding: 2px 6px; border-radius: 4px; font-size: 10px;">${slot.format}</span>
         <span style="color: #94a3b8;">${escapeHtml(slot.name)}</span>
+        ${(slot.pdfFileName || slot.sourceType === 'pdf') ? `<span style="background:rgba(236,72,153,0.2); color:#f472b6; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">📄 PDF Local</span>` : ''}
       `;
       modalCalibTitle.textContent = `Calibración: ${slot.name} (${slot.format})`;
 
@@ -3909,6 +4291,61 @@
       valRot.textContent = calib.rot + '°';
       adjZoom.value = calib.zoom;
       valZoom.textContent = calib.zoom + '%';
+    }
+
+    function triggerPresentationModalPdfUpload() {
+      const f = document.getElementById('modal-slot-pdf-file');
+      if (f) { f.value = ''; f.click(); }
+    }
+
+    async function handlePresentationModalPdfPicked(input) {
+      const file = input && input.files && input.files[0];
+      if (!file || !activeModalSlotId) return;
+      const slot = deckSlots.find(s => s.id === activeModalSlotId);
+      if (!slot) return;
+
+      showHint(`Subiendo ${file.name} y procesando diapositivas HD...`, 5000);
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const base64Data = e.target.result;
+        const urlParams = new URLSearchParams(window.location.search);
+        const dId = urlParams.get('deck') || (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
+
+        try {
+          const resp = await fetch('http://127.0.0.1:8765/upload-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              slotId: slot.id,
+              deckId: dId,
+              fileName: file.name,
+              fileData: base64Data
+            })
+          });
+
+          if (resp.ok) {
+            const json = await resp.json();
+            if (json.success && json.data) {
+              slot.slidesCount = json.data.slidesCount;
+              slot.slideImages = json.data.slideImages;
+              slot.pdfFileName = json.data.pdfFileName;
+              slot.pdfHash = json.data.pdfHash;
+              slot.sourceType = 'pdf';
+              modalSlotSlides.value = slot.slidesCount;
+              modalSlotUrl.value = file.name;
+              saveDeckSlots();
+              rebuildStepsFromSlots();
+              onModalSlotChanged();
+              showHint(`✓ PDF cargado: ${json.data.slidesCount} diapositivas HD`, 3500);
+              return;
+            }
+          }
+          throw new Error('Servicio local no disponible');
+        } catch(err) {
+          showHint(`Error al procesar PDF local: ${err.message}`, 4000);
+        }
+      };
+      reader.readAsDataURL(file);
     }
 
     function readModalSlidersToLive() {
@@ -3968,7 +4405,13 @@
     function saveModalConfig() {
       const slot = deckSlots.find(s => s.id === activeModalSlotId);
       if (slot) {
-        slot.url = modalSlotUrl.value.trim();
+        if (!slot.pdfFileName && slot.sourceType !== 'pdf') {
+          slot.url = modalSlotUrl.value.trim();
+        } else if (modalSlotUrl.value.trim().startsWith('http')) {
+          slot.url = modalSlotUrl.value.trim();
+          delete slot.pdfFileName;
+          slot.sourceType = 'url';
+        }
         slot.slidesCount = parseInt(modalSlotSlides.value) || 10;
         slot.calib = {
           left: parseFloat(adjLeft.value),
@@ -4027,7 +4470,8 @@
       });
     }
 
-    // Iniciar UI del escenario
+    // Iniciar UI del escenario con los marcos del preset activo
+    applyPresetFrameImages();
     updateStepUI();
 
     function isDeckMatch(cmdDeckId) {
@@ -4262,6 +4706,10 @@
         else if (activeStep.format === '9:16') applyFrame916Coords(activeStep.calib);
         else if (activeStep.format === '16:9') applyFrame2Coords(activeStep.calib);
       }
+      if (activeStep) {
+        if (activeStep.type === 'slide') applyFrameHue(activeStep.hue);
+        else applyVideoHue(activeStep.hue);
+      }
 
       updateStepUI();
       updateSlideCounters();
@@ -4488,26 +4936,27 @@
     //  para máxima compatibilidad con la caché de media del navegador.
     // ═══════════════════════════════════════════════════════
     (function preloadAssets() {
+      const a = getActivePresetAssets();
       const VIDEO_ASSETS = [
-        'Transitions/title_to_3x4.mp4',
-        'Transitions/title_to_3x4_reverse.mp4',
-        'Transitions/title_to_9x16.mp4',
-        'Transitions/title_to_9x16_reverse.mp4',
-        'Transitions/title_to_16x9.mp4',
-        'Transitions/title_to_16x9_reverse.mp4',
-        'Transitions/3x4_to_16x9.mp4',
-        'Transitions/3x4_to_16x9_reverse.mp4',
-        'Transitions/9x16_to_16x9.mp4',
-        'Transitions/9x16_to_16x9_reverse.mp4',
-        'Transitions/9x16_to_3x4.mp4',
-        'Transitions/9x16_to_3x4_reverse.mp4',
+        a['trans_title_3x4'] || 'presets/preset2/Title%20a%203x4.mp4',
+        a['trans_title_3x4_rev'] || 'presets/preset2/3x4%20a%20Title.mp4',
+        a['trans_title_916'] || 'presets/preset2/Title%20a%209x16.mp4',
+        a['trans_title_916_rev'] || 'presets/preset2/9x16%20a%20Title.mp4',
+        a['trans_title_169'] || 'presets/preset2/Title%20a%2016x9.mp4',
+        a['trans_title_169_rev'] || 'presets/preset2/16x9%20a%20Title.mp4',
+        a['trans_34_169'] || 'presets/preset2/3x4%20a%2016x9.mp4',
+        a['trans_34_169_rev'] || 'presets/preset2/16x9%20a%203x4.mp4',
+        a['trans_916_169'] || 'presets/preset2/9x16%20a%2016x9.mp4',
+        a['trans_916_169_rev'] || 'presets/preset2/16x9%20a%209x16.mp4',
+        a['trans_916_34'] || 'presets/preset2/9x16%20a%203x4.mp4',
+        a['trans_916_34_rev'] || 'presets/preset2/3x4%20a%209x16.mp4',
       ];
 
       const IMAGE_ASSETS = [
-        'Frame%20fijos/3x4.png',
-        'Frame%20fijos/16x9.png',
-        'Frame%20fijos/9x16.png',
-        'Frame%20fijos/title.jpeg',
+        a['frame_3x4'] || 'presets/preset2/3x4.png',
+        a['frame_16x9'] || 'presets/preset2/16x9.png',
+        a['frame_9x16'] || 'presets/preset2/9x16.png',
+        a['frame_title'] || 'presets/preset2/Title.png',
         'logo_izquierda.png',
         'logo_derecha.png',
       ];

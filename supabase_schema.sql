@@ -39,6 +39,13 @@ CREATE POLICY "Permitir actualización pública de dm_decks"
     USING (true)
     WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Permitir eliminación pública de dm_decks" ON public.dm_decks;
+CREATE POLICY "Permitir eliminación pública de dm_decks"
+    ON public.dm_decks
+    FOR DELETE
+    TO anon, authenticated
+    USING (true);
+
 -- 4. Habilitar la replicación en tiempo real (Supabase Realtime) para la tabla dm_decks
 -- Esto permite que cualquier cambio guardado en un ordenador se envíe instantáneamente a los demás
 DO $$

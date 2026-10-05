@@ -392,10 +392,13 @@
   <script>
   // ═══ ASSET REGISTRY ═══════════════════════════════════════
   const FRAMES = [
-    { key:'frame_3x4',   label:'Marco 3:4',    sub:'Movil',     src:'Frame%20fijos/3x4.png',    type:'image', ratio:'r34',  accept:'image/*' },
-    { key:'frame_16x9',  label:'Marco 16:9',   sub:'Escenario', src:'Frame%20fijos/16x9.png',   type:'image', ratio:'',     accept:'image/*' },
-    { key:'frame_9x16',  label:'Marco 9:16',   sub:'Vertical',  src:'Frame%20fijos/9x16.png',   type:'image', ratio:'r916', accept:'image/*' },
-    { key:'frame_title', label:'Portada Title', sub:'Estatica',  src:'Frame%20fijos/title.jpeg', type:'image', ratio:'',     accept:'image/*' },
+    { key:'frame_3x4',          label:'Marco 3:4 (Fijo)',         sub:'Movil con pantalla',     src:'presets/preset2/3x4.png',          type:'image', ratio:'r34',  accept:'image/*' },
+    { key:'frame_3x4_sinfondo', label:'Marco 3:4 (Sin Fondo)',   sub:'Pantalla transparente',  src:'presets/preset2/3x4_sinfondo.png', type:'image', ratio:'r34',  accept:'image/*' },
+    { key:'frame_16x9',         label:'Marco 16:9 (Fijo)',        sub:'Escenario con pantalla', src:'presets/preset2/16x9.png',         type:'image', ratio:'',     accept:'image/*' },
+    { key:'frame_16x9_sinfondo',label:'Marco 16:9 (Sin Fondo)',  sub:'Pantalla transparente',  src:'presets/preset2/16x9_sinfondo.png',type:'image', ratio:'',     accept:'image/*' },
+    { key:'frame_9x16',          label:'Marco 9:16 (Fijo)',        sub:'Vertical con pantalla',  src:'presets/preset2/9x16.png',         type:'image', ratio:'r916', accept:'image/*' },
+    { key:'frame_9x16_sinfondo', label:'Marco 9:16 (Sin Fondo)',   sub:'Pantalla transparente',  src:'presets/preset2/9x16_sinfondo.png',type:'image', ratio:'r916', accept:'image/*' },
+    { key:'frame_title',        label:'Portada Title',            sub:'Estatica',               src:'presets/preset2/Title.png',        type:'image', ratio:'',     accept:'image/*' },
   ];
   const TRANSITIONS = [
     { key:'trans_title_3x4',     label:'Title — 3:4',   src:'Transitions/title_to_3x4.mp4',          type:'video' },
@@ -616,9 +619,10 @@
     localStorage.setItem('dm_calib_version','20260923_def_v2');
 
     // ── 2. Guardar en el preset activo ────────────────────────────────
-    const activePsId=localStorage.getItem('dm_active_preset')||'preset1';
+    const activePsId=localStorage.getItem('dm_active_preset')||'preset2';
     let presets=[]; try{presets=JSON.parse(localStorage.getItem('dm_presets')||'[]');}catch(e){}
     if(!presets.find(p=>p.id==='preset1')) presets.unshift({id:'preset1',name:'PRESET 1',locked:true,assets:{},calib:{}});
+    if(!presets.find(p=>p.id==='preset2')) presets.push(defaultPreset2());
     let activePs=presets.find(p=>p.id===activePsId)||presets[0];
     if(!activePs.calib) activePs.calib={};
     activePs.calib[key]=calib;
@@ -745,9 +749,48 @@
   // ═══ PRESETS ══════════════════════════════════════════════
   const PS_KEY='dm_presets',PS_ACTIVE='dm_active_preset';
   function defaultPreset1(){ const a={}; ALL_ASSETS.forEach(x=>{a[x.key]=null;}); return{id:'preset1',name:'PRESET 1',description:'Configuracion original por defecto',locked:true,createdAt:Date.now(),assets:a}; }
-  function loadPresets(){ try{let p=JSON.parse(localStorage.getItem(PS_KEY)||'[]');if(!p.find(x=>x.id==='preset1'))p.unshift(defaultPreset1());return p;}catch(e){return[defaultPreset1()];} }
+  function defaultPreset2(){
+    const a={};
+    ALL_ASSETS.forEach(x=>{a[x.key]=null;});
+    a['frame_3x4'] = 'presets/preset2/3x4.png';
+    a['frame_3x4_sinfondo'] = 'presets/preset2/3x4_sinfondo.png';
+    a['frame_16x9'] = 'presets/preset2/16x9.png';
+    a['frame_16x9_sinfondo'] = 'presets/preset2/16x9_sinfondo.png';
+    a['frame_9x16'] = 'presets/preset2/9x16.png';
+    a['frame_9x16_sinfondo'] = 'presets/preset2/9x16_sinfondo.png';
+    a['frame_title'] = 'presets/preset2/Title.png';
+    a['trans_title_3x4'] = 'presets/preset2/Title%20a%203x4.mp4';
+    a['trans_title_3x4_rev'] = 'presets/preset2/3x4%20a%20Title.mp4';
+    a['trans_title_916'] = 'presets/preset2/Title%20a%209x16.mp4';
+    a['trans_title_916_rev'] = 'presets/preset2/9x16%20a%20Title.mp4';
+    a['trans_title_169'] = 'presets/preset2/Title%20a%2016x9.mp4';
+    a['trans_title_169_rev'] = 'presets/preset2/16x9%20a%20Title.mp4';
+    a['trans_34_169'] = 'presets/preset2/3x4%20a%2016x9.mp4?v=2';
+    a['trans_34_169_rev'] = 'presets/preset2/16x9%20a%203x4.mp4?v=2';
+    a['trans_916_169'] = 'presets/preset2/9x16%20a%2016x9.mp4';
+    a['trans_916_169_rev'] = 'presets/preset2/16x9%20a%209x16.mp4';
+    a['trans_916_34'] = 'presets/preset2/9x16%20a%203x4.mp4';
+    a['trans_916_34_rev'] = 'presets/preset2/3x4%20a%209x16.mp4';
+    return {id:'preset2',name:'PRESET 2 (Nuevos)',description:'Nuevos frames y transiciones',locked:false,createdAt:Date.now(),assets:a};
+  }
+  function loadPresets(){
+    try{
+      let p=JSON.parse(localStorage.getItem(PS_KEY)||'[]');
+      if(!p.find(x=>x.id==='preset1')) p.unshift(defaultPreset1());
+      let p2 = p.find(x=>x.id==='preset2');
+      if(!p2) {
+        p.push(defaultPreset2());
+      } else {
+        // Asegurar que Title y sus transiciones estén presentes
+        p2.assets = { ...defaultPreset2().assets, ...(p2.assets||{}) };
+      }
+      return p;
+    }catch(e){
+      return[defaultPreset1(), defaultPreset2()];
+    }
+  }
   function savePresets(ps){localStorage.setItem(PS_KEY,JSON.stringify(ps));}
-  function getActivePsId(){return localStorage.getItem(PS_ACTIVE)||'preset1';}
+  function getActivePsId(){return localStorage.getItem(PS_ACTIVE)||'preset2';}
   function setActivePsId(id){localStorage.setItem(PS_ACTIVE,id);}
   function createPreset(){
     const nm=prompt('Nombre del preset:','PRESET 2'); if(!nm) return;

@@ -139,6 +139,7 @@
         { event: '*', schema: 'public', table: 'dm_decks' },
         (payload) => {
           if (payload.new && payload.new.slots && typeof onDeckChangeCallback === 'function') {
+            if (payload.new.calib_version === '__deleted__' || payload.new.calib_version === 'deleted') return;
             const currentDeckId = getActiveDeckId();
             if (payload.new.id === currentDeckId || !payload.new.id) {
               console.log('[DMCloud] Configuración actualizada desde otro ordenador:', payload.new.id, payload.new.updated_at);
@@ -221,7 +222,7 @@
 
     // Listar todos los decks disponibles (nube + local fallback)
     listDecks: async function() {
-      const localList = getLocalDecksIndex();
+      let localList = getLocalDecksIndex().filter(l => l.id && l.id !== '__deleted__' && l.id !== 'deleted');
       if (!client) {
         initClient();
         if (!client) return localList;
@@ -230,15 +231,18 @@
       try {
         const { data, error } = await client
           .from('dm_decks')
-          .select('id, updated_at')
+          .select('id, updated_at, calib_version')
+          .neq('calib_version', '__deleted__')
           .order('updated_at', { ascending: false });
 
         if (error || !data) {
           return localList;
         }
 
+        const validData = data.filter(item => item.calib_version !== '__deleted__' && item.calib_version !== 'deleted' && item.id !== '__deleted__');
+
         // Combinar datos de la nube con nombres locales si existen
-        const combined = data.map(item => {
+        const combined = validData.map(item => {
           const localItem = localList.find(l => l.id === item.id);
           const name = (localItem && localItem.name) ? localItem.name : (item.id === DEFAULT_DECK_ID ? 'Presentación Principal' : `Presentación (${item.id})`);
           return {
@@ -278,6 +282,11 @@
         if (error) {
           console.warn('[DMCloud] Error al obtener dm_decks:', error);
           notifyStatus('error', error.message);
+          return null;
+        }
+
+        if (!data || data.calib_version === '__deleted__' || data.calib_version === 'deleted') {
+          notifyStatus('connected', 'Sincronizado');
           return null;
         }
 
@@ -358,22 +367,44 @@
     deleteDeck: async function(id) {
       if (!id || id === DEFAULT_DECK_ID) return false;
 
-      // Borrar de supabase
+      if (!client) {
+        initClient();
+      }
+
+      // 1. Borrar de Supabase
       if (client) {
         try {
+          // Primero marcamos como __deleted__ por si la política RLS no permite DELETE anónimo en la BD
+          await client.from('dm_decks').update({
+            calib_version: '__deleted__',
+            slots: [],
+            updated_at: new Date().toISOString(),
+            updated_by: 'deleted'
+          }).eq('id', id);
+
+          // E intentamos borrado físico
           const { error } = await client.from('dm_decks').delete().eq('id', id);
           if (error) {
-            console.error('[deleteDeck] Supabase error:', error);
+            console.warn('[deleteDeck] Supabase delete warning:', error);
           }
         } catch(e) {
           console.error('[deleteDeck] Exception:', e);
         }
       }
 
-      // Borrar del índice local
+      // 2. Borrar del índice local y almacenamiento
       let list = getLocalDecksIndex();
-      list = list.filter(l => l.id !== id);
+      list = list.filter(l => l.id !== id && l.id !== '__deleted__');
       saveLocalDecksIndex(list);
+
+      try {
+        localStorage.removeItem('dm_deck_slots_' + id);
+        localStorage.removeItem('dm_deck_preset_' + id);
+        const alt = JSON.parse(localStorage.getItem('dm_decks_index') || '[]');
+        if (Array.isArray(alt)) {
+          localStorage.setItem('dm_decks_index', JSON.stringify(alt.filter(l => l.id !== id)));
+        }
+      } catch(e) {}
 
       // Si el borrado era el activo, volver a default
       if (getActiveDeckId() === id) {

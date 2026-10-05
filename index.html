@@ -565,6 +565,12 @@
       </div>
 
       <div class="form-group">
+        <label class="form-label">Preset de Marcos y Transiciones</label>
+        <select id="new-deck-preset-select" class="form-input" style="background: #101116; font-weight: 700; color: #f8fafc; cursor: pointer; padding: 9px 12px; border-radius: 8px;">
+        </select>
+      </div>
+
+      <div class="form-group">
         <label class="form-label">Plantilla Inicial</label>
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #cbd5e1; cursor: pointer;">
@@ -670,8 +676,13 @@
         allDecks = [{ id: 'default', name: 'Presentación Principal', updated_at: new Date().toISOString() }];
       }
 
+      // Filtrar cualquier deck eliminado o inválido
+      allDecks = (allDecks || []).filter(d => d && d.id && d.id !== '__deleted__' && d.id !== 'deleted');
+
       if (countEl) countEl.textContent = allDecks.length;
-      renderProjects(allDecks);
+      const searchInput = document.getElementById('search-input');
+      const query = searchInput ? searchInput.value : '';
+      filterProjects(query);
     }
 
     // ── Preset por proyecto ──────────────────────────────────
@@ -681,10 +692,44 @@
         if (!ps.find(p => p.id === 'preset1')) {
           ps.unshift({ id: 'preset1', name: 'PRESET 1', description: 'Configuracion original' });
         }
+        let p2 = ps.find(p => p.id === 'preset2');
+        const p2Assets = {
+          frame_3x4: 'presets/preset2/3x4.png',
+          frame_3x4_sinfondo: 'presets/preset2/3x4_sinfondo.png',
+          frame_16x9: 'presets/preset2/16x9.png',
+          frame_16x9_sinfondo: 'presets/preset2/16x9_sinfondo.png',
+          frame_9x16: 'presets/preset2/9x16.png',
+          frame_9x16_sinfondo: 'presets/preset2/9x16_sinfondo.png',
+          frame_title: 'presets/preset2/Title.png',
+          trans_title_3x4: 'presets/preset2/Title%20a%203x4.mp4',
+          trans_title_3x4_rev: 'presets/preset2/3x4%20a%20Title.mp4',
+          trans_title_916: 'presets/preset2/Title%20a%209x16.mp4',
+          trans_title_916_rev: 'presets/preset2/9x16%20a%20Title.mp4',
+          trans_title_169: 'presets/preset2/Title%20a%2016x9.mp4',
+          trans_title_169_rev: 'presets/preset2/16x9%20a%20Title.mp4',
+          trans_34_169: 'presets/preset2/3x4%20a%2016x9.mp4?v=2',
+          trans_34_169_rev: 'presets/preset2/16x9%20a%203x4.mp4?v=2',
+          trans_916_169: 'presets/preset2/9x16%20a%2016x9.mp4',
+          trans_916_169_rev: 'presets/preset2/16x9%20a%209x16.mp4',
+          trans_916_34: 'presets/preset2/9x16%20a%203x4.mp4',
+          trans_916_34_rev: 'presets/preset2/3x4%20a%209x16.mp4'
+        };
+        if (!p2) {
+          ps.push({
+            id: 'preset2',
+            name: 'PRESET 2 (Nuevos)',
+            description: 'Nuevos frames y transiciones',
+            assets: p2Assets
+          });
+          try { localStorage.setItem('dm_presets', JSON.stringify(ps)); } catch(e) {}
+        } else {
+          p2.assets = { ...p2Assets, ...(p2.assets || {}) };
+          try { localStorage.setItem('dm_presets', JSON.stringify(ps)); } catch(e) {}
+        }
         return ps;
-      } catch(e) { return [{ id: 'preset1', name: 'PRESET 1' }]; }
+      } catch(e) { return [{ id: 'preset1', name: 'PRESET 1' }, { id: 'preset2', name: 'PRESET 2 (Nuevos)' }]; }
     }
-    function getDeckPreset(deckId) { return localStorage.getItem('dm_deck_preset_' + deckId) || ''; }
+    function getDeckPreset(deckId) { return localStorage.getItem('dm_deck_preset_' + deckId) || localStorage.getItem('dm_active_preset') || 'preset2'; }
     function setDeckPreset(deckId, presetId) {
       localStorage.setItem('dm_deck_preset_' + deckId, presetId);
       // Aplicar los overrides del preset seleccionado
@@ -701,8 +746,7 @@
     function getDeckPresetOptions(deckId) {
       const ps = loadPresets();
       const current = getDeckPreset(deckId);
-      const none = `<option value="" ${!current ? 'selected' : ''} style="color:#64748b">Sin preset</option>`;
-      return none + ps.map(p =>
+      return ps.map(p =>
         `<option value="${p.id}" ${p.id === current ? 'selected' : ''}>${p.name}</option>`
       ).join('');
     }
@@ -796,7 +840,15 @@
     function openNewDeckModal() {
       const modal = document.getElementById('new-deck-modal');
       const input = document.getElementById('new-deck-name-input');
+      const presetSel = document.getElementById('new-deck-preset-select');
       if (input) input.value = `Proyecto ${allDecks.length + 1}`;
+      if (presetSel) {
+        const ps = loadPresets();
+        const activePs = localStorage.getItem('dm_active_preset') || 'preset2';
+        presetSel.innerHTML = ps.map(p =>
+          `<option value="${p.id}" ${p.id === activePs ? 'selected' : ''}>${p.name}</option>`
+        ).join('');
+      }
       if (modal) modal.style.display = 'flex';
       if (input) input.focus();
     }
@@ -810,6 +862,8 @@
       const input = document.getElementById('new-deck-name-input');
       const name = (input ? input.value.trim() : '') || 'Nuevo Proyecto';
       const templateChoice = document.querySelector('input[name="new-deck-template"]:checked')?.value || 'preset';
+      const presetSel = document.getElementById('new-deck-preset-select');
+      const chosenPreset = (presetSel ? presetSel.value : '') || 'preset2';
 
       let initialSlots = [];
       if (templateChoice === 'empty') {
@@ -848,8 +902,9 @@
       }
 
       const newId = 'deck-' + Date.now();
+      setDeckPreset(newId, chosenPreset);
       closeNewDeckModal();
-      showToast(`Creando ${name}...`);
+      showToast(`Creando ${name} (${chosenPreset})...`);
 
       if (window.DMCloud) {
         await DMCloud.createDeck(newId, name, initialSlots);
@@ -899,17 +954,33 @@
     }
 
     async function deleteProject(deckId, name) {
-      if (deckId === 'default') {
+      if (!deckId || deckId === 'default') {
         alert('El proyecto principal no se puede eliminar.');
         return;
       }
       if (!confirm(`¿Estás seguro de eliminar el proyecto "${name}"?`)) return;
 
+      // 1. Actualización optimista inmediata en la UI para que desaparezca sin retraso
+      allDecks = allDecks.filter(d => d.id !== deckId);
+      const searchInput = document.getElementById('search-input');
+      filterProjects(searchInput ? searchInput.value : '');
+      const countEl = document.getElementById('projects-total-count');
+      if (countEl) countEl.textContent = allDecks.length;
+
       showToast('Eliminando proyecto...');
-      if (window.DMCloud) {
-        await DMCloud.deleteDeck(deckId);
+
+      // 2. Ejecutar borrado en Supabase Cloud y almacenamiento local
+      try {
+        if (window.DMCloud) {
+          await DMCloud.deleteDeck(deckId);
+        }
+        localStorage.removeItem('dm_deck_slots_' + deckId);
+        localStorage.removeItem('dm_deck_preset_' + deckId);
+      } catch (err) {
+        console.error('Error al eliminar proyecto:', err);
       }
-      localStorage.removeItem('dm_deck_slots_' + deckId);
+
+      // 3. Recargar estado confirmado
       await loadProjects();
       showToast('Proyecto eliminado');
     }
