@@ -73,7 +73,7 @@
       box-shadow: none !important;
     }
 
-    /* Capas de cada paso con fundido suave de 0.5 segundos */
+    /* Capas de cada paso con fundido suave y ágil de 0.2 segundos */
     .stage-layer {
       position: absolute;
       top: 0;
@@ -82,7 +82,7 @@
       height: 100%;
       opacity: 0;
       visibility: hidden;
-      transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+      transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
       pointer-events: none;
       z-index: 1;
     }
@@ -94,15 +94,15 @@
       z-index: 10;
     }
 
-    /* La capa entrante activa se posiciona en z-index: 30 por encima de la anterior para que su fundido de 0.5s sea visible */
+    /* La capa entrante activa se posiciona en z-index: 30 por encima de la anterior para que su fundido sea visible */
     .stage-layer.active.incoming-layer {
       z-index: 30;
-      transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+      transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
     }
 
-    /* Capa de vídeo de transición: fundido de 0.5s sobre la capa inferior */
+    /* Capa de vídeo de transición: fundido ágil sobre la capa inferior */
     #layer-step2 {
-      transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+      transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
     }
 
     #layer-step2.active {
@@ -110,7 +110,7 @@
       visibility: visible;
       pointer-events: auto;
       z-index: 25;
-      transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+      transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
     }
 
     #layer-step2.active.incoming-layer {
@@ -145,7 +145,7 @@
       object-fit: cover;
       pointer-events: none;
       z-index: 5;
-      transition: opacity 0.5s ease-in-out;
+      transition: opacity 0.2s ease-in-out;
     }
 
     /* Marco sin fondo superpuesto (pantalla transparente): aparece instantáneo encima */
@@ -210,7 +210,7 @@
       width: var(--phone-width, 47.7%);
       height: var(--phone-height, 111.45%);
       z-index: 8;
-      transition: opacity 0.5s ease-in-out;
+      transition: opacity 0.2s ease-in-out;
       background: #000;
       overflow: hidden;
       transform-origin: center center;
@@ -226,7 +226,7 @@
       width: var(--frame2-width, 85.85%);
       height: var(--frame2-height, 66.7%);
       z-index: 8;
-      transition: opacity 0.5s ease-in-out;
+      transition: opacity 0.2s ease-in-out;
       background: #000;
       overflow: hidden;
       border-radius: var(--frame2-radius, 12px);
@@ -242,7 +242,7 @@
       width: var(--frame916-width, 19.17%);
       height: var(--frame916-height, 95.15%);
       z-index: 8;
-      transition: opacity 0.5s ease-in-out;
+      transition: opacity 0.2s ease-in-out;
       background: #000;
       overflow: hidden;
       border-radius: var(--frame916-radius, 40px);
@@ -3733,7 +3733,7 @@
         const fe = getFrameElements(step.format);
         applyFrameHue(step.hue);
         isTransitionLocked = true;
-        setTimeout(() => { isTransitionLocked = false; }, 1200);
+        setTimeout(() => { isTransitionLocked = false; }, 250);
 
         if (targetLayer) {
           targetLayer.style.zIndex = '30';
@@ -3742,32 +3742,22 @@
           targetLayer.classList.add('incoming-layer');
         }
 
-        // Estado inicial de Fase 1 (t=0s a 0.5s):
-        // El frame fijo entra con fundido de 0 a 100 en 0.5s
+        // Entrada fluida y sincronizada: frame fijo, frame sinfondo y diapositiva entran juntos en 0.2s
         if (fe.fixedImg) {
-          fe.fixedImg.style.transition = 'none';
-          fe.fixedImg.style.opacity = '0';
-        }
-        if (fe.sinfondoImg) {
-          fe.sinfondoImg.style.transition = 'none';
-          fe.sinfondoImg.style.opacity = '0';
-        }
-        if (fe.screenSlot) {
-          fe.screenSlot.style.transition = 'none';
-          fe.screenSlot.style.opacity = '0';
-        }
-
-        if (targetLayer) void targetLayer.offsetWidth; // Reflow forzado
-
-        // Iniciar fundido de 0 a 100 del frame fijo en 0.5s
-        if (fe.fixedImg) {
-          fe.fixedImg.style.transition = 'opacity 0.5s ease-in-out';
+          fe.fixedImg.style.transition = 'opacity 0.2s ease-out';
           fe.fixedImg.style.opacity = '1';
         }
+        if (fe.sinfondoImg) {
+          fe.sinfondoImg.style.transition = 'opacity 0.2s ease-out';
+          fe.sinfondoImg.style.opacity = '1';
+        }
+        if (fe.screenSlot) {
+          fe.screenSlot.style.transition = 'opacity 0.2s ease-out';
+          fe.screenSlot.style.opacity = '1';
+        }
 
-        // Fase 2: Pasados exactamente 0.5s
+        // Limpieza rápida de capas anteriores tras el fundido de 0.2s
         setTimeout(() => {
-          // Desactivar capas anteriores una vez completada la entrada del frame fijo
           if (previousLayers.length > 0) {
             previousLayers.forEach(layer => {
               layer.classList.remove('active', 'incoming-layer', 'fading-out');
@@ -3775,29 +3765,12 @@
               layer.style.zIndex = '';
             });
           }
-
-          // "el mismo frame pero _sinfondo aparece encima de forma instantanea"
-          if (fe.sinfondoImg) {
-            fe.sinfondoImg.style.transition = 'none';
-            fe.sinfondoImg.style.opacity = '1';
+          if (targetLayer) {
+            targetLayer.classList.remove('incoming-layer');
+            targetLayer.style.zIndex = '';
           }
-
-          // "en los 0,5 segundos restantes aparece con un fundido de 0 100 de opacidad la presentacion"
-          if (fe.screenSlot) {
-            void fe.screenSlot.offsetWidth; // Reflow
-            fe.screenSlot.style.transition = 'opacity 0.5s ease-in-out';
-            fe.screenSlot.style.opacity = '1';
-          }
-
-          // Final de los 0.5s restantes (t = 1.0s total):
-          setTimeout(() => {
-            if (targetLayer) {
-              targetLayer.classList.remove('incoming-layer');
-              targetLayer.style.zIndex = '';
-            }
-            isTransitionLocked = false;
-          }, 500);
-        }, 500);
+          isTransitionLocked = false;
+        }, 200);
       }
       // Nota: si step.type === 'video', targetLayer (#layer-step2) se activará en beginHoldAndPlay() cuando el fotograma 0 esté listo
 
@@ -3869,7 +3842,7 @@
             targetLayer.classList.add('active');
             targetLayer.classList.add('incoming-layer');
             void targetLayer.offsetWidth; // Reflow para activar la animación
-            targetLayer.style.transition = 'opacity 0.5s ease-in-out';
+            targetLayer.style.transition = 'opacity 0.2s ease-in-out';
             targetLayer.style.opacity = '1';
             videoEl.style.opacity = '1';
           }
@@ -3880,7 +3853,7 @@
           }
           // En transición X → title (reverse), los logos se ocultarán al llegar a la portada con animate=true
 
-          // Pasados los 0.5s de fundido, la capa inferior desaparece completamente
+          // Pasados los 0.2s de fundido, la capa inferior desaparece completamente
           setTimeout(() => {
             if (previousLayers.length > 0) {
               previousLayers.forEach(layer => {
@@ -3893,9 +3866,9 @@
             if (targetLayer) {
               targetLayer.classList.remove('incoming-layer');
             }
-          }, 500);
+          }, 200);
 
-          // Pausa de 0.5 segundos (coincidente con el fundido de entrada) antes de arrancar la animación
+          // Arranque inmediato del vídeo (40ms para asegurar el primer cuadro sin congelar la pantalla)
           if (videoStartTimeout) clearTimeout(videoStartTimeout);
           videoStartTimeout = setTimeout(() => {
             const currentStep = STEPS[currentStepIndex];
@@ -3929,7 +3902,7 @@
                 });
               }
             }
-          }, 500);
+          }, 40);
         };
 
         if (currentSrc !== rawVideoSrc) {
@@ -4059,9 +4032,9 @@
         const fe = getFrameElements(currentStep.format);
         if (fe.screenSlot && fe.screenSlot.style.opacity !== '0') {
           isTransitionLocked = true;
-          setTimeout(() => { isTransitionLocked = false; }, 1200);
+          setTimeout(() => { isTransitionLocked = false; }, 200);
 
-          fe.screenSlot.style.transition = 'opacity 0.5s ease-in-out';
+          fe.screenSlot.style.transition = 'opacity 0.12s ease-out';
           fe.screenSlot.style.opacity = '0';
           setTimeout(() => {
             if (fe.sinfondoImg) {
@@ -4070,7 +4043,7 @@
             }
             isTransitionLocked = false;
             advanceToNextStep(true);
-          }, 500);
+          }, 120);
           return;
         }
       }
@@ -4105,9 +4078,9 @@
         const fe = getFrameElements(currentStep.format);
         if (fe.screenSlot && fe.screenSlot.style.opacity !== '0') {
           isTransitionLocked = true;
-          setTimeout(() => { isTransitionLocked = false; }, 1200);
+          setTimeout(() => { isTransitionLocked = false; }, 200);
 
-          fe.screenSlot.style.transition = 'opacity 0.5s ease-in-out';
+          fe.screenSlot.style.transition = 'opacity 0.12s ease-out';
           fe.screenSlot.style.opacity = '0';
           setTimeout(() => {
             if (fe.sinfondoImg) {
@@ -4116,7 +4089,7 @@
             }
             isTransitionLocked = false;
             prevStep(true);
-          }, 500);
+          }, 120);
           return;
         }
       }
@@ -4141,9 +4114,9 @@
         const fe = getFrameElements(currentStep.format);
         if (fe.screenSlot && fe.screenSlot.style.opacity !== '0') {
           isTransitionLocked = true;
-          setTimeout(() => { isTransitionLocked = false; }, 1200);
+          setTimeout(() => { isTransitionLocked = false; }, 200);
 
-          fe.screenSlot.style.transition = 'opacity 0.5s ease-in-out';
+          fe.screenSlot.style.transition = 'opacity 0.12s ease-out';
           fe.screenSlot.style.opacity = '0';
           setTimeout(() => {
             if (fe.sinfondoImg) {
@@ -4152,7 +4125,7 @@
             }
             isTransitionLocked = false;
             goToStep(index, true);
-          }, 500);
+          }, 120);
           return;
         }
       }
@@ -4204,7 +4177,7 @@
       try { videoEl.pause(); } catch(e) {}
       if (videoEndTimeout) clearTimeout(videoEndTimeout);
 
-      const delay = immediate ? 0 : 350;
+      const delay = immediate ? 0 : 30;
       videoEndTimeout = setTimeout(() => {
         const step = STEPS[currentStepIndex];
         if (step && step.type === 'video') {
@@ -4225,8 +4198,8 @@
     videoEl.addEventListener('timeupdate', () => {
       const step = STEPS[currentStepIndex];
       if (step && step.type === 'video' && videoEl.duration > 0.5) {
-        // Disparar hold de final si el vídeo alcanza los últimos 150ms
-        if (!hasTriggeredEndHold && videoEl.currentTime >= (videoEl.duration - 0.15)) {
+        // Disparar cambio fluido al slide final sin pausa congelada
+        if (!hasTriggeredEndHold && videoEl.currentTime >= (videoEl.duration - 0.06)) {
           triggerEndHold();
         }
       }
