@@ -16,6 +16,7 @@
   <script src="supabase-config.js"></script>
   <script src="supabase-client.js"></script>
   <!-- PDF Processor en Cliente (Web / Offline / Cloud) -->
+  <script src="vendor/pdf.worker.min.js"></script>
   <script src="vendor/pdf.min.js"></script>
   <script src="pdf-processor.js"></script>
   <style>
@@ -4398,11 +4399,22 @@
       showToast('¡Configuración de escenas copiada al portapapeles!');
     }
 
-    function showToast(msg, type = 'info') {
+    function showToast(msg, typeOrDuration = 'info', maybeDuration = null) {
       const toast = document.getElementById('toast');
       if (!toast) return;
       toast.textContent = msg;
       toast.className = 'toast';
+
+      let type = 'info';
+      let duration = 2500;
+
+      if (typeof typeOrDuration === 'number') {
+        duration = typeOrDuration;
+      } else if (typeof typeOrDuration === 'string') {
+        type = typeOrDuration;
+        duration = (typeof maybeDuration === 'number') ? maybeDuration : (type === 'error' ? 5000 : 2500);
+      }
+
       if (type === 'error') {
         toast.classList.add('toast-error');
       } else if (type === 'success') {
@@ -4412,7 +4424,7 @@
       if (window._toastTimer) clearTimeout(window._toastTimer);
       window._toastTimer = setTimeout(() => {
         toast.classList.remove('show');
-      }, type === 'error' ? 5000 : 2500);
+      }, duration);
     }
 
     // Escuchar mensajes del Escenario y de Ponentes (BroadcastChannel)
@@ -4654,6 +4666,15 @@
         await refreshDeckSelectorUI();
         const cloudData = await DMCloud.fetchDeckConfig(activeDeckId);
         if (cloudData && Array.isArray(cloudData.slots) && cloudData.slots.length > 0) {
+          // Preservar imágenes locales de diapositivas si la nube no las tiene
+          cloudData.slots.forEach(cs => {
+            const localSlot = slots.find(s => s.id === cs.id);
+            if (localSlot && Array.isArray(localSlot.slideImages) && localSlot.slideImages.length > 0) {
+              if (!Array.isArray(cs.slideImages) || cs.slideImages.length === 0) {
+                cs.slideImages = localSlot.slideImages;
+              }
+            }
+          });
           slots = cloudData.slots;
           if (window.DMStorage) {
             await DMStorage.saveDeckSlots(activeDeckId, slots);
@@ -5118,6 +5139,15 @@
         if (remoteData && Array.isArray(remoteData.slots)) {
           if (!remoteData.id || remoteData.id === activeDeckId) {
             console.log('[DMCloud] Recibida actualización remota de escenas');
+            // Preservar imágenes locales de diapositivas si el servidor no las incluye
+            remoteData.slots.forEach(rs => {
+              const localSlot = slots.find(s => s.id === rs.id);
+              if (localSlot && Array.isArray(localSlot.slideImages) && localSlot.slideImages.length > 0) {
+                if (!Array.isArray(rs.slideImages) || rs.slideImages.length === 0) {
+                  rs.slideImages = localSlot.slideImages;
+                }
+              }
+            });
             slots = remoteData.slots;
             if (window.DMStorage) {
               DMStorage.saveDeckSlots(activeDeckId, slots);

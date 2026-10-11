@@ -41,6 +41,10 @@
 
   function setupWorker() {
     if (!window.pdfjsLib) return;
+    if (window.pdfjsWorker && window.pdfjsWorker.WorkerMessageHandler) {
+      // Worker local ya cargado e integrado en memoria (funciona en file://, http:// y https://)
+      return;
+    }
     if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
       // Probar si el worker local existe o usar CDN
       window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
@@ -188,7 +192,7 @@
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
+      const timeoutId = setTimeout(() => controller.abort(), 800);
 
       // Convertir a base64
       const b64 = await new Promise((resolve, reject) => {

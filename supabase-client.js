@@ -148,6 +148,7 @@
   let liveBroadcastChannel = null;
   let onDeckChangeCallback = null;
   let onLiveCommandCallback = null;
+  const SESSION_CLIENT_ID = 'tab_' + Math.random().toString(36).substring(2, 10);
 
   function notifyStatus(status, message = '') {
     currentStatus = status;
@@ -268,9 +269,11 @@
         (payload) => {
           if (payload.new && payload.new.slots && typeof onDeckChangeCallback === 'function') {
             if (payload.new.calib_version === '__deleted__' || payload.new.calib_version === 'deleted') return;
+            // Ignorar cambios emitidos por esta misma pestaña/sesión
+            if (payload.new.updated_by && payload.new.updated_by.includes(SESSION_CLIENT_ID)) return;
             const currentDeckId = getActiveDeckId();
             if (payload.new.id === currentDeckId || !payload.new.id) {
-              console.log('[DMCloud] Configuración actualizada desde otro ordenador:', payload.new.id, payload.new.updated_at);
+              console.log('[DMCloud] Configuración recibida desde otro dispositivo:', payload.new.id, payload.new.updated_at);
               onDeckChangeCallback(payload.new);
             }
           }
@@ -447,31 +450,13 @@
 
       try {
         notifyStatus('syncing', 'Subiendo a la nube...');
-        let cloudSlots = slots;
-
-        // Comprobar tamaño y optimizar para PostgREST
-        try {
-          const rawStr = JSON.stringify(slots);
-          if (rawStr.length > 2.5 * 1024 * 1024) {
-            console.warn(`[DMCloud] Payload de slots pesado (${(rawStr.length / 1024 / 1024).toFixed(1)}MB). Optimizando imágenes base64 para la nube...`);
-            cloudSlots = slots.map(s => {
-              if (s.slideImages && Array.isArray(s.slideImages)) {
-                return {
-                  ...s,
-                  slideImages: s.slideImages.filter(img => typeof img === 'string' && !img.startsWith('data:'))
-                };
-              }
-              return s;
-            });
-          }
-        } catch(optErr) {}
 
         const payload = {
           id: targetId,
-          slots: cloudSlots,
+          slots: slots,
           calib_version: calibVersion || '20260923_def_v2',
           updated_at: new Date().toISOString(),
-          updated_by: sender
+          updated_by: `${sender}:${SESSION_CLIENT_ID}`
         };
 
         const { error } = await client

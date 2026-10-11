@@ -15,6 +15,7 @@
   <script src="supabase-config.js"></script>
   <script src="supabase-client.js"></script>
   <!-- PDF Processor en Cliente (Web / Offline / Cloud) -->
+  <script src="vendor/pdf.worker.min.js"></script>
   <script src="vendor/pdf.min.js"></script>
   <script src="pdf-processor.js"></script>
   <style>
@@ -5177,6 +5178,16 @@
           const currentStageDeck = new URLSearchParams(window.location.search).get('deck') || DMCloud.getActiveDeckId();
           if (!remoteData.id || remoteData.id === currentStageDeck) {
             console.log('[DMCloud] Recargando escenas actualizadas en la nube para deck:', remoteData.id);
+            if (Array.isArray(remoteData.slots)) {
+              remoteData.slots.forEach(rs => {
+                const localSlot = deckSlots.find(s => s.id === rs.id);
+                if (localSlot && Array.isArray(localSlot.slideImages) && localSlot.slideImages.length > 0) {
+                  if (!Array.isArray(rs.slideImages) || rs.slideImages.length === 0) {
+                    rs.slideImages = localSlot.slideImages;
+                  }
+                }
+              });
+            }
             reloadSlotsFromData(remoteData.slots);
             showHint('Escenas sincronizadas desde la nube', 2500);
           }
@@ -5190,6 +5201,16 @@
             const cloudData = await DMCloud.fetchDeckConfig(stageDeckId);
             if (cloudData && Array.isArray(cloudData.slots) && cloudData.slots.length > 0) {
               console.log('[DMCloud] Escenas inicializadas desde Supabase Cloud para deck:', stageDeckId);
+              if (Array.isArray(cloudData.slots)) {
+                cloudData.slots.forEach(cs => {
+                  const localSlot = deckSlots.find(s => s.id === cs.id);
+                  if (localSlot && Array.isArray(localSlot.slideImages) && localSlot.slideImages.length > 0) {
+                    if (!Array.isArray(cs.slideImages) || cs.slideImages.length === 0) {
+                      cs.slideImages = localSlot.slideImages;
+                    }
+                  }
+                });
+              }
               reloadSlotsFromData(cloudData.slots);
             }
           } catch (e) {
