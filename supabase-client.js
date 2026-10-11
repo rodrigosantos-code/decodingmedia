@@ -422,7 +422,13 @@
         }
 
         if (data && Array.isArray(data.slots)) {
-          DMStorage.saveDeckSlots(targetId, data.slots);
+          const localTime = parseInt(localStorage.getItem('dm_deck_slots_time_' + targetId) || '0', 10);
+          const cloudTime = data.updated_at ? new Date(data.updated_at).getTime() : 0;
+          if (!localTime || cloudTime >= localTime) {
+            DMStorage.saveDeckSlots(targetId, data.slots);
+          } else {
+            console.log('[DMCloud] Local IndexedDB es más reciente que los datos de la nube. Preservando local.');
+          }
         }
 
         notifyStatus('connected', 'Sincronizado');
@@ -441,6 +447,9 @@
       // Asegurar persistencia local inmediata en IndexedDB
       if (Array.isArray(slots)) {
         DMStorage.saveDeckSlots(targetId, slots);
+        try {
+          localStorage.setItem('dm_deck_slots_time_' + targetId, String(Date.now()));
+        } catch(e) {}
       }
 
       if (!client) {

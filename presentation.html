@@ -2838,9 +2838,30 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     let stageDeckId = urlParams.get('deck') || (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
+    if ((!stageDeckId || stageDeckId === 'default') && !urlParams.get('deck')) {
+      try {
+        const storedActive = localStorage.getItem('dm_active_deck_id');
+        if (storedActive && storedActive !== 'default') {
+          stageDeckId = storedActive;
+        } else {
+          const idxRaw = localStorage.getItem('dm_local_decks_index') || localStorage.getItem('dm_decks_index');
+          if (idxRaw) {
+            const list = JSON.parse(idxRaw);
+            if (Array.isArray(list) && list.length > 0) {
+              const valid = list.filter(d => d.id && d.id !== 'default' && !d.id.startsWith('test-'));
+              if (valid.length > 0) {
+                valid.sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
+                stageDeckId = valid[0].id;
+              }
+            }
+          }
+        }
+      } catch(e) {}
+    }
     if (urlParams.get('deck') && window.DMCloud) {
       DMCloud.setActiveDeckId(urlParams.get('deck'));
     }
+    const stagePageLoadTime = Date.now();
 
     function getInitialStepIndex(stepsLength, targetDeckId) {
       // 1. Prioridad: parámetro ?step= explícito en la URL (ej. preview de una escena desde el editor)
@@ -4977,9 +4998,22 @@
         }
       });
 
+      // Preservar imágenes locales de diapositivas si newSlots no las tiene
+      if (Array.isArray(deckSlots)) {
+        newSlots.forEach(ns => {
+          const oldSlot = deckSlots.find(s => s.id === ns.id);
+          if (oldSlot && Array.isArray(oldSlot.slideImages) && oldSlot.slideImages.length > 0) {
+            if (!Array.isArray(ns.slideImages) || ns.slideImages.length === 0) {
+              ns.slideImages = oldSlot.slideImages;
+            }
+          }
+        });
+      }
+
       // Remember the current step's slot id to try to preserve position after reorder
       const prevStep = (STEPS && STEPS[currentStepIndex]) ? STEPS[currentStepIndex] : null;
       const prevSlotId = prevStep ? prevStep.slotId : null;
+      const prevIndex = currentStepIndex;
 
       deckSlots = newSlots;
       STEPS = buildTimeline(deckSlots);
@@ -4993,13 +5027,17 @@
           found = true;
         }
       }
+      if (!found && typeof prevIndex === 'number' && prevIndex >= 0 && prevIndex < STEPS.length) {
+        currentStepIndex = prevIndex;
+        found = true;
+      }
       if (!found || currentStepIndex >= STEPS.length) {
         currentStepIndex = getInitialStepIndex(STEPS.length, stageDeckId);
         currentSlide = 1;
       }
 
       if (STEPS[currentStepIndex] && STEPS[currentStepIndex].type === 'video') {
-        currentStepIndex = 0;
+        currentStepIndex = (currentStepIndex + 1 < STEPS.length) ? (currentStepIndex + 1) : 0;
       }
 
       const activeStep = STEPS[currentStepIndex];
@@ -5026,6 +5064,16 @@
           if (data.deckId && stageDeckId === 'default' && data.deckId !== 'default') {
             stageDeckId = data.deckId;
             if (window.DMCloud) DMCloud.setActiveDeckId(data.deckId);
+          }
+          if (Array.isArray(deckSlots)) {
+            data.slots.forEach(bs => {
+              const localSlot = deckSlots.find(s => s.id === bs.id);
+              if (localSlot && Array.isArray(localSlot.slideImages) && localSlot.slideImages.length > 0) {
+                if (!Array.isArray(bs.slideImages) || bs.slideImages.length === 0) {
+                  bs.slideImages = localSlot.slideImages;
+                }
+              }
+            });
           }
           reloadSlotsFromData(data.slots);
         }
@@ -5090,6 +5138,10 @@
       // Salto directo a un paso de la línea de tiempo
       else if (data.type === 'SET_STEP' && typeof data.step === 'number') {
         if (!data.deckId || data.deckId === stageDeckId) {
+          if (typeof stagePageLoadTime !== 'undefined' && (Date.now() - stagePageLoadTime < 3000) && urlParams.get('step') !== null) {
+            console.log('[Stage] Ignorando SET_STEP inicial para respetar ?step=' + urlParams.get('step'));
+            return;
+          }
           goToStep(data.step);
         }
       }
@@ -5116,11 +5168,11 @@
       }
     }
 
-    // Polling ultra-rápido de LocalStorage para garantizar sincronización en file:///
-    let lastProcessedCmdTime = 0;
-    let lastProcessedStepTime = 0;
-    let lastProcessedSlotsTime = 0;
-    let lastProcessedCalibTime = 0;
+    // Polling ultra-rápido de LocalStorage para sincronización en local
+    let lastProcessedCmdTime = Date.now();
+    let lastProcessedStepTime = Date.now();
+    let lastProcessedSlotsTime = Date.now();
+    let lastProcessedCalibTime = Date.now();
 
     setInterval(() => {
       try {
@@ -5153,6 +5205,16 @@
           if (syncData && syncData.time > lastProcessedSlotsTime) {
             lastProcessedSlotsTime = syncData.time;
             if (Array.isArray(syncData.slots)) {
+              if (Array.isArray(deckSlots)) {
+                syncData.slots.forEach(bs => {
+                  const localSlot = deckSlots.find(s => s.id === bs.id);
+                  if (localSlot && Array.isArray(localSlot.slideImages) && localSlot.slideImages.length > 0) {
+                    if (!Array.isArray(bs.slideImages) || bs.slideImages.length === 0) {
+                      bs.slideImages = localSlot.slideImages;
+                    }
+                  }
+                });
+              }
               reloadSlotsFromData(syncData.slots);
             }
           }
@@ -5206,6 +5268,12 @@
         if (remoteData && Array.isArray(remoteData.slots)) {
           const currentStageDeck = new URLSearchParams(window.location.search).get('deck') || DMCloud.getActiveDeckId();
           if (!remoteData.id || remoteData.id === currentStageDeck) {
+            const localTime = parseInt(localStorage.getItem('dm_deck_slots_time_' + currentStageDeck) || '0', 10);
+            const remoteTime = remoteData.updated_at ? new Date(remoteData.updated_at).getTime() : 0;
+            if (localTime && localTime > remoteTime) {
+              console.log('[DMCloud] Ignorando cambio remoto porque el estado local es más reciente');
+              return;
+            }
             console.log('[DMCloud] Recargando escenas actualizadas en la nube para deck:', remoteData.id);
             if (Array.isArray(remoteData.slots)) {
               remoteData.slots.forEach(rs => {
@@ -5227,8 +5295,14 @@
       setTimeout(async () => {
         if (DMCloud.isConfigured()) {
           try {
+            const localTime = parseInt(localStorage.getItem('dm_deck_slots_time_' + stageDeckId) || '0', 10);
             const cloudData = await DMCloud.fetchDeckConfig(stageDeckId);
             if (cloudData && Array.isArray(cloudData.slots) && cloudData.slots.length > 0) {
+              const cloudTime = cloudData.updated_at ? new Date(cloudData.updated_at).getTime() : 0;
+              if (localTime && localTime > cloudTime) {
+                console.log('[DMCloud] Local es más reciente que Supabase Cloud (' + localTime + ' > ' + cloudTime + '). Preservando versión local.');
+                return;
+              }
               console.log('[DMCloud] Escenas inicializadas desde Supabase Cloud para deck:', stageDeckId);
               if (Array.isArray(cloudData.slots)) {
                 cloudData.slots.forEach(cs => {

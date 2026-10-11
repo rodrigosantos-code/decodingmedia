@@ -2896,6 +2896,9 @@
       }
 
       // 2. Guardar en localStorage de forma segura sin excepciones de cuota
+      try {
+        localStorage.setItem('dm_deck_slots_time_' + dId, String(Date.now()));
+      } catch (e) {}
       if (window.DMStorage) {
         DMStorage.safeSetItem('dm_deck_slots', slots);
         DMStorage.safeSetItem('dm_deck_slots_' + dId, slots);
@@ -2969,6 +2972,7 @@
         // 2. Guardar en localStorage de forma segura
         let lsSaved = false;
         try {
+          localStorage.setItem('dm_deck_slots_time_' + dId, String(Date.now()));
           if (window.DMStorage) {
             DMStorage.safeSetItem('dm_deck_slots', slots);
             DMStorage.safeSetItem('dm_deck_slots_' + dId, slots);
@@ -4447,9 +4451,10 @@
         if (Array.isArray(slots) && slots.length > 0) {
           bus.postMessage({ type: 'DECK_SLOTS_UPDATED', slots: slots, deckId: activeDeckId, timeline: currentTimeline, time: Date.now() });
         }
-        const stepPayload = { type: 'SET_STEP', step: currentStep, deckId: activeDeckId, time: Date.now() };
-        bus.postMessage(stepPayload);
-        postToStageIframe(stepPayload);
+        if (typeof currentStep === 'number' && currentStep > 0) {
+          const stepPayload = { type: 'SET_STEP', step: currentStep, deckId: activeDeckId, time: Date.now() };
+          bus.postMessage(stepPayload);
+        }
         return;
       }
 
@@ -4675,8 +4680,14 @@
       if (!window.DMCloud || !DMCloud.isConfigured()) return;
       try {
         await refreshDeckSelectorUI();
+        const localTime = parseInt(localStorage.getItem('dm_deck_slots_time_' + activeDeckId) || '0', 10);
         const cloudData = await DMCloud.fetchDeckConfig(activeDeckId);
         if (cloudData && Array.isArray(cloudData.slots) && cloudData.slots.length > 0) {
+          const cloudTime = cloudData.updated_at ? new Date(cloudData.updated_at).getTime() : 0;
+          if (localTime && localTime > cloudTime) {
+            console.log('[Editor] Datos locales más recientes que la nube (' + localTime + ' > ' + cloudTime + '). Manteniendo versión local.');
+            return;
+          }
           // Preservar imágenes locales de diapositivas si la nube no las tiene
           cloudData.slots.forEach(cs => {
             const localSlot = slots.find(s => s.id === cs.id);
@@ -4758,19 +4769,8 @@
       showToast('Cargando presentación...');
       let loaded = false;
 
-      // 1. Intentar cargar desde la nube
-      if (window.DMCloud && DMCloud.isConfigured()) {
-        try {
-          const cloudData = await DMCloud.fetchDeckConfig(newDeckId);
-          if (cloudData && Array.isArray(cloudData.slots) && cloudData.slots.length > 0) {
-            slots = cloudData.slots;
-            loaded = true;
-          }
-        } catch (e) {}
-      }
-
-      // 2. Intentar cargar desde IndexedDB (datos locales completos con imágenes HD)
-      if (!loaded && window.DMStorage) {
+      // 1. Intentar cargar desde IndexedDB (datos locales completos con imágenes HD)
+      if (window.DMStorage) {
         try {
           const idbSlots = await DMStorage.getDeckSlots(newDeckId);
           if (idbSlots && Array.isArray(idbSlots) && idbSlots.length > 0) {
@@ -4778,6 +4778,21 @@
             loaded = true;
           }
         } catch(e) {}
+      }
+
+      // 2. Si no hay datos locales o la nube tiene datos más recientes, cargar de la nube
+      if (window.DMCloud && DMCloud.isConfigured()) {
+        try {
+          const localTime = parseInt(localStorage.getItem('dm_deck_slots_time_' + newDeckId) || '0', 10);
+          const cloudData = await DMCloud.fetchDeckConfig(newDeckId);
+          if (cloudData && Array.isArray(cloudData.slots) && cloudData.slots.length > 0) {
+            const cloudTime = cloudData.updated_at ? new Date(cloudData.updated_at).getTime() : 0;
+            if (!loaded || cloudTime > localTime) {
+              slots = cloudData.slots;
+              loaded = true;
+            }
+          }
+        } catch (e) {}
       }
 
       // 3. Fallback a almacenamiento local si no se descargó de la nube ni de IndexedDB
@@ -4888,6 +4903,9 @@
       
       // 1. Guardar de inmediato todos los datos en IndexedDB y localStorage
       if (Array.isArray(slots) && slots.length > 0) {
+        try {
+          localStorage.setItem('dm_deck_slots_time_' + targetDeckId, String(Date.now()));
+        } catch(e) {}
         if (window.DMStorage) {
           DMStorage.saveDeckSlots(targetDeckId, slots);
           DMStorage.safeSetItem('dm_deck_slots', slots);
