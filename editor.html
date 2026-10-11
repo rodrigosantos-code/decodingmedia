@@ -2959,15 +2959,19 @@
           throw new Error('Estructura de escenas inválida en memoria.');
         }
 
-        // 1. Guardar en IndexedDB (soporta imágenes HD ilimitadas) con validación
+        // 1. Guardar en IndexedDB (soporta imágenes HD ilimitadas)
+        let idbSaved = false;
         if (window.DMStorage) {
-          const idbOk = await DMStorage.saveDeckSlots(dId, slots);
-          if (idbOk === false) {
-            throw new Error('Fallo al escribir en la base de datos local (IndexedDB). Comprueba espacio y permisos.');
+          try {
+            const idbOk = await DMStorage.saveDeckSlots(dId, slots);
+            idbSaved = (idbOk !== false);
+          } catch (e) {
+            console.warn('[Storage] Advertencia en IndexedDB:', e);
           }
         }
 
         // 2. Guardar en localStorage de forma segura
+        let lsSaved = false;
         try {
           if (window.DMStorage) {
             DMStorage.safeSetItem('dm_deck_slots', slots);
@@ -2979,8 +2983,14 @@
           if (typeof currentStep === 'number') {
             localStorage.setItem('dm_current_step_' + dId, currentStep);
           }
+          lsSaved = true;
         } catch (lsErr) {
           console.warn('[Storage] Advertencia en localStorage:', lsErr);
+        }
+
+        // Si fallan tanto IndexedDB como localStorage, reportar fallo local
+        if (!idbSaved && !lsSaved) {
+          throw new Error('No se pudo escribir en el almacenamiento del navegador. Comprueba espacio en disco o permisos.');
         }
 
         // 3. Reconstruir línea de tiempo y notificar al Escenario
@@ -3001,24 +3011,34 @@
           }
         } catch (e) {}
 
-        // 4. Guardar en Supabase Cloud si está configurado
+        // 4. Sincronizar en Supabase Cloud si está configurado
+        let cloudState = 'none'; // 'none' | 'ok' | 'err'
+        let cloudDetail = '';
         if (window.DMCloud && DMCloud.isConfigured()) {
-          const activeOpt = (typeof deckSelector !== 'undefined' && deckSelector) ? deckSelector.options[deckSelector.selectedIndex] : null;
-          const dName = activeOpt ? activeOpt.textContent : '';
-          const cloudOk = await DMCloud.saveDeckConfig(slots, '20260923_def_v2', 'editor_manual', dId, dName);
-          if (cloudOk === false) {
-            throw new Error('Error al sincronizar con Supabase Cloud. Comprueba tu conexión a Internet.');
+          try {
+            const activeOpt = (typeof deckSelector !== 'undefined' && deckSelector) ? deckSelector.options[deckSelector.selectedIndex] : null;
+            const dName = activeOpt ? activeOpt.textContent : '';
+            const cloudRes = await DMCloud.saveDeckConfig(slots, '20260923_def_v2', 'editor_manual', dId, dName);
+            if (cloudRes === true || (cloudRes && cloudRes.success)) {
+              cloudState = 'ok';
+            } else {
+              cloudState = 'err';
+              cloudDetail = (cloudRes && cloudRes.error) ? cloudRes.error : 'Error desconocido al subir';
+            }
+          } catch (cloudErr) {
+            cloudState = 'err';
+            cloudDetail = cloudErr.message || 'Error de conexión';
           }
         }
 
-        // 5. Refrescar interfaz
+        // 5. Refrescar interfaz y enlace del escenario
         renderSlotList();
         renderStepGrid();
         renderCalibSlotSelector();
         renderPreview();
         updateStageLink();
 
-        // 6. Feedback visual de éxito
+        // 6. Feedback visual
         if (saveBtn) {
           saveBtn.classList.remove('saving');
           saveBtn.classList.add('saved');
@@ -3028,7 +3048,15 @@
             if (saveText) saveText.textContent = originalText;
           }, 2000);
         }
-        showToast('✓ Cambios guardados correctamente', 'success');
+
+        if (cloudState === 'ok') {
+          showToast('✓ Cambios guardados correctamente (Local y Nube)', 'success');
+        } else if (cloudState === 'err') {
+          console.warn('[Cloud Sync] Guardado local completo, pero la sincronización en la nube falló:', cloudDetail);
+          showToast(`✓ Guardado localmente en este equipo (Aviso nube: ${cloudDetail})`, 'success');
+        } else {
+          showToast('✓ Cambios guardados correctamente en este equipo', 'success');
+        }
 
       } catch (err) {
         console.error('[Editor] Error al guardar cambios:', err);

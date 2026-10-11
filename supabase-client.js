@@ -442,14 +442,33 @@
 
       if (!client) {
         initClient();
-        if (!client) return false;
+        if (!client) return { success: false, error: 'Cliente de Supabase no disponible' };
       }
 
       try {
         notifyStatus('syncing', 'Subiendo a la nube...');
+        let cloudSlots = slots;
+
+        // Comprobar tamaño y optimizar para PostgREST
+        try {
+          const rawStr = JSON.stringify(slots);
+          if (rawStr.length > 2.5 * 1024 * 1024) {
+            console.warn(`[DMCloud] Payload de slots pesado (${(rawStr.length / 1024 / 1024).toFixed(1)}MB). Optimizando imágenes base64 para la nube...`);
+            cloudSlots = slots.map(s => {
+              if (s.slideImages && Array.isArray(s.slideImages)) {
+                return {
+                  ...s,
+                  slideImages: s.slideImages.filter(img => typeof img === 'string' && !img.startsWith('data:'))
+                };
+              }
+              return s;
+            });
+          }
+        } catch(optErr) {}
+
         const payload = {
           id: targetId,
-          slots: slots,
+          slots: cloudSlots,
           calib_version: calibVersion || '20260923_def_v2',
           updated_at: new Date().toISOString(),
           updated_by: sender
@@ -462,7 +481,7 @@
         if (error) {
           console.warn('[DMCloud] Error al guardar en Supabase:', error);
           notifyStatus('error', error.message);
-          return false;
+          return { success: false, error: error.message };
         }
 
         // Actualizar índice local de presentaciones
@@ -477,11 +496,11 @@
         saveLocalDecksIndex(list);
 
         notifyStatus('connected', 'Guardado en la nube');
-        return true;
+        return { success: true };
       } catch (err) {
         console.error('[DMCloud] Excepción en saveDeckConfig:', err);
-        notifyStatus('error', 'Error de red');
-        return false;
+        notifyStatus('error', err.message || 'Error de red');
+        return { success: false, error: err.message || 'Error de red' };
       }
     },
 
