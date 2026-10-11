@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Decoding Media - Presentación</title>
   <link rel="icon" type="image/x-icon" href="dm.ico?v=20260924">
-  <!-- Google Fonts: Montserrat -->
+  <!-- Google Fonts: Montserrat, Playfair Display (Serif), Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
   
   <!-- Supabase Cloud SDK y Cliente -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -298,29 +298,23 @@
       transition: opacity 0.4s ease-in-out;
     }
 
-    #phone-screen-slot .screen-iframe {
-      transform: scale(var(--phone-zoom, 1));
-      transform-origin: center center;
-    }
-    #phone-screen-slot .screen-iframe-buf {
+    #phone-screen-slot .screen-iframe,
+    #phone-screen-slot .screen-iframe-buf,
+    #phone-screen-slot .screen-slide-img {
       transform: scale(var(--phone-zoom, 1));
       transform-origin: center center;
     }
 
-    #frame2-screen-slot .screen-iframe {
-      transform: scale(var(--frame2-zoom, 1.41));
-      transform-origin: center center;
-    }
-    #frame2-screen-slot .screen-iframe-buf {
+    #frame2-screen-slot .screen-iframe,
+    #frame2-screen-slot .screen-iframe-buf,
+    #frame2-screen-slot .screen-slide-img {
       transform: scale(var(--frame2-zoom, 1.41));
       transform-origin: center center;
     }
 
-    #frame916-screen-slot .screen-iframe {
-      transform: scale(var(--frame916-zoom, 1.19));
-      transform-origin: center center;
-    }
-    #frame916-screen-slot .screen-iframe-buf {
+    #frame916-screen-slot .screen-iframe,
+    #frame916-screen-slot .screen-iframe-buf,
+    #frame916-screen-slot .screen-slide-img {
       transform: scale(var(--frame916-zoom, 1.19));
       transform-origin: center center;
     }
@@ -338,6 +332,119 @@
       pointer-events: none;
       user-select: none;
       display: none;
+      transition: opacity 0.3s ease;
+    }
+
+    /* =========================================================================
+       TEXTOS SUPERPUESTOS ENCIMA DE LAS ESCENAS (LOWER THIRD & DEGRADADO)
+       ========================================================================= */
+    .stage-text-gradient {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: var(--overlay-grad-height, 42%);
+      background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, var(--overlay-grad-opacity, 0.92)) 0%,
+        rgba(0, 0, 0, calc(var(--overlay-grad-opacity, 0.92) * 0.72)) 35%,
+        rgba(0, 0, 0, calc(var(--overlay-grad-opacity, 0.92) * 0.25)) 70%,
+        rgba(0, 0, 0, 0) 100%
+      );
+      z-index: 28;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out, height 0.3s ease;
+    }
+
+    .stage-text-gradient.active {
+      opacity: 1;
+    }
+
+    .stage-text-overlay {
+      position: absolute;
+      left: 0;
+      bottom: var(--overlay-bottom-y, 7%);
+      width: 100%;
+      z-index: 29;
+      pointer-events: none;
+      padding: 0 4.5%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: bottom 0.3s ease;
+    }
+
+    .stage-text-overlay.align-left {
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    .stage-text-overlay.align-center {
+      align-items: center;
+      text-align: center;
+    }
+
+    .stage-text-overlay.align-right {
+      align-items: flex-end;
+      text-align: right;
+    }
+
+    .stage-overlay-inner {
+      max-width: 92%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* TÍTULO PRINCIPAL (Serif Display elegante, calcado de la foto del ponente) */
+    .stage-overlay-title {
+      font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+      font-weight: 700;
+      font-size: var(--overlay-title-size, 62px);
+      line-height: 1.08;
+      color: #ffffff;
+      letter-spacing: -0.012em;
+      text-shadow: 
+        0 4px 28px rgba(0, 0, 0, 0.88),
+        0 2px 8px rgba(0, 0, 0, 0.75);
+      margin: 0;
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform, opacity;
+    }
+
+    /* SUBTÍTULO (Sans-serif negrita moderno y limpio) */
+    .stage-overlay-subtitle {
+      font-family: 'Plus Jakarta Sans', 'Montserrat', -apple-system, sans-serif;
+      font-weight: 700;
+      font-size: var(--overlay-sub-size, 25px);
+      line-height: 1.25;
+      color: #ffffff;
+      letter-spacing: 0.015em;
+      text-shadow: 
+        0 3px 18px rgba(0, 0, 0, 0.85),
+        0 1px 5px rgba(0, 0, 0, 0.65);
+      margin: 0;
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform, opacity;
+    }
+
+    /* ANIMACIÓN ENTRADA ESCALONADA (STAGGER) */
+    .stage-text-overlay.active .stage-overlay-title {
+      opacity: 1;
+      transform: translateY(0);
+      transition-delay: 0.15s;
+    }
+
+    .stage-text-overlay.active .stage-overlay-subtitle {
+      opacity: 1;
+      transform: translateY(0);
+      transition-delay: 0.32s;
     }
 
     /* Presentación Interactiva Nativa (Fallback / Modo Autónomo) con fundido de 1s */
@@ -1891,6 +1998,15 @@
       <video id="video-reverse-element" class="media-cover" playsinline muted preload="auto">
         <source src="Transitions/3x4_to_16x9_reverse.mp4" type="video/mp4" />
       </video>
+    <!-- Degradado Negro Inferior para textos / rótulos sobre la escena -->
+    <div id="stage-text-gradient" class="stage-text-gradient"></div>
+
+    <!-- Contenedor de Textos Superpuestos (Título Serif + Subtítulo) -->
+    <div id="stage-text-overlay" class="stage-text-overlay">
+      <div class="stage-overlay-inner">
+        <h1 id="stage-overlay-title" class="stage-overlay-title">Jose Luis Pulpón</h1>
+        <p id="stage-overlay-subtitle" class="stage-overlay-subtitle">Director general de MS</p>
+      </div>
     </div>
 
     <!-- Barra Inferior de Control y Línea de Tiempo (Broadcast Bottombar) -->
@@ -2224,19 +2340,19 @@
       if (clean.includes('docs.google.com/presentation')) {
         const mKey = clean.match(/\/d\/([a-zA-Z0-9_-]+)/);
         if (mKey) {
-          return `https://docs.google.com/presentation/d/${mKey[1]}/embed?start=false&loop=false&delayms=3000`;
+          return `https://docs.google.com/presentation/d/${mKey[1]}/embed?start=false&loop=false&delayms=3000&rm=minimal`;
         }
       }
 
       // Caso 2: URLs estándar de Google
       const mStd = clean.match(/https:\/\/docs\.google\.com\/presentation\/d\/([a-zA-Z0-9_-]+)/);
       if (mStd) {
-        return `https://docs.google.com/presentation/d/${mStd[1]}/embed?start=false&loop=false&delayms=3000`;
+        return `https://docs.google.com/presentation/d/${mStd[1]}/embed?start=false&loop=false&delayms=3000&rm=minimal`;
       }
 
       // Caso 3: OneDrive / Office Online / Otros
       if (clean.includes('/edit') || clean.includes('/view')) {
-        return clean.replace(/\/edit.*|\/view.*/, '/embed?start=false&loop=false&delayms=3000');
+        return clean.replace(/\/edit.*|\/view.*/, '/embed?start=false&loop=false&delayms=3000&rm=minimal');
       }
       return clean;
     }
@@ -2298,7 +2414,12 @@
               try { localStorage.setItem('dm_calib_version', CALIB_VERSION); } catch (e) { }
             }
             if (migrated) {
-              try { localStorage.setItem('dm_deck_slots', JSON.stringify(parsed)); } catch(e) {}
+              if (window.DMStorage) {
+                DMStorage.safeSetItem('dm_deck_slots', parsed);
+                DMStorage.safeSetItem('dm_deck_slots_' + targetDeck, parsed);
+              } else {
+                try { localStorage.setItem('dm_deck_slots', JSON.stringify(parsed)); } catch(e) {}
+              }
             }
             // Fusionar calibraciones del panel Admin (dm_admin_calib)
             try {
@@ -2320,6 +2441,16 @@
     }
 
     let deckSlots = getStoredSlots();
+
+    // Carga asíncrona inmediata desde IndexedDB para el deck activo en escenario
+    const _initTargetDeck = (new URLSearchParams(window.location.search)).get('deck') || (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
+    if (window.DMStorage) {
+      DMStorage.getDeckSlots(_initTargetDeck).then(stored => {
+        if (stored && Array.isArray(stored) && stored.length > 0) {
+          reloadSlotsFromData(stored);
+        }
+      });
+    }
 
     // ═══ GESTOR DE PRESETS / ASSETS EN ESCENARIO ═══
     function getActivePresetAssets() {
@@ -2511,7 +2642,8 @@
           hue: (typeof slot.hue === 'number') ? slot.hue : 0,
           color: getHueColor(slot.hue),
           pdfHash: slot.pdfHash || null,
-          calib: slot.calib ? { ...calibDefault, ...slot.calib } : calibDefault
+          calib: slot.calib ? { ...calibDefault, ...slot.calib } : calibDefault,
+          textOverlay: slot.textOverlay || null
         });
 
         if (slot.format === 'title') {
@@ -2621,7 +2753,8 @@
           hue: (typeof slot.hue === 'number') ? slot.hue : 0,
           color: getHueColor(slot.hue),
           pdfHash: slot.pdfHash || null,
-          calib: slot.calib ? { ...calibDefault, ...slot.calib } : calibDefault
+          calib: slot.calib ? { ...calibDefault, ...slot.calib } : calibDefault,
+          textOverlay: slot.textOverlay || null
         });
 
         const nextSlot = slotsArr[(idx + 1) % slotsArr.length];
@@ -3392,6 +3525,72 @@
       }
     }
 
+    /* ---- Rótulos y Textos Superpuestos sobre la Escena (Lower Third) ---- */
+    let overlayAnimTimer = null;
+    function applyStepTextOverlay(step) {
+      const gradEl = document.getElementById('stage-text-gradient');
+      const overlayEl = document.getElementById('stage-text-overlay');
+      const titleEl = document.getElementById('stage-overlay-title');
+      const subEl = document.getElementById('stage-overlay-subtitle');
+
+      if (!gradEl || !overlayEl) return;
+      if (overlayAnimTimer) { clearTimeout(overlayAnimTimer); overlayAnimTimer = null; }
+
+      // Extraer datos del overlay
+      let ov = null;
+      if (step && step.type === 'slide') {
+        ov = step.textOverlay;
+        if (!ov && step.slotId && typeof deckSlots !== 'undefined' && Array.isArray(deckSlots)) {
+          const matchedSlot = deckSlots.find(s => s.id === step.slotId);
+          if (matchedSlot) ov = matchedSlot.textOverlay;
+        }
+      }
+
+      if (ov && ov.enabled && (ov.title || ov.subtitle)) {
+        // Configurar contenidos
+        if (titleEl) {
+          titleEl.textContent = ov.title || '';
+          titleEl.style.display = ov.title ? 'block' : 'none';
+        }
+        if (subEl) {
+          subEl.textContent = ov.subtitle || '';
+          subEl.style.display = ov.subtitle ? 'block' : 'none';
+        }
+
+        // Configurar variables CSS
+        const bottomY = (ov.bottomY !== undefined) ? ov.bottomY : 7;
+        const titleSize = (ov.titleSize !== undefined) ? ov.titleSize : 62;
+        const subSize = (ov.subSize !== undefined) ? ov.subSize : 25;
+        const gradHeight = (ov.gradientHeight !== undefined) ? ov.gradientHeight : 42;
+        const gradOpacity = (ov.gradientOpacity !== undefined) ? (ov.gradientOpacity / 100) : 0.92;
+
+        overlayEl.style.setProperty('--overlay-bottom-y', `${bottomY}%`);
+        overlayEl.style.setProperty('--overlay-title-size', `${titleSize}px`);
+        overlayEl.style.setProperty('--overlay-sub-size', `${subSize}px`);
+
+        overlayEl.classList.remove('align-left', 'align-center', 'align-right');
+        overlayEl.classList.add(`align-${ov.align || 'center'}`);
+
+        if (ov.gradientEnabled !== false) {
+          gradEl.style.setProperty('--overlay-grad-height', `${gradHeight}%`);
+          gradEl.style.setProperty('--overlay-grad-opacity', `${gradOpacity}`);
+          gradEl.classList.add('active');
+        } else {
+          gradEl.classList.remove('active');
+        }
+
+        // Reinicio limpio de la animación para entrada fresca y fluida
+        overlayEl.classList.remove('active');
+        void overlayEl.offsetWidth; // Forzar reflow
+        overlayAnimTimer = setTimeout(() => {
+          overlayEl.classList.add('active');
+        }, 50);
+      } else {
+        overlayEl.classList.remove('active');
+        gradEl.classList.remove('active');
+      }
+    }
+
     function updateStepUI(preserveVisuals = false) {
       if (!STEPS || STEPS.length === 0) return;
       applyPresetFrameImages();
@@ -3401,6 +3600,9 @@
         currentStepIndex = 0;
       }
       const step = STEPS[currentStepIndex];
+
+      // Aplicar Rótulo / Textos y degradado inferior en tiempo real
+      applyStepTextOverlay(step);
 
       // Logos: visibles siempre excepto en portada title y durante transición title → X
       if (step.format === 'title') {
@@ -4313,15 +4515,16 @@
     }
 
     function saveDeckSlots() {
-      try {
-        localStorage.setItem('dm_deck_slots', JSON.stringify(deckSlots));
-      } catch (e) {
-        console.warn('localStorage quota exceeded on dm_deck_slots:', e);
-      }
       const dId = (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
-      try {
-        localStorage.setItem('dm_deck_slots_' + dId, JSON.stringify(deckSlots));
-      } catch (e) {}
+
+      if (window.DMStorage) {
+        DMStorage.saveDeckSlots(dId, deckSlots);
+        DMStorage.safeSetItem('dm_deck_slots', deckSlots);
+        DMStorage.safeSetItem('dm_deck_slots_' + dId, deckSlots);
+      } else {
+        try { localStorage.setItem('dm_deck_slots', JSON.stringify(deckSlots)); } catch (e) {}
+        try { localStorage.setItem('dm_deck_slots_' + dId, JSON.stringify(deckSlots)); } catch (e) {}
+      }
 
       rebuildStepsFromSlots();
 
@@ -4334,7 +4537,11 @@
       };
       bus.postMessage(payload);
       try {
-        localStorage.setItem('dm_deck_slots_sync', JSON.stringify(payload));
+        if (window.DMStorage) {
+          DMStorage.safeSetItem('dm_deck_slots_sync', payload);
+        } else {
+          localStorage.setItem('dm_deck_slots_sync', JSON.stringify(payload));
+        }
       } catch (e) {}
 
       if (window.DMCloud && DMCloud.isConfigured()) {
@@ -4500,25 +4707,7 @@
         };
       }
 
-      localStorage.setItem('dm_deck_slots', JSON.stringify(deckSlots));
-      STEPS = buildTimeline(deckSlots);
-      updateStepUI();
-
-      const payload = {
-        type: 'DECK_SLOTS_UPDATED',
-        slots: deckSlots,
-        timeline: STEPS,
-        time: Date.now()
-      };
-      bus.postMessage(payload);
-      try {
-        localStorage.setItem('dm_deck_slots_sync', JSON.stringify(payload));
-      } catch(e) {}
-
-      // Sincronizar en Supabase si está disponible
-      if (window.DMCloud && DMCloud.isConfigured()) {
-        DMCloud.saveDeckConfig(deckSlots, '20260923_def_v2', 'stage_modal');
-      }
+      saveDeckSlots();
 
       configModal.classList.remove('open');
       showHint('¡Configuración de plazas y calibración guardada!', 3000);
@@ -4683,6 +4872,19 @@
             else if (fmt === '9:16') applyFrame916Coords(calibData.calib);
             else if (fmt === '16:9') applyFrame2Coords(calibData.calib);
           }
+        } else if (e.key === 'dm_slot_text_overlay_sync') {
+          const ovData = JSON.parse(e.newValue);
+          if (ovData && ovData.slotId) {
+            const slot = deckSlots.find(s => s.id === ovData.slotId);
+            if (slot) slot.textOverlay = ovData.textOverlay;
+            STEPS.forEach(st => {
+              if (st.slotId === ovData.slotId) st.textOverlay = ovData.textOverlay;
+            });
+            const currentStep = STEPS[currentStepIndex];
+            if (currentStep && currentStep.slotId === ovData.slotId) {
+              applyStepTextOverlay(currentStep);
+            }
+          }
         } else if (e.key === 'dm_admin_calib') {
           // Calibración global desde admin.html — aplica a todos los slots del formato correspondiente
           try {
@@ -4814,6 +5016,18 @@
         if (fmt === '3:4') applyPhoneCoords(data.calib);
         else if (fmt === '9:16') applyFrame916Coords(data.calib);
         else if (fmt === '16:9') applyFrame2Coords(data.calib);
+      }
+      // Actualización de Rótulo / Textos y degradado en tiempo real
+      else if (data.type === 'SLOT_TEXT_OVERLAY_UPDATE') {
+        const slot = data.slotId ? deckSlots.find(s => s.id === data.slotId) : null;
+        if (slot) slot.textOverlay = data.textOverlay;
+        STEPS.forEach(st => {
+          if (st.slotId === data.slotId) st.textOverlay = data.textOverlay;
+        });
+        const currentStep = STEPS[currentStepIndex];
+        if (currentStep && currentStep.slotId === data.slotId) {
+          applyStepTextOverlay(currentStep);
+        }
       }
       // Calibración global desde el panel Admin (admin.html)
       else if (data.type === 'SLOT_CALIB_UPDATE_GLOBAL' && data.calib && data.frameKey) {

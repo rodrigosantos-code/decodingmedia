@@ -209,5 +209,75 @@
       "slides/slot-1790248054592/slide_3.jpg"
     ],
     "updated_at": 1791190440.091241
+  },
+  "slot-1791207998827": {
+    "sha": "d7326fbc6d9d3457693f804e4ea55a21b5b91bdecff5a171d771bd377208f3d2",
+    "page_count": 4,
+    "slide_images": [
+      "slides/slot-1791207998827/slide_1.jpg",
+      "slides/slot-1791207998827/slide_2.jpg",
+      "slides/slot-1791207998827/slide_3.jpg",
+      "slides/slot-1791207998827/slide_4.jpg"
+    ],
+    "pdf_filename": "Sin ti\u0301tulo-1.pdf",
+    "source_type": "pdf",
+    "updated_at": 1791210601.195657
+  },
+  "slot-1791289095562": {
+    "sha": "f8e31936ae6983548eaa5286b4c9be986da82eb7195891946af17f3e38ec6aef",
+    "page_count": 13,
+    "slide_images": [
+      "slides/slot-1791289095562/slide_1.jpg",
+      "slides/slot-1791289095562/slide_2.jpg",
+      "slides/slot-1791289095562/slide_3.jpg",
+      "slides/slot-1791289095562/slide_4.jpg",
+      "slides/slot-1791289095562/slide_5.jpg",
+      "slides/slot-1791289095562/slide_6.jpg",
+      "slides/slot-1791289095562/slide_7.jpg",
+      "slides/slot-1791289095562/slide_8.jpg",
+      "slides/slot-1791289095562/slide_9.jpg",
+      "slides/slot-1791289095562/slide_10.jpg",
+      "slides/slot-1791289095562/slide_11.jpg",
+      "slides/slot-1791289095562/slide_12.jpg",
+      "slides/slot-1791289095562/slide_13.jpg"
+    ],
+    "pdf_filename": "La_TV_hace_que_lo_digital_funcione_Making_Science_2026.pdf",
+    "source_type": "pdf",
+    "updated_at": 1791289124.637082
+  },
+  "slot-1791537228199": {
+    "sha": "5cad7b358ffdf8807dc9ef007e4225dd3c233780014898b7a5918a6d58307241",
+    "page_count": 14,
+    "slide_images": [
+      "slides/slot-1791537228199/slide_1.jpg",
+      "slides/slot-1791537228199/slide_2.jpg",
+      "slides/slot-1791537228199/slide_3.jpg",
+      "slides/slot-1791537228199/slide_4.jpg",
+      "slides/slot-1791537228199/slide_5.jpg",
+      "slides/slot-1791537228199/slide_6.jpg",
+      "slides/slot-1791537228199/slide_7.jpg",
+      "slides/slot-1791537228199/slide_8.jpg",
+      "slides/slot-1791537228199/slide_9.jpg",
+      "slides/slot-1791537228199/slide_10.jpg",
+      "slides/slot-1791537228199/slide_11.jpg",
+      "slides/slot-1791537228199/slide_12.jpg",
+      "slides/slot-1791537228199/slide_13.jpg",
+      "slides/slot-1791537228199/slide_14.jpg"
+    ],
+    "updated_at": 1791541615.7743979
+  },
+  "slot-1791539247153": {
+    "sha": "ee4d0a8ed0798b38157e9cc19b97f75b61c6c0e37e3b57178642233593b42f2f",
+    "page_count": 7,
+    "slide_images": [
+      "slides/slot-1791539247153/slide_1.jpg",
+      "slides/slot-1791539247153/slide_2.jpg",
+      "slides/slot-1791539247153/slide_3.jpg",
+      "slides/slot-1791539247153/slide_4.jpg",
+      "slides/slot-1791539247153/slide_5.jpg",
+      "slides/slot-1791539247153/slide_6.jpg",
+      "slides/slot-1791539247153/slide_7.jpg"
+    ],
+    "updated_at": 1791541619.6670148
   }
 }

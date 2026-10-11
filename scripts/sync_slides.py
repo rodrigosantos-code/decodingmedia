@@ -79,7 +79,7 @@ def update_supabase_deck_slots(deck_id, slots):
         'Prefer': 'return=minimal'
     })
     try:
-        with urllib.request.urlopen(req, context=SSL_CTX) as resp:
+        with urllib.request.urlopen(req, context=SSL_CTX, timeout=30) as resp:
             return resp.status in (200, 204)
     except Exception as e:
         print(f"[Sync] Error updating Supabase deck '{deck_id}': {e}")

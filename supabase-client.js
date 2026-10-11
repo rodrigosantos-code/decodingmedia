@@ -11,6 +11,134 @@
   const STORAGE_KEY_DECKS_INDEX = 'dm_local_decks_index';
   const DEFAULT_DECK_ID = 'default';
 
+  // =========================================================================
+  // GESTOR DE ALMACENAMIENTO HÍBRIDO (IndexedDB + LocalStorage seguro)
+  // Permite almacenar proyectos y PDFs con múltiples diapositivas sin límite de 5MB
+  // =========================================================================
+  const DMStorage = {
+    DB_NAME: 'dm_deck_storage',
+    DB_VERSION: 1,
+    STORE_DECKS: 'decks',
+    _dbPromise: null,
+
+    _getDB: function() {
+      if (this._dbPromise) return this._dbPromise;
+      this._dbPromise = new Promise((resolve) => {
+        if (typeof indexedDB === 'undefined') {
+          console.warn('[DMStorage] IndexedDB no soportado en este navegador');
+          resolve(null);
+          return;
+        }
+        const req = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(this.STORE_DECKS)) {
+            db.createObjectStore(this.STORE_DECKS, { keyPath: 'id' });
+          }
+        };
+        req.onsuccess = (e) => resolve(e.target.result);
+        req.onerror = (e) => {
+          console.warn('[DMStorage] Error abriendo IndexedDB:', e.target.error);
+          resolve(null);
+        };
+      });
+      return this._dbPromise;
+    },
+
+    saveDeckSlots: async function(deckId, slots) {
+      if (!deckId) deckId = DEFAULT_DECK_ID;
+      const db = await this._getDB();
+      if (!db) return false;
+      return new Promise((resolve) => {
+        try {
+          const tx = db.transaction(this.STORE_DECKS, 'readwrite');
+          const store = tx.objectStore(this.STORE_DECKS);
+          store.put({
+            id: deckId,
+            slots: slots,
+            updated_at: new Date().toISOString()
+          });
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = (err) => {
+            console.warn('[DMStorage] Error guardando deck en IndexedDB:', err);
+            resolve(false);
+          };
+        } catch (e) {
+          console.warn('[DMStorage] Excepción guardando en IndexedDB:', e);
+          resolve(false);
+        }
+      });
+    },
+
+    getDeckSlots: async function(deckId) {
+      if (!deckId) deckId = DEFAULT_DECK_ID;
+      const db = await this._getDB();
+      if (!db) return null;
+      return new Promise((resolve) => {
+        try {
+          const tx = db.transaction(this.STORE_DECKS, 'readonly');
+          const store = tx.objectStore(this.STORE_DECKS);
+          const req = store.get(deckId);
+          req.onsuccess = () => {
+            if (req.result && Array.isArray(req.result.slots)) {
+              resolve(req.result.slots);
+            } else {
+              resolve(null);
+            }
+          };
+          req.onerror = () => resolve(null);
+        } catch (e) {
+          console.warn('[DMStorage] Excepción leyendo de IndexedDB:', e);
+          resolve(null);
+        }
+      });
+    },
+
+    // Guardado seguro en localStorage que previene excepciones de cuota (QuotaExceededError)
+    safeSetItem: function(key, data) {
+      const str = typeof data === 'string' ? data : JSON.stringify(data);
+      try {
+        localStorage.setItem(key, str);
+        return true;
+      } catch (e) {
+        console.warn(`[DMStorage] QuotaExceeded en '${key}'. Almacenando versión ligera sin cadenas base64...`);
+        try {
+          let parsed = typeof data === 'string' ? JSON.parse(data) : data;
+          if (Array.isArray(parsed)) {
+            const stripped = parsed.map(s => {
+              if (s.slideImages && Array.isArray(s.slideImages)) {
+                return {
+                  ...s,
+                  slideImages: s.slideImages.filter(img => typeof img === 'string' && !img.startsWith('data:'))
+                };
+              }
+              return s;
+            });
+            localStorage.setItem(key, JSON.stringify(stripped));
+            return true;
+          } else if (parsed && typeof parsed === 'object') {
+            if (Array.isArray(parsed.slots)) {
+              const strippedSlots = parsed.slots.map(s => {
+                if (s.slideImages && Array.isArray(s.slideImages)) {
+                  return {
+                    ...s,
+                    slideImages: s.slideImages.filter(img => typeof img === 'string' && !img.startsWith('data:'))
+                  };
+                }
+                return s;
+              });
+              localStorage.setItem(key, JSON.stringify({ ...parsed, slots: strippedSlots }));
+              return true;
+            }
+          }
+        } catch (e2) {}
+        return false;
+      }
+    }
+  };
+
+  window.DMStorage = DMStorage;
+
   let client = null;
   let statusListeners = [];
   let currentStatus = 'not_configured'; // 'not_configured' | 'connecting' | 'connected' | 'error' | 'syncing'
@@ -290,6 +418,10 @@
           return null;
         }
 
+        if (data && Array.isArray(data.slots)) {
+          DMStorage.saveDeckSlots(targetId, data.slots);
+        }
+
         notifyStatus('connected', 'Sincronizado');
         return data;
       } catch (err) {
@@ -302,6 +434,12 @@
     // Guardar escenas/slots en Supabase para un deck dado
     saveDeckConfig: async function(slots, calibVersion, sender = 'editor', deckId, deckName) {
       const targetId = deckId || getActiveDeckId();
+      
+      // Asegurar persistencia local inmediata en IndexedDB
+      if (Array.isArray(slots)) {
+        DMStorage.saveDeckSlots(targetId, slots);
+      }
+
       if (!client) {
         initClient();
         if (!client) return false;

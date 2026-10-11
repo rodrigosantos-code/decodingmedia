@@ -6,10 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Decoding Media - Control Room</title>
   <link rel="icon" type="image/x-icon" href="dm.ico?v=20260924">
-  <!-- Google Fonts: Montserrat -->
+  <!-- Google Fonts: Montserrat, Playfair Display (Serif), Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
   
   <!-- Supabase Cloud SDK y Cliente -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -251,6 +251,60 @@
       transform: translateY(0);
     }
 
+    .btn-header-save {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 9px 18px;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.25);
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-header-save:hover {
+      background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-header-save:active {
+      transform: translateY(0);
+    }
+
+    .btn-header-save.saving {
+      opacity: 0.85;
+      cursor: wait;
+      pointer-events: none;
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #94a3b8;
+      box-shadow: none;
+    }
+
+    .btn-header-save.saved {
+      background: #10b981;
+      border-color: #34d399;
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+    }
+
+    .btn-header-save.error {
+      background: #ef4444;
+      border-color: #f87171;
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+    }
+
     .btn-header-live-next {
       background: #141620;
       border: 1px solid rgba(236, 72, 153, 0.45);
@@ -281,122 +335,218 @@
       transform: translateY(0);
     }
 
-    .live-remote-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 8px;
+    /* =========================================================================
+       PREVISUALIZACIÓN DE FRAMES FIJOS (ESTÁTICA, SIN IFRAME NI CONTROL REMOTO)
+       ========================================================================= */
+    .static-preview-stage {
+      position: absolute;
+      inset: 0;
       width: 100%;
-      max-width: 440px;
-      justify-content: center;
-      flex-shrink: 0;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+      user-select: none;
     }
 
-    .btn-live-remote {
-      background: #141620;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      color: #cbd5e1;
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 8px 14px;
-      border-radius: 9px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      white-space: nowrap;
+    /* Marco fijo base (detrás de la pantalla) */
+    .prev-frame-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      z-index: 5;
     }
 
-    .btn-live-remote:hover {
-      background: #1c1e2a;
-      border-color: rgba(255, 255, 255, 0.28);
-      color: #fff;
-      transform: translateY(-1px);
-    }
-
-    .btn-live-remote:active {
-      transform: translateY(0);
-    }
-
-    .btn-live-remote.btn-live-next {
-      flex: 1;
-      background: #f9a9d4;
-      color: #000000 !important;
-      font-weight: 800;
-      border: none;
-      padding: 9px 18px;
-      font-size: 12.5px;
-      box-shadow: 0 2px 10px rgba(249, 169, 212, 0.28);
-    }
-
-    .btn-live-remote.btn-live-next:hover {
-      background: #f472b6;
-      box-shadow: 0 4px 14px rgba(244, 114, 182, 0.4);
-      transform: translateY(-1px);
-    }
-
-    .btn-live-remote.btn-live-reset {
-      padding: 8px 10px;
-      color: #8c95a6;
-    }
-
-    .btn-live-remote.btn-live-reset:hover {
-      color: #fff;
-    }
-
-    .btn-live-remote.btn-live-lock {
-      padding: 8px 14px;
-      color: #ef4444;
-      border-color: rgba(239,68,68,0.35);
-      background: rgba(239,68,68,0.08);
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .btn-live-remote.btn-live-lock:hover {
-      color: #fff;
-      border-color: rgba(239,68,68,0.6);
-      background: rgba(239,68,68,0.16);
-    }
-
-    /* Estado: modo libre (editor desconectado del directo) */
-    .live-remote-bar.live-locked .btn-live-next,
-    .live-remote-bar.live-locked .btn-live-prev {
-      opacity: 0.32;
+    /* Marco frontal con transparencia (dedos, manos y bordes sobre la pantalla) */
+    .prev-frame-sinfondo {
+      z-index: 12;
       pointer-events: none;
     }
 
-    .live-remote-bar.live-locked .btn-live-lock {
-      color: #8c95a6;
-      border-color: rgba(255,255,255,0.14);
-      background: transparent;
+    /* Hueco / Pantalla Calibrada */
+    .prev-screen-slot {
+      position: absolute;
+      z-index: 8;
+      background: #000;
+      overflow: hidden;
+      transform-origin: center center;
+      pointer-events: none;
+      box-shadow: 0 0 24px rgba(0, 0, 0, 0.7);
     }
 
-    .live-locked-badge {
-      display: none;
+    /* Imagen de diapositiva */
+    .prev-slide-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+      transform-origin: center center;
+    }
+
+    /* Placeholder cuando la escena no tiene diapositiva adjunta */
+    .prev-empty-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0d0f17;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 12px;
+      text-align: center;
+    }
+
+    /* Degradado negro inferior */
+    .prev-text-gradient {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 42%;
+      z-index: 28;
+      pointer-events: none;
+      background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.92) 0%,
+        rgba(0, 0, 0, calc(0.92 * 0.72)) 35%,
+        rgba(0, 0, 0, calc(0.92 * 0.25)) 70%,
+        rgba(0, 0, 0, 0) 100%
+      );
+      transition: height 0.15s ease, opacity 0.2s ease;
+    }
+
+    /* Rótulo de textos (Título y Subtítulo) */
+    .prev-text-overlay {
+      position: absolute;
+      left: 0;
+      bottom: 7%;
+      width: 100%;
+      z-index: 29;
+      pointer-events: none;
+      padding: 0 5%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-sizing: border-box;
+      transition: bottom 0.15s ease;
+    }
+
+    .prev-text-overlay.align-left {
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    .prev-text-overlay.align-center {
+      align-items: center;
+      text-align: center;
+    }
+
+    .prev-text-overlay.align-right {
+      align-items: flex-end;
+      text-align: right;
+    }
+
+    .prev-overlay-inner {
+      max-width: 92%;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .prev-overlay-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 700;
+      font-size: 20px;
+      line-height: 1.1;
+      color: #ffffff;
+      margin: 0;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.9), 0 1px 4px rgba(0, 0, 0, 0.8);
+      letter-spacing: -0.012em;
+    }
+
+    .prev-overlay-subtitle {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      font-weight: 700;
+      font-size: 10px;
+      line-height: 1.25;
+      color: #ffffff;
+      margin: 0;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+      letter-spacing: 0.015em;
+    }
+
+    /* Logos en esquinas superiores */
+    .prev-corner-logo {
+      position: absolute;
+      z-index: 35;
+      pointer-events: none;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.7));
+      display: flex;
+      align-items: center;
+    }
+
+    .prev-corner-logo-left {
+      top: 3.5%;
+      left: 3.5%;
+      height: 4.5%;
+      max-height: 24px;
+    }
+
+    .prev-corner-logo-left img {
+      height: 100%;
+      width: auto;
+      max-height: 24px;
+      object-fit: contain;
+    }
+
+    .prev-corner-logo-right {
+      top: 3.5%;
+      right: 3.5%;
+      height: 4.5%;
+      max-height: 24px;
+    }
+
+    .prev-corner-logo-right img {
+      height: 100%;
+      width: auto;
+      max-height: 24px;
+      object-fit: contain;
+    }
+
+    /* Badge informativo de escena en la esquina superior */
+    .prev-slot-info-pill {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 40;
+      display: inline-flex;
       align-items: center;
       gap: 5px;
-      font-size: 10.5px;
+      background: rgba(10, 12, 18, 0.88);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 3px 8px;
+      border-radius: 9999px;
+      font-size: 9px;
       font-weight: 700;
-      color: #fbbf24;
-      letter-spacing: 0.3px;
-    }
-    .live-locked-badge.visible {
-      display: flex;
+      color: #e2e8f0;
+      pointer-events: none;
+      letter-spacing: 0.02em;
     }
 
-    .live-rec-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #ef4444;
-      box-shadow: 0 0 8px #ef4444;
-      animation: blink 1.4s infinite;
-      display: inline-block;
-      flex-shrink: 0;
+    .prev-slot-info-pill .pill-dot {
+      color: rgba(255, 255, 255, 0.3);
     }
 
     .status-badge {
@@ -550,14 +700,6 @@
       width: 100%;
     }
 
-    .preview-hint {
-      font-size: 10px;
-      color: #64748b;
-      margin-top: 8px;
-      font-weight: 500;
-      text-align: center;
-      flex-shrink: 0;
-    }
 
     .calib-card {
       display: flex;
@@ -936,6 +1078,61 @@
       box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.2);
     }
 
+    /* --- SECCIÓN RÓTULO / TEXTOS ENCIMA DE LA ESCENA --- */
+    .calib-section-divider {
+      margin: 16px 0 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 14px;
+    }
+
+    .btn-align-pill {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-align-pill:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .btn-align-pill.active {
+      background: rgba(236, 72, 153, 0.2);
+      border-color: #ec4899;
+      color: #fff;
+      box-shadow: 0 0 10px rgba(236, 72, 153, 0.3);
+    }
+
+    .slot-overlay-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      border-radius: 4px;
+      padding: 1px 5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .slot-overlay-badge:hover {
+      background: rgba(56, 189, 248, 0.22);
+      border-color: rgba(56, 189, 248, 0.45);
+    }
+
     /* Presentación Activa */
     .input-row {
       display: flex;
@@ -965,7 +1162,7 @@
     .preview-box {
       width: 100%;
       max-width: 100%;
-      max-height: calc(100% - 24px);
+      max-height: 100%;
       aspect-ratio: 16 / 9;
       background: #000;
       border-radius: 12px;
@@ -974,6 +1171,7 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(236, 72, 153, 0.08);
       margin: 0;
+      cursor: default;
     }
 
     .preview-phase-badge {
@@ -1022,24 +1220,44 @@
     /* Toast notification */
     .toast {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: 24px;
+      right: 24px;
       background: #151824;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.18);
       color: #fff;
-      padding: 8px 16px;
-      border-radius: 4px;
-      font-size: 12px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
       font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 8px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
       opacity: 0;
       transform: translateY(12px);
-      transition: all 0.25s ease;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       pointer-events: none;
-      z-index: 200;
+      z-index: 9999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .toast.toast-error {
+      background: #230d11;
+      border: 1px solid #ef4444;
+      color: #fecaca;
+      box-shadow: 0 10px 30px rgba(239, 68, 68, 0.45);
+    }
+
+    .toast.toast-success {
+      background: #06281e;
+      border: 1px solid #10b981;
+      color: #a7f3d0;
+      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.35);
     }
 
     /* Gestor Dinámico de Diapositivas (Slots) */
@@ -1442,6 +1660,15 @@
         <span id="sync-slides-text" style="font-weight: 700;">Sincronizar Diapositivas</span>
       </button>
 
+      <button type="button" class="btn-header-save" id="btn-manual-save" onclick="manualSaveProject()" title="Guardar todos los cambios (Ctrl+S / Cmd+S)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        <span id="save-btn-text">Guardar</span>
+      </button>
+
       <a href="presentation.html" id="open-stage-btn" target="_blank" class="btn-stage-pink">
         <span>Abrir<br>Escenario &nearr;</span>
       </a>
@@ -1482,48 +1709,61 @@
         </div>
       </div>
 
-      <!-- Columna 2: Previsualización 16:9 en Vivo -->
+      <!-- Columna 2: Previsualización 16:9 de Frames Fijos -->
       <div class="card preview-card">
         <div class="card-header">
           <div class="card-title">
             <span>Previsualización (16:9)</span>
           </div>
+          <span id="preview-slot-badge" style="font-size: 10px; padding: 2px 8px; border-radius: 999px; background: rgba(236,72,153,0.15); border: 1px solid rgba(236,72,153,0.3); color: #f472b6; font-weight: 700;">Marco Fijo</span>
         </div>
 
         <div class="preview-wrap">
-          <div class="preview-box" id="preview-box" style="cursor: pointer;" title="Haz clic para avanzar al siguiente paso">
-            <iframe id="preview-stage-iframe" src="presentation.html?preview=1&static=1&v=20260924_1345"
-              style="position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; border: none; pointer-events: none; display: block; transform-origin: 0 0;"
-            ></iframe>
+          <div class="preview-box" id="preview-box">
+            <div class="static-preview-stage" id="static-preview-stage">
+              <!-- Capa 1: Marco base -->
+              <img id="prev-frame-base" class="prev-frame-img" src="presets/preset2/3x4.png" alt="Marco Fijo" />
+
+              <!-- Capa 2: Hueco de pantalla calibrado -->
+              <div id="prev-screen-slot" class="prev-screen-slot">
+                <img id="prev-slide-img" class="prev-slide-img" src="" alt="Diapositiva" />
+                <div id="prev-empty-placeholder" class="prev-empty-placeholder">
+                  <span>Sin Diapositiva</span>
+                </div>
+              </div>
+
+              <!-- Capa 3: Marco frontal sin fondo (dedos/manos por encima de la pantalla) -->
+              <img id="prev-frame-overlay" class="prev-frame-img prev-frame-sinfondo" src="presets/preset2/3x4_sinfondo.png" alt="Marco Frontal" />
+
+              <!-- Capa 4: Degradado negro inferior -->
+              <div id="prev-text-gradient" class="prev-text-gradient"></div>
+
+              <!-- Capa 5: Rótulo de textos (Título y Subtítulo) -->
+              <div id="prev-text-overlay" class="prev-text-overlay">
+                <div class="prev-overlay-inner">
+                  <h2 id="prev-overlay-title" class="prev-overlay-title">Jose Luis Pulpón</h2>
+                  <p id="prev-overlay-subtitle" class="prev-overlay-subtitle">Director general de MS</p>
+                </div>
+              </div>
+
+              <!-- Capa 6: Logos superiores de esquinas -->
+              <div class="prev-corner-logo prev-corner-logo-left" id="prev-corner-logo-left">
+                <img src="logo_izquierda.png" alt="Making Science" />
+              </div>
+              <div class="prev-corner-logo prev-corner-logo-right" id="prev-corner-logo-right">
+                <img src="logo_derecha.png" alt="Decoding Media" />
+              </div>
+
+              <!-- Capa 7: Badge informativo de escena -->
+              <div class="prev-slot-info-pill" id="prev-slot-info-pill">
+                <span id="prev-slot-badge-num">#1</span>
+                <span class="pill-dot">&bull;</span>
+                <span id="prev-slot-badge-fmt">3:4</span>
+                <span class="pill-dot">&bull;</span>
+                <span id="prev-slot-badge-name">Escena 1</span>
+              </div>
+            </div>
           </div>
-          <!-- Barra de Control Remoto de Directo -->
-          <div class="live-remote-bar" id="live-remote-bar">
-            <button type="button" class="btn-live-remote btn-live-prev" onclick="sendCommand('PREV_STEP')" title="Retroceder a la escena anterior en directo">
-              <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-              <span>Anterior</span>
-            </button>
-
-            <button type="button" class="btn-live-remote btn-live-next" onclick="sendCommand('NEXT_STEP')" title="Avanzar de escena en directo en la proyección">
-              <span class="live-rec-dot"></span>
-              <span>Pasar Escena en Directo ▶</span>
-            </button>
-
-            <button type="button" class="btn-live-remote btn-live-reset" onclick="sendCommand('RESET')" title="Reiniciar presentación al principio">
-              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
-            </button>
-
-            <button type="button" class="btn-live-remote btn-live-lock" id="btn-live-lock" onclick="toggleLiveMode()" title="Navegar libremente sin afectar al directo">
-              <span class="live-rec-dot" id="lock-dot"></span>
-              <svg class="icon-svg" viewBox="0 0 24 24" id="lock-icon" style="display:none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-              <span id="lock-label">En Directo</span>
-            </button>
-          </div>
-          <span id="live-locked-badge" class="live-locked-badge">
-            <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#fbbf24;fill:none;stroke-width:2;stroke-linecap:round;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            Modo libre — el editor no afecta al directo
-          </span>
-
-          <span class="preview-hint" style="margin-top: 5px;">Haz clic en la pantalla o pulsa [Enter] para avanzar paso</span>
           <span id="preview-phase-text" style="display: none;"></span>
         </div>
       </div>
@@ -1624,6 +1864,126 @@
               <input type="range" id="slide-zoom" min="50" max="250" step="1" value="100"
                 oninput="syncVal('zoom', this.value)">
               <input type="number" id="num-zoom" step="1" value="100" onchange="syncVal('zoom', this.value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN: RÓTULO / TEXTOS SUPERPUESTOS ENCIMA DE LA ESCENA -->
+        <div class="calib-section-divider" id="overlay-section">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11.5px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 5px;">
+                <svg style="width:14px;height:14px;color:#ec4899;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+                Rótulo en Pantalla
+              </span>
+              <span style="font-size: 9.5px; padding: 2px 6px; background: rgba(236,72,153,0.15); color: #f472b6; border: 1px solid rgba(236,72,153,0.3); border-radius: 4px; font-weight: 700;">Lower Third</span>
+            </div>
+            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="checkbox" id="overlay-enable-check" onchange="toggleOverlayEnabled(this.checked)" style="accent-color: #ec4899; cursor: pointer; width: 16px; height: 16px;" />
+              <span style="font-size: 11px; font-weight: 700; color: #e2e8f0;">Mostrar</span>
+            </label>
+          </div>
+
+          <div id="overlay-controls-panel" style="display: flex; flex-direction: column; gap: 9px; transition: opacity 0.2s ease;">
+            <!-- Texto Principal (Título / Nombre) -->
+            <div class="slider-group">
+              <div class="slider-label-row">
+                <span class="slider-label">Texto Principal (Título Serif)</span>
+              </div>
+              <input type="text" id="overlay-input-title" class="text-input" style="width: 100%; font-family: 'Playfair Display', Georgia, serif; font-size: 13.5px; font-weight: 700; padding: 7px 10px;" placeholder="Ej: Jose Luis Pulpón" oninput="syncOverlayText('title', this.value)" />
+            </div>
+
+            <!-- Subtítulo -->
+            <div class="slider-group">
+              <div class="slider-label-row">
+                <span class="slider-label">Subtítulo (Cargo / Entidad)</span>
+              </div>
+              <input type="text" id="overlay-input-subtitle" class="text-input" style="width: 100%; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 600; padding: 7px 10px;" placeholder="Ej: Director general de MS" oninput="syncOverlayText('subtitle', this.value)" />
+            </div>
+
+            <!-- Posición Vertical (Y desde abajo) -->
+            <div class="slider-group">
+              <div class="slider-label-row">
+                <span class="slider-label">Posición Inferior (Y %)</span>
+                <span class="slider-val-tag" id="tag-overlay-y">7%</span>
+              </div>
+              <div class="slider-control-row">
+                <input type="range" id="slide-overlay-y" min="2" max="35" step="0.5" value="7" oninput="syncOverlayNum('bottomY', this.value)" />
+                <input type="number" id="num-overlay-y" step="0.5" value="7" onchange="syncOverlayNum('bottomY', this.value)" />
+              </div>
+            </div>
+
+            <!-- Alineación Horizontal -->
+            <div class="slider-group">
+              <div class="slider-label-row">
+                <span class="slider-label">Alineación Horizontal</span>
+              </div>
+              <div style="display: flex; gap: 5px; height: 28px; margin-top: 2px;">
+                <button type="button" class="btn-align-pill" id="btn-align-left" onclick="syncOverlayAlign('left')">Izquierda</button>
+                <button type="button" class="btn-align-pill active" id="btn-align-center" onclick="syncOverlayAlign('center')">Centrado</button>
+                <button type="button" class="btn-align-pill" id="btn-align-right" onclick="syncOverlayAlign('right')">Derecha</button>
+              </div>
+            </div>
+
+            <!-- Sliders de tamaño de fuentes -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <!-- Tamaño Título -->
+              <div class="slider-group">
+                <div class="slider-label-row">
+                  <span class="slider-label">Tam. Título (px)</span>
+                </div>
+                <div class="slider-control-row">
+                  <input type="range" id="slide-overlay-titlesize" min="30" max="110" step="1" value="62" oninput="syncOverlayNum('titleSize', this.value)" />
+                  <input type="number" id="num-overlay-titlesize" step="1" value="62" onchange="syncOverlayNum('titleSize', this.value)" />
+                </div>
+              </div>
+
+              <!-- Tamaño Subtítulo -->
+              <div class="slider-group">
+                <div class="slider-label-row">
+                  <span class="slider-label">Tam. Subtítulo (px)</span>
+                </div>
+                <div class="slider-control-row">
+                  <input type="range" id="slide-overlay-subsize" min="14" max="48" step="1" value="25" oninput="syncOverlayNum('subSize', this.value)" />
+                  <input type="number" id="num-overlay-subsize" step="1" value="25" onchange="syncOverlayNum('subSize', this.value)" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Control del Degradado Negro Inferior -->
+            <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px; margin-top: 2px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-size: 11px; font-weight: 700; color: #cbd5e1; display: flex; align-items: center; gap: 5px;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #000; border: 1px solid #64748b; display: inline-block;"></span>
+                  Degradado Negro Inferior
+                </span>
+                <label style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer;">
+                  <input type="checkbox" id="overlay-grad-enable-check" onchange="syncOverlayGradientEnabled(this.checked)" checked style="accent-color: #38bdf8; cursor: pointer;" />
+                  <span style="font-size: 10px; color: #94a3b8;">Activo</span>
+                </label>
+              </div>
+
+              <div id="overlay-grad-subcontrols" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div class="slider-group" style="padding: 6px 8px;">
+                  <div class="slider-label-row">
+                    <span class="slider-label">Altura (%)</span>
+                  </div>
+                  <div class="slider-control-row">
+                    <input type="range" id="slide-overlay-gradheight" min="15" max="80" step="1" value="42" oninput="syncOverlayNum('gradientHeight', this.value)" />
+                    <input type="number" id="num-overlay-gradheight" step="1" value="42" onchange="syncOverlayNum('gradientHeight', this.value)" />
+                  </div>
+                </div>
+
+                <div class="slider-group" style="padding: 6px 8px;">
+                  <div class="slider-label-row">
+                    <span class="slider-label">Opacidad (%)</span>
+                  </div>
+                  <div class="slider-control-row">
+                    <input type="range" id="slide-overlay-gradopacity" min="0" max="100" step="1" value="92" oninput="syncOverlayNum('gradientOpacity', this.value)" />
+                    <input type="number" id="num-overlay-gradopacity" step="1" value="92" onchange="syncOverlayNum('gradientOpacity', this.value)" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2136,18 +2496,18 @@
       // Caso 1: Google Slides publicado en la web (/d/e/2PACX-.../)
       const mPub = clean.match(/docs\.google\.com\/presentation\/d\/e\/([a-zA-Z0-9_-]+)/i);
       if (mPub) {
-        return `https://docs.google.com/presentation/d/e/${mPub[1]}/embed?start=false&loop=false&delayms=3000`;
+        return `https://docs.google.com/presentation/d/e/${mPub[1]}/embed?start=false&loop=false&delayms=3000&rm=minimal`;
       }
 
       // Caso 2: Google Slides estándar con ID de presentación (/d/ID/...)
       const mStd = clean.match(/docs\.google\.com\/presentation\/d\/([a-zA-Z0-9_-]+)/i);
       if (mStd) {
-        return `https://docs.google.com/presentation/d/${mStd[1]}/embed?start=false&loop=false&delayms=3000`;
+        return `https://docs.google.com/presentation/d/${mStd[1]}/embed?start=false&loop=false&delayms=3000&rm=minimal`;
       }
 
       // Caso 3: OneDrive / Office Online / Otros
       if (clean.includes('/edit') || clean.includes('/view')) {
-        return clean.replace(/\/edit.*|\/view.*/, '/embed?start=false&loop=false&delayms=3000');
+        return clean.replace(/\/edit.*|\/view.*/, '/embed?start=false&loop=false&delayms=3000&rm=minimal');
       }
       return clean;
     }
@@ -2168,8 +2528,15 @@
       return `${clean}#slide=${slideNum}`;
     }
 
-    function getStoredSlots() {
-      const raw = localStorage.getItem('dm_deck_slots');
+    const urlDeckParam = new URLSearchParams(window.location.search).get('deck');
+    let activeDeckId = urlDeckParam || (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
+    if (urlDeckParam && window.DMCloud) {
+      DMCloud.setActiveDeckId(urlDeckParam);
+    }
+
+    function getStoredSlots(targetDeckId) {
+      const dId = targetDeckId || activeDeckId || 'default';
+      const raw = localStorage.getItem('dm_deck_slots_' + dId) || localStorage.getItem('dm_deck_slots');
       if (raw) {
         try {
           const parsed = JSON.parse(raw);
@@ -2202,7 +2569,12 @@
               try { localStorage.setItem('dm_calib_version', CALIB_VERSION); } catch (e) { }
             }
             if (migrated) {
-              try { localStorage.setItem('dm_deck_slots', JSON.stringify(parsed)); } catch (e) { }
+              if (window.DMStorage) {
+                DMStorage.safeSetItem('dm_deck_slots_' + dId, parsed);
+                DMStorage.safeSetItem('dm_deck_slots', parsed);
+              } else {
+                try { localStorage.setItem('dm_deck_slots', JSON.stringify(parsed)); } catch (e) { }
+              }
             }
             return parsed;
           }
@@ -2235,7 +2607,12 @@
           calib: legacyCoords2
         }
       ];
-      localStorage.setItem('dm_deck_slots', JSON.stringify(initial));
+      if (window.DMStorage) {
+        DMStorage.safeSetItem('dm_deck_slots_' + dId, initial);
+        DMStorage.safeSetItem('dm_deck_slots', initial);
+      } else {
+        try { localStorage.setItem('dm_deck_slots', JSON.stringify(initial)); } catch(e){}
+      }
       return initial;
     }
 
@@ -2264,6 +2641,7 @@
           color: getHueColor(s.hue),
           calib: s.calib ? { ...calibDefault, ...s.calib } : calibDefault,
           speaker: s.speaker,
+          textOverlay: s.textOverlay || null,
           slotIndex: 0
         });
 
@@ -2373,6 +2751,7 @@
           color: getHueColor(s.hue),
           calib: s.calib ? { ...calibDefault, ...s.calib } : calibDefault,
           speaker: s.speaker,
+          textOverlay: s.textOverlay || null,
           slotIndex: i
         });
 
@@ -2463,18 +2842,31 @@
       return timeline;
     }
 
-    let slots = getStoredSlots();
+    let slots = getStoredSlots(activeDeckId);
     let activeCalibSlotId = slots[0] ? slots[0].id : null;
     let currentTimeline = buildTimeline(slots);
     let currentStep = 0;
     try {
-      const initDeckId = (typeof activeDeckId !== 'undefined' && activeDeckId) ? activeDeckId : 'default';
-      const savedInitStep = localStorage.getItem('dm_current_step_' + initDeckId);
+      const savedInitStep = localStorage.getItem('dm_current_step_' + activeDeckId);
       if (savedInitStep !== null && !isNaN(parseInt(savedInitStep, 10))) {
         const val = parseInt(savedInitStep, 10);
         if (val >= 0 && val < currentTimeline.length) currentStep = val;
       }
     } catch (e) {}
+
+    // Carga asíncrona inmediata desde IndexedDB si está disponible
+    if (window.DMStorage) {
+      DMStorage.getDeckSlots(activeDeckId).then(dbSlots => {
+        if (dbSlots && Array.isArray(dbSlots) && dbSlots.length > 0) {
+          slots = dbSlots;
+          currentTimeline = buildTimeline(slots);
+          renderSlotList();
+          renderStepGrid();
+          if (activeCalibSlotId) selectSlotForCalib(activeCalibSlotId, false);
+          renderPreview();
+        }
+      });
+    }
 
     // Elementos DOM
     const busDot = document.getElementById('bus-dot');
@@ -2491,37 +2883,28 @@
 
 
 
-    // Helper: enviar datos al iframe de index.html incrustado en el preview
-    function postToStageIframe(data) {
-      const iframe = document.getElementById('preview-stage-iframe');
-      if (iframe && iframe.contentWindow) {
-        try { iframe.contentWindow.postMessage(data, '*'); } catch(e) {}
-      }
-    }
+    // Previsualización simplificada: ya no se usa iframe en el editor
+    function postToStageIframe(data) {}
 
     function saveSlotsAndBroadcast() {
-      try {
-        localStorage.setItem('dm_deck_slots', JSON.stringify(slots));
-      } catch (e) {
-        console.warn('[Storage] QuotaExceeded on dm_deck_slots, guardando copia ligera:', e);
-        try {
-          const lightweight = slots.map(s => {
-            if (s.slideImages && s.slideImages.length > 3 && s.slideImages[0].startsWith('data:')) {
-              return { ...s, slideImages: [s.slideImages[0]] };
-            }
-            return s;
-          });
-          localStorage.setItem('dm_deck_slots', JSON.stringify(lightweight));
-        } catch (e2) {}
+      const dId = typeof activeDeckId !== 'undefined' ? activeDeckId : 'default';
+
+      // 1. Guardar en IndexedDB (soporta cualquier tamaño de imágenes HD sin límite de 5MB)
+      if (window.DMStorage) {
+        DMStorage.saveDeckSlots(dId, slots);
       }
-      if (typeof activeDeckId !== 'undefined') {
-        try {
-          localStorage.setItem('dm_deck_slots_' + activeDeckId, JSON.stringify(slots));
-        } catch (e) {}
+
+      // 2. Guardar en localStorage de forma segura sin excepciones de cuota
+      if (window.DMStorage) {
+        DMStorage.safeSetItem('dm_deck_slots', slots);
+        DMStorage.safeSetItem('dm_deck_slots_' + dId, slots);
+      } else {
+        try { localStorage.setItem('dm_deck_slots', JSON.stringify(slots)); } catch (e) {}
+        try { localStorage.setItem('dm_deck_slots_' + dId, JSON.stringify(slots)); } catch (e) {}
       }
+
       currentTimeline = buildTimeline(slots);
 
-      const dId = typeof activeDeckId !== 'undefined' ? activeDeckId : 'default';
       const payload = {
         type: 'DECK_SLOTS_UPDATED',
         deckId: dId,
@@ -2537,7 +2920,11 @@
       postToStageIframe(payload);
       try {
         if (liveMode) {
-          localStorage.setItem('dm_deck_slots_sync', JSON.stringify(payload));
+          if (window.DMStorage) {
+            DMStorage.safeSetItem('dm_deck_slots_sync', payload);
+          } else {
+            localStorage.setItem('dm_deck_slots_sync', JSON.stringify(payload));
+          }
         }
       } catch (e) { }
 
@@ -2553,6 +2940,118 @@
       renderCalibSlotSelector();
       renderPreview();
     }
+
+    // ═══ BOTÓN DE GUARDADO MANUAL (MANUAL SAVE) Y RETORNO DE ERRORES ═══
+    async function manualSaveProject() {
+      const saveBtn = document.getElementById('btn-manual-save');
+      const saveText = document.getElementById('save-btn-text');
+      const originalText = saveText ? saveText.textContent : 'Guardar';
+
+      if (saveBtn) {
+        saveBtn.classList.add('saving');
+        if (saveText) saveText.textContent = 'Guardando...';
+      }
+
+      try {
+        const dId = typeof activeDeckId !== 'undefined' ? activeDeckId : 'default';
+
+        if (!Array.isArray(slots)) {
+          throw new Error('Estructura de escenas inválida en memoria.');
+        }
+
+        // 1. Guardar en IndexedDB (soporta imágenes HD ilimitadas) con validación
+        if (window.DMStorage) {
+          const idbOk = await DMStorage.saveDeckSlots(dId, slots);
+          if (idbOk === false) {
+            throw new Error('Fallo al escribir en la base de datos local (IndexedDB). Comprueba espacio y permisos.');
+          }
+        }
+
+        // 2. Guardar en localStorage de forma segura
+        try {
+          if (window.DMStorage) {
+            DMStorage.safeSetItem('dm_deck_slots', slots);
+            DMStorage.safeSetItem('dm_deck_slots_' + dId, slots);
+          } else {
+            localStorage.setItem('dm_deck_slots', JSON.stringify(slots));
+            localStorage.setItem('dm_deck_slots_' + dId, JSON.stringify(slots));
+          }
+          if (typeof currentStep === 'number') {
+            localStorage.setItem('dm_current_step_' + dId, currentStep);
+          }
+        } catch (lsErr) {
+          console.warn('[Storage] Advertencia en localStorage:', lsErr);
+        }
+
+        // 3. Reconstruir línea de tiempo y notificar al Escenario
+        currentTimeline = buildTimeline(slots);
+        const payload = {
+          type: 'DECK_SLOTS_UPDATED',
+          deckId: dId,
+          slots: slots,
+          timeline: currentTimeline,
+          time: Date.now()
+        };
+        bus.postMessage(payload);
+        try {
+          if (window.DMStorage) {
+            DMStorage.safeSetItem('dm_deck_slots_sync', payload);
+          } else {
+            localStorage.setItem('dm_deck_slots_sync', JSON.stringify(payload));
+          }
+        } catch (e) {}
+
+        // 4. Guardar en Supabase Cloud si está configurado
+        if (window.DMCloud && DMCloud.isConfigured()) {
+          const activeOpt = (typeof deckSelector !== 'undefined' && deckSelector) ? deckSelector.options[deckSelector.selectedIndex] : null;
+          const dName = activeOpt ? activeOpt.textContent : '';
+          const cloudOk = await DMCloud.saveDeckConfig(slots, '20260923_def_v2', 'editor_manual', dId, dName);
+          if (cloudOk === false) {
+            throw new Error('Error al sincronizar con Supabase Cloud. Comprueba tu conexión a Internet.');
+          }
+        }
+
+        // 5. Refrescar interfaz
+        renderSlotList();
+        renderStepGrid();
+        renderCalibSlotSelector();
+        renderPreview();
+        updateStageLink();
+
+        // 6. Feedback visual de éxito
+        if (saveBtn) {
+          saveBtn.classList.remove('saving');
+          saveBtn.classList.add('saved');
+          if (saveText) saveText.textContent = '✓ Guardado';
+          setTimeout(() => {
+            saveBtn.classList.remove('saved');
+            if (saveText) saveText.textContent = originalText;
+          }, 2000);
+        }
+        showToast('✓ Cambios guardados correctamente', 'success');
+
+      } catch (err) {
+        console.error('[Editor] Error al guardar cambios:', err);
+        if (saveBtn) {
+          saveBtn.classList.remove('saving');
+          saveBtn.classList.add('error');
+          if (saveText) saveText.textContent = '✕ Error al guardar';
+          setTimeout(() => {
+            saveBtn.classList.remove('error');
+            if (saveText) saveText.textContent = originalText;
+          }, 3500);
+        }
+        showToast('✕ Error al guardar: ' + (err.message || 'Error inesperado'), 'error');
+      }
+    }
+
+    // Atajo de teclado: Ctrl+S / Cmd+S para Guardar
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        manualSaveProject();
+      }
+    });
 
     function getSlideThumbnailHtml(slot, isMini = false) {
       if (!slot) return '';
@@ -2639,6 +3138,12 @@
                   <option value="280" ${s.hue === 280 ? 'selected' : ''} style="background:#11141f; color:#a855f7;">Morado</option>
                 </select>
               </div>
+              ${(s.textOverlay && s.textOverlay.enabled) ? `
+                <span class="slot-overlay-badge" onclick="event.stopPropagation(); selectSlotForCalib('${s.id}')" title="Rótulo activo: ${escapeHtml(s.textOverlay.title || '')}">
+                  <svg style="width:10px;height:10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+                  ${escapeHtml(s.textOverlay.title || 'Rótulo')}
+                </span>
+              ` : ''}
             </div>
             <div class="slot-actions">
               <button class="btn-icon-mini" onclick="event.stopPropagation(); moveSlot('${s.id}', -1)" title="Subir orden" ${i === 0 ? 'disabled style="opacity:0.25;cursor:default;"' : ''}>
@@ -2677,6 +3182,12 @@
                 </div>
               ` : `
                 <input class="slot-url-input" placeholder="URL Google Slides / PPT de esta escena..." value="${escapeHtml(s.url || '')}" onchange="updateSlotUrl('${s.id}', this.value)" title="Enlace de la presentación" />
+                ${(s.url && s.url.includes('/presentation/d/')) ? `
+                  <a href="https://docs.google.com/presentation/d/${(s.url.match(/\/presentation\/d\/([a-zA-Z0-9_-]+)/) || [])[1] || ''}/export/pdf" target="_blank" download class="btn-download-pdf-slot" onclick="event.stopPropagation()" title="Descargar este Google Slides como PDF para procesarlo en HD" style="display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); border-radius:6px; padding:6px 9px; text-decoration:none; cursor:pointer; flex-shrink:0;">
+                    <svg style="width:12px;height:12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Bajar PDF
+                  </a>
+                ` : ''}
                 <button type="button" class="btn-upload-pdf-slot" onclick="event.stopPropagation(); triggerSlotPdfUpload('${s.id}')" title="Subir presentación en archivo PDF">
                   <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
                   Subir PDF
@@ -2903,7 +3414,7 @@
       });
     }
 
-    function selectSlotForCalib(slotId, shouldBroadcastStep = true) {
+    function selectSlotForCalib(slotId) {
       activeCalibSlotId = slotId;
       const slot = slots.find(s => s.id === slotId) || slots[0];
       if (!slot) return;
@@ -2914,26 +3425,8 @@
         currentStep = stepIdx;
       }
 
-      // Sincronizar UI local siempre
+      // Sincronizar UI local y vista previa estática (sin afectar a la emisión en directo)
       syncEditorUI();
-
-      // Enviar al escenario/preview
-      if (shouldBroadcastStep) {
-        const stepPayload = { type: 'SET_STEP', step: currentStep, deckId: activeDeckId };
-        // Preview: siempre
-        postToStageIframe(stepPayload);
-        // Escenario real: solo en directo
-        if (liveMode) {
-          currentStep = stepIdx >= 0 ? stepIdx : currentStep;
-          try {
-            localStorage.setItem('dm_current_step_' + activeDeckId, currentStep);
-            localStorage.setItem('dm_stage_set_step', JSON.stringify({ step: currentStep, deckId: activeDeckId, time: Date.now() }));
-          } catch(e) {}
-          updateStageLink();
-          bus.postMessage(stepPayload);
-          if (window.DMCloud && DMCloud.isConfigured()) DMCloud.broadcastLiveCommand(stepPayload);
-        }
-      }
     }
 
     function updateSlotName(id, val) {
@@ -3027,6 +3520,7 @@
         }
 
         let finalImages = result.slideImages;
+        let uploadedToStorage = false;
 
         // 3. Intentar subir las diapositivas a Supabase Storage para sincronización en tiempo real
         if (window.DMPdfProcessor.tryUploadToSupabaseStorage && result.slideBlobs && result.slideBlobs.length > 0) {
@@ -3036,6 +3530,7 @@
           });
           if (cloudUrls && cloudUrls.length === result.slidesCount) {
             finalImages = cloudUrls;
+            uploadedToStorage = true;
             console.log('[PDF] Diapositivas alojadas en Supabase Storage');
           }
         }
@@ -3047,7 +3542,11 @@
         slot.lastSync = new Date().toISOString();
 
         saveSlotsAndBroadcast();
-        showToast(`✓ PDF procesado con éxito: ${result.slidesCount} diapositivas HD listas`, 4000);
+        if (uploadedToStorage) {
+          showToast(`✓ PDF subido a la nube: ${result.slidesCount} diapositivas HD`, 4000);
+        } else {
+          showToast(`✓ PDF procesado y guardado: ${result.slidesCount} diapositivas HD`, 4000);
+        }
       } catch (err) {
         console.error('[PDF] Error procesando PDF en navegador:', err);
         showToast(`Error al procesar PDF: ${err.message || 'Archivo no compatible'}`, 5000);
@@ -3083,6 +3582,8 @@
       if (!slot) return;
       slot.hue = parseInt(val) || 0;
       saveSlotsAndBroadcast();
+      renderSlotList();
+      renderPreview();
       showToast(`Color de escena cambiado a ${getHueName(slot.hue)}`);
     }
 
@@ -3275,7 +3776,19 @@
         url: url,
         slidesCount: slidesCountVal,
         calib: getDefaultCoords(pendingFormat),
-        sourceType: isPdfMode ? 'pdf' : 'url'
+        sourceType: isPdfMode ? 'pdf' : 'url',
+        textOverlay: {
+          enabled: false,
+          title: name,
+          subtitle: 'Director general de MS',
+          bottomY: 7,
+          align: 'center',
+          titleSize: 62,
+          subSize: 25,
+          gradientEnabled: true,
+          gradientHeight: 42,
+          gradientOpacity: 92
+        }
       };
 
       slots.push(newSlot);
@@ -3331,7 +3844,7 @@
 
       const isTitle = (activeSlot.format === 'title');
 
-      // Lock/unlock sliders for title
+      // Bloquear/desbloquear sliders si es título
       const slidersContainer = document.getElementById('calibration-sliders');
       if (slidersContainer) {
         if (isTitle) {
@@ -3343,29 +3856,30 @@
         }
       }
 
-      if (isTitle) {
-        if (previewPhaseText) {
-          previewPhaseText.textContent = `TITLE: ${activeSlot.name.toUpperCase()}`;
-        }
-        return;
+      if (!isTitle) {
+        // Sincronizar etiquetas y valores de Sliders
+        const tagLeft = document.getElementById('tag-left');
+        if (tagLeft) tagLeft.textContent = activeSlot.calib.left + '%';
+        const tagWidth = document.getElementById('tag-width');
+        if (tagWidth) tagWidth.textContent = activeSlot.calib.width + '%';
+        const tagTop = document.getElementById('tag-top');
+        if (tagTop) tagTop.textContent = activeSlot.calib.top + '%';
+        const tagHeight = document.getElementById('tag-height');
+        if (tagHeight) tagHeight.textContent = activeSlot.calib.height + '%';
+        const tagRadius = document.getElementById('tag-radius');
+        if (tagRadius) tagRadius.textContent = activeSlot.calib.radius + 'px';
+        const tagRot = document.getElementById('tag-rot');
+        if (tagRot) tagRot.textContent = activeSlot.calib.rot + '°';
+        const tagZoom = document.getElementById('tag-zoom');
+        if (tagZoom) tagZoom.textContent = activeSlot.calib.zoom + '%';
+
+        ['left', 'width', 'top', 'height', 'radius', 'rot', 'zoom'].forEach(key => {
+          const slider = document.getElementById(`slide-${key}`);
+          const num = document.getElementById(`num-${key}`);
+          if (slider && parseFloat(slider.value) !== activeSlot.calib[key]) slider.value = activeSlot.calib[key];
+          if (num && parseFloat(num.value) !== activeSlot.calib[key]) num.value = activeSlot.calib[key];
+        });
       }
-
-      // Sincronizar Sliders
-      document.getElementById('tag-left').textContent = activeSlot.calib.left + '%';
-      document.getElementById('tag-width').textContent = activeSlot.calib.width + '%';
-      document.getElementById('tag-top').textContent = activeSlot.calib.top + '%';
-      document.getElementById('tag-height').textContent = activeSlot.calib.height + '%';
-      document.getElementById('tag-radius').textContent = activeSlot.calib.radius + 'px';
-      document.getElementById('tag-rot').textContent = activeSlot.calib.rot + '°';
-      const tagZoom = document.getElementById('tag-zoom');
-      if (tagZoom) tagZoom.textContent = activeSlot.calib.zoom + '%';
-
-      ['left', 'width', 'top', 'height', 'radius', 'rot', 'zoom'].forEach(key => {
-        const slider = document.getElementById(`slide-${key}`);
-        const num = document.getElementById(`num-${key}`);
-        if (slider && parseFloat(slider.value) !== activeSlot.calib[key]) slider.value = activeSlot.calib[key];
-        if (num && parseFloat(num.value) !== activeSlot.calib[key]) num.value = activeSlot.calib[key];
-      });
 
       if (codeOutput) {
         codeOutput.textContent = JSON.stringify(slots.map(s => ({
@@ -3378,8 +3892,312 @@
       }
 
       if (previewPhaseText) {
-        previewPhaseText.textContent = `CALIBRANDO: ${activeSlot.name.toUpperCase()} (${activeSlot.format})`;
+        previewPhaseText.textContent = isTitle ? `TITLE: ${activeSlot.name.toUpperCase()}` : `CALIBRANDO: ${activeSlot.name.toUpperCase()} (${activeSlot.format})`;
       }
+
+      // Sincronizar sección Rótulo / Text Overlay
+      const overlaySec = document.getElementById('overlay-section');
+      if (overlaySec) {
+        if (isTitle) {
+          overlaySec.style.opacity = '0.3';
+          overlaySec.style.pointerEvents = 'none';
+        } else {
+          overlaySec.style.opacity = '1';
+          overlaySec.style.pointerEvents = 'auto';
+        }
+      }
+      renderOverlayControls(activeSlot);
+
+      // Renderizado del frame estático
+      renderStaticFramePreview(activeSlot);
+    }
+
+    // ─── RENDERIZADOR DE FRAME FIJO Y RECORTE CALIBRADO ───
+    function renderStaticFramePreview(slot) {
+      if (!slot) return;
+      const previewBox = document.getElementById('preview-box');
+      if (!previewBox) return;
+
+      const frameBase = document.getElementById('prev-frame-base');
+      const frameOverlay = document.getElementById('prev-frame-overlay');
+      const screenSlot = document.getElementById('prev-screen-slot');
+      const slideImg = document.getElementById('prev-slide-img');
+      const placeholder = document.getElementById('prev-empty-placeholder');
+      const gradient = document.getElementById('prev-text-gradient');
+      const textOverlay = document.getElementById('prev-text-overlay');
+      const titleEl = document.getElementById('prev-overlay-title');
+      const subEl = document.getElementById('prev-overlay-subtitle');
+      const logoLeft = document.getElementById('prev-corner-logo-left');
+      const logoRight = document.getElementById('prev-corner-logo-right');
+      const badgeNum = document.getElementById('prev-slot-badge-num');
+      const badgeFmt = document.getElementById('prev-slot-badge-fmt');
+      const badgeName = document.getElementById('prev-slot-badge-name');
+      const previewSlotBadge = document.getElementById('preview-slot-badge');
+
+      const isTitle = (slot.format === 'title');
+      const slotIndex = slots.findIndex(s => s.id === slot.id);
+      const slotNumStr = `#${slotIndex >= 0 ? slotIndex + 1 : 1}`;
+
+      // Badges informativos
+      if (badgeNum) badgeNum.textContent = slotNumStr;
+      if (badgeFmt) badgeFmt.textContent = slot.format ? slot.format.toUpperCase() : '3:4';
+      if (badgeName) badgeName.textContent = slot.name || 'Escena';
+      if (previewSlotBadge) previewSlotBadge.textContent = `${slotNumStr} · ${slot.format ? slot.format.toUpperCase() : '3:4'}`;
+
+      const boxW = previewBox.clientWidth || 640;
+      const scale = boxW / 1920;
+      const hueVal = (typeof slot.hue === 'number') ? slot.hue : (parseInt(slot.hue) || 0);
+
+      if (isTitle) {
+        // Portada TITLE estática
+        if (frameBase) {
+          frameBase.style.display = 'block';
+          frameBase.src = (hueVal !== 0) ? `presets/preset2/colors/${hueVal}/Title.png` : 'presets/preset2/Title.png';
+          frameBase.onerror = function() { this.src = 'presets/preset2/Title.png'; };
+        }
+        if (frameOverlay) frameOverlay.style.display = 'none';
+        if (screenSlot) screenSlot.style.display = 'none';
+        if (gradient) gradient.style.display = 'none';
+        if (textOverlay) textOverlay.style.display = 'none';
+        if (logoLeft) logoLeft.style.display = 'none';
+        if (logoRight) logoRight.style.display = 'none';
+        return;
+      }
+
+      // Marcos fijos con recorte (3:4, 16:9, 9:16)
+      let baseFile = '3x4.png';
+      let sinfondoFile = '3x4_sinfondo.png';
+      if (slot.format === '16:9') {
+        baseFile = '16x9.png';
+        sinfondoFile = '16x9_sinfondo.png';
+      } else if (slot.format === '9:16') {
+        baseFile = '9x16.png';
+        sinfondoFile = '9x16_sinfondo.png';
+      }
+
+      if (frameBase) {
+        frameBase.style.display = 'block';
+        frameBase.src = (hueVal !== 0) ? `presets/preset2/colors/${hueVal}/${baseFile}` : `presets/preset2/${baseFile}`;
+        frameBase.onerror = function() { this.src = `presets/preset2/${baseFile}`; };
+      }
+      if (frameOverlay) {
+        frameOverlay.style.display = 'block';
+        frameOverlay.src = (hueVal !== 0) ? `presets/preset2/colors/${hueVal}/${sinfondoFile}` : `presets/preset2/${sinfondoFile}`;
+        frameOverlay.onerror = function() { this.src = `presets/preset2/${sinfondoFile}`; };
+      }
+
+      // Posicionamiento milimétrico del hueco de pantalla
+      const calib = slot.calib || getDefaultCoords(slot.format);
+      if (screenSlot) {
+        screenSlot.style.display = 'block';
+        screenSlot.style.left = calib.left + '%';
+        screenSlot.style.top = calib.top + '%';
+        screenSlot.style.width = calib.width + '%';
+        screenSlot.style.height = calib.height + '%';
+        screenSlot.style.borderRadius = Math.max(0, Math.round((calib.radius || 0) * scale)) + 'px';
+        screenSlot.style.transform = `rotate(${calib.rot || 0}deg)`;
+      }
+
+      // Diapositiva dentro del hueco
+      let slideIdx = 0;
+      const currentStepObj = currentTimeline[currentStep];
+      if (currentStepObj && currentStepObj.slotId === slot.id && typeof currentStepObj.slideIndex === 'number') {
+        slideIdx = currentStepObj.slideIndex;
+      }
+      const slideUrl = (slot.slideImages && slot.slideImages.length > 0) ? (slot.slideImages[slideIdx] || slot.slideImages[0]) : null;
+      const zoomRatio = (calib.zoom !== undefined ? calib.zoom : 100) / 100;
+
+      if (slideImg && placeholder) {
+        if (slideUrl) {
+          slideImg.src = slideUrl;
+          slideImg.style.display = 'block';
+          slideImg.style.transform = `scale(${zoomRatio})`;
+          placeholder.style.display = 'none';
+        } else {
+          slideImg.style.display = 'none';
+          placeholder.style.display = 'flex';
+          const pSpan = placeholder.querySelector('span');
+          if (pSpan) pSpan.textContent = slot.speaker || slot.name || 'Sin Diapositiva';
+        }
+      }
+
+      // Logos en esquinas superiores
+      if (logoLeft) logoLeft.style.display = 'flex';
+      if (logoRight) logoRight.style.display = 'flex';
+
+      // Degradado negro inferior
+      const ov = slot.textOverlay || getDefaultOverlayModel(slot);
+      if (gradient) {
+        if (ov.enabled && ov.gradientEnabled) {
+          gradient.style.display = 'block';
+          gradient.style.height = (ov.gradientHeight || 42) + '%';
+          const gOp = (ov.gradientOpacity !== undefined ? ov.gradientOpacity : 92) / 100;
+          gradient.style.background = `linear-gradient(to top, rgba(0, 0, 0, ${gOp}) 0%, rgba(0, 0, 0, ${gOp * 0.72}) 35%, rgba(0, 0, 0, ${gOp * 0.25}) 70%, rgba(0, 0, 0, 0) 100%)`;
+        } else {
+          gradient.style.display = 'none';
+        }
+      }
+
+      // Rótulo / Text Overlay
+      if (textOverlay) {
+        if (ov.enabled && (ov.title || ov.subtitle)) {
+          textOverlay.style.display = 'flex';
+          textOverlay.style.bottom = (ov.bottomY !== undefined ? ov.bottomY : 7) + '%';
+          textOverlay.className = `prev-text-overlay align-${ov.align || 'center'}`;
+          if (titleEl) {
+            titleEl.textContent = ov.title || '';
+            titleEl.style.fontSize = Math.max(12, Math.round((ov.titleSize || 62) * scale)) + 'px';
+          }
+          if (subEl) {
+            subEl.textContent = ov.subtitle || '';
+            subEl.style.fontSize = Math.max(8, Math.round((ov.subSize || 25) * scale)) + 'px';
+          }
+        } else {
+          textOverlay.style.display = 'none';
+        }
+      }
+    }
+
+    function getDefaultOverlayModel(slot) {
+      const isPulpon = (slot && (slot.id === 'slot-1791537166985' || (slot.name && slot.name.toLowerCase().includes('pulpon'))));
+      return {
+        enabled: isPulpon ? true : false,
+        title: isPulpon ? 'Jose Luis Pulpón' : (slot && (slot.speaker || slot.name) ? (slot.speaker || slot.name) : 'Jose Luis Pulpón'),
+        subtitle: isPulpon ? 'Director general de MS' : 'Director general de MS',
+        bottomY: 7,
+        align: 'center',
+        titleSize: 62,
+        subSize: 25,
+        gradientEnabled: true,
+        gradientHeight: 42,
+        gradientOpacity: 92
+      };
+    }
+
+    function renderOverlayControls(slot) {
+      if (!slot) return;
+      if (!slot.textOverlay) {
+        slot.textOverlay = getDefaultOverlayModel(slot);
+      }
+      const ov = slot.textOverlay;
+
+      const enableCheck = document.getElementById('overlay-enable-check');
+      const panel = document.getElementById('overlay-controls-panel');
+      const inputTitle = document.getElementById('overlay-input-title');
+      const inputSub = document.getElementById('overlay-input-subtitle');
+      const slideY = document.getElementById('slide-overlay-y');
+      const numY = document.getElementById('num-overlay-y');
+      const tagY = document.getElementById('tag-overlay-y');
+      const slideTitleSize = document.getElementById('slide-overlay-titlesize');
+      const numTitleSize = document.getElementById('num-overlay-titlesize');
+      const slideSubSize = document.getElementById('slide-overlay-subsize');
+      const numSubSize = document.getElementById('num-overlay-subsize');
+      const gradCheck = document.getElementById('overlay-grad-enable-check');
+      const slideGradHeight = document.getElementById('slide-overlay-gradheight');
+      const numGradHeight = document.getElementById('num-overlay-gradheight');
+      const slideGradOpacity = document.getElementById('slide-overlay-gradopacity');
+      const numGradOpacity = document.getElementById('num-overlay-gradopacity');
+
+      if (enableCheck) enableCheck.checked = !!ov.enabled;
+      if (panel) {
+        panel.style.opacity = ov.enabled ? '1' : '0.4';
+        panel.style.pointerEvents = ov.enabled ? 'auto' : 'none';
+      }
+
+      if (inputTitle && document.activeElement !== inputTitle) inputTitle.value = ov.title || '';
+      if (inputSub && document.activeElement !== inputSub) inputSub.value = ov.subtitle || '';
+
+      const bY = (ov.bottomY !== undefined) ? ov.bottomY : 7;
+      if (slideY && parseFloat(slideY.value) !== bY) slideY.value = bY;
+      if (numY && parseFloat(numY.value) !== bY) numY.value = bY;
+      if (tagY) tagY.textContent = bY + '%';
+
+      // Botones de alineación
+      const curAlign = ov.align || 'center';
+      ['left', 'center', 'right'].forEach(al => {
+        const btn = document.getElementById(`btn-align-${al}`);
+        if (btn) btn.classList.toggle('active', al === curAlign);
+      });
+
+      const tSize = (ov.titleSize !== undefined) ? ov.titleSize : 62;
+      if (slideTitleSize && parseFloat(slideTitleSize.value) !== tSize) slideTitleSize.value = tSize;
+      if (numTitleSize && parseFloat(numTitleSize.value) !== tSize) numTitleSize.value = tSize;
+
+      const sSize = (ov.subSize !== undefined) ? ov.subSize : 25;
+      if (slideSubSize && parseFloat(slideSubSize.value) !== sSize) slideSubSize.value = sSize;
+      if (numSubSize && parseFloat(numSubSize.value) !== sSize) numSubSize.value = sSize;
+
+      if (gradCheck) gradCheck.checked = (ov.gradientEnabled !== false);
+      const gHeight = (ov.gradientHeight !== undefined) ? ov.gradientHeight : 42;
+      if (slideGradHeight && parseFloat(slideGradHeight.value) !== gHeight) slideGradHeight.value = gHeight;
+      if (numGradHeight && parseFloat(numGradHeight.value) !== gHeight) numGradHeight.value = gHeight;
+
+      const gOpacity = (ov.gradientOpacity !== undefined) ? ov.gradientOpacity : 92;
+      if (slideGradOpacity && parseFloat(slideGradOpacity.value) !== gOpacity) slideGradOpacity.value = gOpacity;
+      if (numGradOpacity && parseFloat(numGradOpacity.value) !== gOpacity) numGradOpacity.value = gOpacity;
+    }
+
+    let overlaySaveTimeout = null;
+    function broadcastOverlayUpdate(slot) {
+      if (!slot) return;
+      const payload = {
+        type: 'SLOT_TEXT_OVERLAY_UPDATE',
+        slotId: slot.id,
+        format: slot.format,
+        textOverlay: slot.textOverlay
+      };
+      renderStaticFramePreview(slot);
+      clearTimeout(overlaySaveTimeout);
+      overlaySaveTimeout = setTimeout(() => {
+        saveSlotsAndBroadcast();
+      }, 350);
+    }
+
+    function toggleOverlayEnabled(checked) {
+      const activeSlot = slots.find(s => s.id === activeCalibSlotId);
+      if (!activeSlot) return;
+      if (!activeSlot.textOverlay) activeSlot.textOverlay = getDefaultOverlayModel(activeSlot);
+      activeSlot.textOverlay.enabled = !!checked;
+      renderOverlayControls(activeSlot);
+      renderSlotList();
+      broadcastOverlayUpdate(activeSlot);
+      showToast(checked ? '✓ Rótulo activado en pantalla' : 'Rótulo desactivado');
+    }
+
+    function syncOverlayText(key, val) {
+      const activeSlot = slots.find(s => s.id === activeCalibSlotId);
+      if (!activeSlot) return;
+      if (!activeSlot.textOverlay) activeSlot.textOverlay = getDefaultOverlayModel(activeSlot);
+      activeSlot.textOverlay[key] = val;
+      broadcastOverlayUpdate(activeSlot);
+    }
+
+    function syncOverlayNum(key, val) {
+      const activeSlot = slots.find(s => s.id === activeCalibSlotId);
+      if (!activeSlot) return;
+      if (!activeSlot.textOverlay) activeSlot.textOverlay = getDefaultOverlayModel(activeSlot);
+      const numVal = parseFloat(val);
+      activeSlot.textOverlay[key] = numVal;
+      renderOverlayControls(activeSlot);
+      broadcastOverlayUpdate(activeSlot);
+    }
+
+    function syncOverlayAlign(align) {
+      const activeSlot = slots.find(s => s.id === activeCalibSlotId);
+      if (!activeSlot) return;
+      if (!activeSlot.textOverlay) activeSlot.textOverlay = getDefaultOverlayModel(activeSlot);
+      activeSlot.textOverlay.align = align;
+      renderOverlayControls(activeSlot);
+      broadcastOverlayUpdate(activeSlot);
+    }
+
+    function syncOverlayGradientEnabled(checked) {
+      const activeSlot = slots.find(s => s.id === activeCalibSlotId);
+      if (!activeSlot) return;
+      if (!activeSlot.textOverlay) activeSlot.textOverlay = getDefaultOverlayModel(activeSlot);
+      activeSlot.textOverlay.gradientEnabled = !!checked;
+      renderOverlayControls(activeSlot);
+      broadcastOverlayUpdate(activeSlot);
     }
 
     let calibSaveTimeout = null;
@@ -3449,129 +4267,22 @@
       showToast(`Calibración de ${activeSlot.name} restablecida`);
     }
 
-    // Modo libre: el editor navega sin afectar al directo
-    let liveMode = true; // true = conectado al directo
+    let liveMode = false;
 
-    function toggleLiveMode() {
-      liveMode = !liveMode;
-      const bar = document.getElementById('live-remote-bar');
-      const lockLabel = document.getElementById('lock-label');
-      const badge = document.getElementById('live-locked-badge');
-      const lockIcon = document.getElementById('lock-icon');
-      const lockDot = document.getElementById('lock-dot');
-      if (liveMode) {
-        // Conectado al directo: botón rojo con punto parpadeante
-        bar && bar.classList.remove('live-locked');
-        if (lockLabel) lockLabel.textContent = 'En Directo';
-        if (lockDot) lockDot.style.display = 'inline-block';
-        if (lockIcon) lockIcon.style.display = 'none';
-        if (badge) badge.classList.remove('visible');
-        showToast('🟥 Directo conectado — el editor controla la presentación');
-      } else {
-        // Modo libre: botón gris con icono candado abierto
-        bar && bar.classList.add('live-locked');
-        if (lockLabel) lockLabel.textContent = 'Libre';
-        if (lockDot) lockDot.style.display = 'none';
-        if (lockIcon) lockIcon.style.display = 'inline-block';
-        if (badge) badge.classList.add('visible');
-        showToast('🔓 Modo libre — el editor NO afecta al directo');
-      }
-    }
+    function toggleLiveMode() {}
 
     function sendStep(stepIndex) {
       currentStep = stepIndex;
-
-      // Sincronizar toda la UI local siempre (independientemente del modo)
       syncEditorUI();
-
       updateStageLink();
-
       const step = currentTimeline[stepIndex];
-      const stepPayload = { type: 'SET_STEP', step: stepIndex, deckId: activeDeckId };
-
-      // Preview del editor: siempre
-      postToStageIframe(stepPayload);
-
-      if (!liveMode) {
-        showToast(`[Libre] Vista: ${step ? step.name : 'Paso ' + (stepIndex + 1)}`);
-        return;
+      if (step && step.slotId) {
+        selectSlotForCalib(step.slotId);
       }
-
-      // En directo: enviar al escenario real
-      try {
-        localStorage.setItem('dm_current_step_' + activeDeckId, String(stepIndex));
-        localStorage.setItem('dm_stage_set_step', JSON.stringify({ step: stepIndex, deckId: activeDeckId, time: Date.now() }));
-      } catch(e) {}
-      bus.postMessage(stepPayload);
-      if (window.DMCloud && DMCloud.isConfigured()) DMCloud.broadcastLiveCommand(stepPayload);
-      showToast(`Paso ${stepIndex + 1}: ${step ? step.name : ''}`);
     }
 
     function sendCommand(cmd) {
-      const dId = typeof activeDeckId !== 'undefined' ? activeDeckId : 'default';
-
-      // En modo libre, los botones de control remoto siguen funcionando siempre (son explícitos)
-      // pero el cambio de paso automático no se envía al escenario real
-
-      const cmdPayload = { type: 'STAGE_COMMAND', command: cmd, deckId: dId, time: Date.now() };
-      bus.postMessage(cmdPayload);
-      postToStageIframe(cmdPayload);
-      try {
-        localStorage.setItem('dm_stage_command', JSON.stringify({ command: cmd, deckId: dId, time: Date.now() }));
-      } catch (e) { }
-
-      // Emitir comando remoto a través de Supabase Realtime a otros ordenadores
-      if (window.DMCloud && DMCloud.isConfigured()) {
-        DMCloud.broadcastLiveCommand(cmdPayload);
-      }
-
-      const totalSteps = Math.max(1, currentTimeline.length);
-      if (cmd === 'NEXT_STEP') {
-        // En el editor no se reproducen vídeos de animación: saltar directamente a la siguiente escena (slide)
-        let nextSlideStep = -1;
-        for (let i = currentStep + 1; i < currentTimeline.length; i++) {
-          if (currentTimeline[i].type === 'slide') {
-            nextSlideStep = i;
-            break;
-          }
-        }
-        if (nextSlideStep < 0) {
-          for (let i = 0; i < currentTimeline.length; i++) {
-            if (currentTimeline[i].type === 'slide') {
-              nextSlideStep = i;
-              break;
-            }
-          }
-        }
-        currentStep = (nextSlideStep >= 0) ? nextSlideStep : (currentStep + 1) % totalSteps;
-        syncPreviewToCurrentStep();
-        const cur = currentTimeline[currentStep];
-        showToast(`Escena en directo: ${cur ? cur.name : 'Paso ' + (currentStep + 1)}`);
-      } else if (cmd === 'PREV_STEP') {
-        let prevSlideStep = -1;
-        for (let i = currentStep - 1; i >= 0; i--) {
-          if (currentTimeline[i].type === 'slide') {
-            prevSlideStep = i;
-            break;
-          }
-        }
-        if (prevSlideStep < 0) {
-          for (let i = currentTimeline.length - 1; i >= 0; i--) {
-            if (currentTimeline[i].type === 'slide') {
-              prevSlideStep = i;
-              break;
-            }
-          }
-        }
-        currentStep = (prevSlideStep >= 0) ? prevSlideStep : (currentStep - 1 + totalSteps) % totalSteps;
-        syncPreviewToCurrentStep();
-        const cur = currentTimeline[currentStep];
-        showToast(`Escena en directo: ${cur ? cur.name : 'Paso ' + (currentStep + 1)}`);
-      } else if (cmd === 'RESET') {
-        currentStep = 0;
-        syncPreviewToCurrentStep();
-        showToast('Directo reiniciado al inicio');
-      }
+      // Control remoto desactivado: el editor no interactúa con la emisión a distancia
     }
 
     function syncPreviewToCurrentStep() {
@@ -3579,19 +4290,16 @@
       const step = currentTimeline[currentStep];
       if (!step) return;
 
-      // Find the slotId to show in calibrator: current step if slide, or nearest slide
       let targetSlotId = null;
       if (step.type === 'slide' && step.slotId) {
         targetSlotId = step.slotId;
       } else {
-        // En pasos de vídeo de transición, buscar hacia adelante la diapositiva entrante
         for (let i = currentStep + 1; i < currentTimeline.length; i++) {
           if (currentTimeline[i].type === 'slide' && currentTimeline[i].slotId) {
             targetSlotId = currentTimeline[i].slotId;
             break;
           }
         }
-        // Si no se encuentra hacia adelante, buscar hacia atrás
         if (!targetSlotId) {
           for (let i = currentStep - 1; i >= 0; i--) {
             if (currentTimeline[i].type === 'slide' && currentTimeline[i].slotId) {
@@ -3603,7 +4311,7 @@
       }
 
       if (targetSlotId) {
-        selectSlotForCalib(targetSlotId, false);
+        selectSlotForCalib(targetSlotId);
       }
     }
 
@@ -3628,79 +4336,27 @@
     }
 
     if (previewBox) {
-      previewBox.style.cursor = 'pointer';
-      previewBox.title = 'Haz clic para avanzar al siguiente paso en el escenario';
-      previewBox.addEventListener('click', () => {
-        sendCommand('NEXT_STEP');
-      });
+      previewBox.style.cursor = 'default';
+      previewBox.removeAttribute('title');
+      if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => {
+          renderPreview();
+        });
+        ro.observe(previewBox);
+      }
     }
 
-    // Escalar el iframe de preview a resolución nativa (1920x1080) centrado dentro del preview-box
     function scalePreviewIframe() {
-      const iframe = document.getElementById('preview-stage-iframe');
-      if (!iframe || !previewBox) return;
-      const boxW = previewBox.clientWidth;
-      const boxH = previewBox.clientHeight;
-      if (!boxW || !boxH) return;
-      const scale = Math.min(boxW / 1920, boxH / 1080);
-      const offsetX = (boxW - 1920 * scale) / 2;
-      const offsetY = (boxH - 1080 * scale) / 2;
-      iframe.style.transformOrigin = '0 0';
-      iframe.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+      renderPreview();
     }
 
     function syncIframeFullState() {
-      const iframe = document.getElementById('preview-stage-iframe');
-      if (!iframe || !iframe.contentWindow) return;
-      scalePreviewIframe();
-      const activeSlot = slots.find(s => s.id === activeCalibSlotId) || slots[0];
-      postToStageIframe({
-        type: 'DECK_SLOTS_UPDATED',
-        slots: slots,
-        timeline: currentTimeline,
-        time: Date.now()
-      });
-      const stepIdx = currentTimeline.findIndex(s => s.type === 'slide' && s.slotId === (activeSlot ? activeSlot.id : null));
-      const targetStep = stepIdx >= 0 ? stepIdx : currentStep;
-      postToStageIframe({
-        type: 'SET_STEP',
-        step: targetStep
-      });
-      if (activeSlot && activeSlot.calib) {
-        postToStageIframe({
-          type: 'SLOT_CALIB_UPDATE',
-          slotId: activeSlot.id,
-          format: activeSlot.format,
-          calib: activeSlot.calib
-        });
-      }
-    }
-
-    const previewIframeEl = document.getElementById('preview-stage-iframe');
-    if (previewIframeEl) {
-      previewIframeEl.addEventListener('load', () => {
-        scalePreviewIframe();
-        setTimeout(syncIframeFullState, 100);
-        setTimeout(syncIframeFullState, 400);
-      });
-    }
-
-    scalePreviewIframe();
-    window.addEventListener('resize', () => {
-      scalePreviewIframe();
       renderPreview();
-    });
+    }
 
-    // Atajos de teclado en sala de control (Enter = Siguiente Paso, Espacio = Siguiente Slide)
-    window.addEventListener('keydown', (e) => {
-      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) return;
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        sendCommand('NEXT_STEP');
-      } else if (e.key === ' ') {
-        e.preventDefault();
-        sendCommand('NEXT_SLIDE');
-      }
+    renderPreview();
+    window.addEventListener('resize', () => {
+      renderPreview();
     });
 
     function copyCode() {
@@ -3714,11 +4370,21 @@
       showToast('¡Configuración de escenas copiada al portapapeles!');
     }
 
-    function showToast(msg) {
+    function showToast(msg, type = 'info') {
       const toast = document.getElementById('toast');
+      if (!toast) return;
       toast.textContent = msg;
+      toast.className = 'toast';
+      if (type === 'error') {
+        toast.classList.add('toast-error');
+      } else if (type === 'success') {
+        toast.classList.add('toast-success');
+      }
       toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2500);
+      if (window._toastTimer) clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, type === 'error' ? 5000 : 2500);
     }
 
     // Escuchar mensajes del Escenario y de Ponentes (BroadcastChannel)
@@ -3730,6 +4396,9 @@
         const stepPayload = { type: 'SET_STEP', step: currentStep, deckId: activeDeckId };
         bus.postMessage(stepPayload);
         postToStageIframe(stepPayload);
+        if (Array.isArray(slots) && slots.length > 0) {
+          bus.postMessage({ type: 'DECK_SLOTS_UPDATED', slots: slots, deckId: activeDeckId });
+        }
         return;
       }
 
@@ -3930,10 +4599,16 @@
         return;
       }
       showToast('Descargando de la nube...');
-      const data = await DMCloud.fetchDeckConfig();
+      const data = await DMCloud.fetchDeckConfig(activeDeckId);
       if (data && Array.isArray(data.slots) && data.slots.length > 0) {
         slots = data.slots;
-        localStorage.setItem('dm_deck_slots', JSON.stringify(slots));
+        if (window.DMStorage) {
+          await DMStorage.saveDeckSlots(activeDeckId, slots);
+          DMStorage.safeSetItem('dm_deck_slots', slots);
+          DMStorage.safeSetItem('dm_deck_slots_' + activeDeckId, slots);
+        } else {
+          try { localStorage.setItem('dm_deck_slots', JSON.stringify(slots)); } catch (e) {}
+        }
         currentTimeline = buildTimeline(slots);
         renderSlotList();
         renderStepGrid();
@@ -3952,8 +4627,14 @@
         const cloudData = await DMCloud.fetchDeckConfig(activeDeckId);
         if (cloudData && Array.isArray(cloudData.slots) && cloudData.slots.length > 0) {
           slots = cloudData.slots;
-          localStorage.setItem('dm_deck_slots', JSON.stringify(slots));
-          localStorage.setItem('dm_deck_slots_' + activeDeckId, JSON.stringify(slots));
+          if (window.DMStorage) {
+            await DMStorage.saveDeckSlots(activeDeckId, slots);
+            DMStorage.safeSetItem('dm_deck_slots', slots);
+            DMStorage.safeSetItem('dm_deck_slots_' + activeDeckId, slots);
+          } else {
+            try { localStorage.setItem('dm_deck_slots', JSON.stringify(slots)); } catch (e) {}
+            try { localStorage.setItem('dm_deck_slots_' + activeDeckId, JSON.stringify(slots)); } catch (e) {}
+          }
           currentTimeline = buildTimeline(slots);
           renderSlotList();
           renderStepGrid();
@@ -3974,11 +4655,6 @@
     // =========================================================================
     // GESTIÓN DE MÚLTIPLES PRESENTACIONES / ESCENAS (DECKS)
     // =========================================================================
-    const urlDeckParam = new URLSearchParams(window.location.search).get('deck');
-    let activeDeckId = urlDeckParam || (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
-    if (urlDeckParam && window.DMCloud) {
-      DMCloud.setActiveDeckId(urlDeckParam);
-    }
     const deckSelector = document.getElementById('deck-selector');
     const newDeckModal = document.getElementById('new-deck-modal');
     const newDeckNameInput = document.getElementById('new-deck-name-input');
@@ -4012,6 +4688,13 @@
       activeDeckId = newDeckId;
       if (window.DMCloud) DMCloud.setActiveDeckId(newDeckId);
 
+      // Mantener la URL sincronizada con el proyecto activo para que permanezca al recargar
+      try {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('deck', newDeckId);
+        window.history.replaceState(null, '', newUrl.toString());
+      } catch(e) {}
+
       showToast('Cargando presentación...');
       let loaded = false;
 
@@ -4026,7 +4709,18 @@
         } catch (e) {}
       }
 
-      // 2. Fallback a almacenamiento local si no se descargó de la nube
+      // 2. Intentar cargar desde IndexedDB (datos locales completos con imágenes HD)
+      if (!loaded && window.DMStorage) {
+        try {
+          const idbSlots = await DMStorage.getDeckSlots(newDeckId);
+          if (idbSlots && Array.isArray(idbSlots) && idbSlots.length > 0) {
+            slots = idbSlots;
+            loaded = true;
+          }
+        } catch(e) {}
+      }
+
+      // 3. Fallback a almacenamiento local si no se descargó de la nube ni de IndexedDB
       if (!loaded) {
         const raw = localStorage.getItem('dm_deck_slots_' + newDeckId);
         if (raw) {
@@ -4041,11 +4735,17 @@
       }
 
       if (!loaded) {
-        slots = getStoredSlots();
+        slots = getStoredSlots(newDeckId);
       }
 
-      localStorage.setItem('dm_deck_slots', JSON.stringify(slots));
-      localStorage.setItem('dm_deck_slots_' + newDeckId, JSON.stringify(slots));
+      if (window.DMStorage) {
+        await DMStorage.saveDeckSlots(newDeckId, slots);
+        DMStorage.safeSetItem('dm_deck_slots', slots);
+        DMStorage.safeSetItem('dm_deck_slots_' + newDeckId, slots);
+      } else {
+        try { localStorage.setItem('dm_deck_slots', JSON.stringify(slots)); } catch(e){}
+        try { localStorage.setItem('dm_deck_slots_' + newDeckId, JSON.stringify(slots)); } catch(e){}
+      }
 
       activeCalibSlotId = slots[0] ? slots[0].id : null;
       const savedStep = localStorage.getItem('dm_current_step_' + newDeckId);
@@ -4058,12 +4758,6 @@
       updateStepButtons();
       updateStageLink();
       renderPreview();
-
-      // Actualizar el iframe de preview para que apunte al nuevo deck
-      const previewIframe = document.getElementById('preview-stage-iframe');
-      if (previewIframe) {
-        previewIframe.src = `presentation.html?deck=${newDeckId}&step=${currentStep}&preview=1&static=1&v=${Date.now()}`;
-      }
 
       // Notificar a todos los dispositivos (local y nube)
       const changePayload = {
@@ -4091,7 +4785,7 @@
     function getPresentationUrl(deckId) {
       const targetId = deckId || (typeof activeDeckId !== 'undefined' ? activeDeckId : 'default');
       const loc = window.location;
-      let path = loc.pathname;
+      let path = loc.pathname || '';
       if (path.endsWith('editor.html') || path.endsWith('index.html')) {
         path = path.replace(/\/(editor|index)\.html$/, '/presentation.html');
       } else if (path.endsWith('/editor')) {
@@ -4102,15 +4796,16 @@
         const idx = path.lastIndexOf('/');
         path = (idx >= 0 ? path.substring(0, idx + 1) : '/') + 'presentation.html';
       }
+      const base = (loc.origin && loc.origin !== 'null') ? loc.origin : loc.href;
       try {
-        const url = new URL(path, loc.origin);
+        const url = new URL(path, base);
         url.searchParams.set('deck', targetId);
         if (typeof currentStep === 'number' && currentStep >= 0 && (!deckId || targetId === activeDeckId)) {
           url.searchParams.set('step', currentStep);
         }
         return url.href;
       } catch (e) {
-        let res = `${loc.origin}/presentation.html?deck=${encodeURIComponent(targetId)}`;
+        let res = `presentation.html?deck=${encodeURIComponent(targetId)}`;
         if (typeof currentStep === 'number' && currentStep >= 0 && (!deckId || targetId === activeDeckId)) {
           res += `&step=${currentStep}`;
         }
@@ -4123,6 +4818,13 @@
       if (openStageBtn) {
         openStageBtn.href = getPresentationUrl(activeDeckId);
       }
+    }
+
+    const openStageBtnEl = document.getElementById('open-stage-btn');
+    if (openStageBtnEl) {
+      openStageBtnEl.addEventListener('click', () => {
+        openStageBtnEl.href = getPresentationUrl(activeDeckId);
+      });
     }
 
     async function copyCurrentPresentationLink() {
@@ -4266,15 +4968,25 @@
 
       if (window.DMCloud) {
         await DMCloud.createDeck(newId, name, initialSlots);
-      } else {
-        localStorage.setItem('dm_deck_slots_' + newId, JSON.stringify(initialSlots));
-        localStorage.setItem('dm_active_deck_id', newId);
       }
+      if (window.DMStorage) {
+        await DMStorage.saveDeckSlots(newId, initialSlots);
+        DMStorage.safeSetItem('dm_deck_slots', initialSlots);
+        DMStorage.safeSetItem('dm_deck_slots_' + newId, initialSlots);
+      } else {
+        try { localStorage.setItem('dm_deck_slots_' + newId, JSON.stringify(initialSlots)); } catch(e){}
+        try { localStorage.setItem('dm_deck_slots', JSON.stringify(initialSlots)); } catch(e){}
+      }
+      localStorage.setItem('dm_active_deck_id', newId);
 
       activeDeckId = newId;
       slots = initialSlots;
-      localStorage.setItem('dm_deck_slots', JSON.stringify(slots));
-      localStorage.setItem('dm_deck_slots_' + newId, JSON.stringify(slots));
+
+      try {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('deck', newId);
+        window.history.replaceState(null, '', newUrl.toString());
+      } catch(e) {}
 
       await refreshDeckSelectorUI();
       if (deckSelector) deckSelector.value = newId;
@@ -4288,11 +5000,6 @@
       if (activeCalibSlotId) selectSlotForCalib(activeCalibSlotId);
       updateStepButtons();
       renderPreview();
-
-      const previewIframe = document.getElementById('preview-stage-iframe');
-      if (previewIframe) {
-        previewIframe.src = `presentation.html?deck=${newId}&preview=1&static=1&v=${Date.now()}`;
-      }
 
       updateStageLink();
       try {
@@ -4384,7 +5091,13 @@
           if (!remoteData.id || remoteData.id === activeDeckId) {
             console.log('[DMCloud] Recibida actualización remota de escenas');
             slots = remoteData.slots;
-            localStorage.setItem('dm_deck_slots', JSON.stringify(slots));
+            if (window.DMStorage) {
+              DMStorage.saveDeckSlots(activeDeckId, slots);
+              DMStorage.safeSetItem('dm_deck_slots', slots);
+              DMStorage.safeSetItem('dm_deck_slots_' + activeDeckId, slots);
+            } else {
+              try { localStorage.setItem('dm_deck_slots', JSON.stringify(slots)); } catch(e){}
+            }
             currentTimeline = buildTimeline(slots);
             renderSlotList();
             renderStepGrid();
