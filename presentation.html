@@ -2383,7 +2383,7 @@
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const targetDeck = urlParams.get('deck') || (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
-        const raw = localStorage.getItem('dm_deck_slots_' + targetDeck) || localStorage.getItem('dm_deck_slots');
+        const raw = localStorage.getItem('dm_deck_slots_' + targetDeck) || (targetDeck === 'default' ? localStorage.getItem('dm_deck_slots') : null);
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -2442,16 +2442,6 @@
     }
 
     let deckSlots = getStoredSlots();
-
-    // Carga asíncrona inmediata desde IndexedDB para el deck activo en escenario
-    const _initTargetDeck = (new URLSearchParams(window.location.search)).get('deck') || (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
-    if (window.DMStorage) {
-      DMStorage.getDeckSlots(_initTargetDeck).then(stored => {
-        if (stored && Array.isArray(stored) && stored.length > 0) {
-          reloadSlotsFromData(stored);
-        }
-      });
-    }
 
     // ═══ GESTOR DE PRESETS / ASSETS EN ESCENARIO ═══
     function getActivePresetAssets() {
@@ -2847,7 +2837,10 @@
     }
 
     const urlParams = new URLSearchParams(window.location.search);
-    const stageDeckId = urlParams.get('deck') || (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
+    let stageDeckId = urlParams.get('deck') || (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
+    if (urlParams.get('deck') && window.DMCloud) {
+      DMCloud.setActiveDeckId(urlParams.get('deck'));
+    }
 
     function getInitialStepIndex(stepsLength, targetDeckId) {
       // 1. Prioridad: parámetro ?step= explícito en la URL (ej. preview de una escena desde el editor)
@@ -2863,26 +2856,40 @@
         }
       }
 
-      // 2. Control en vivo activo: si la sala de control envió una orden en los últimos 15s
+      // 2. Control en vivo activo: si la sala de control envió una orden en los últimos 30s
       try {
         const rawStep = localStorage.getItem('dm_stage_set_step');
         if (rawStep) {
           const parsed = JSON.parse(rawStep);
-          if (parsed && typeof parsed.step === 'number' && (Date.now() - parsed.time) < 15000) {
-            let val = parsed.step;
-            if (val >= 0 && val < stepsLength) {
-              if (STEPS && STEPS[val] && STEPS[val].type === 'video') {
-                val = (val + 1 < stepsLength) ? (val + 1) : 0;
+          if (parsed && typeof parsed.step === 'number' && (Date.now() - parsed.time) < 30000) {
+            if (!parsed.deckId || parsed.deckId === targetDeckId || targetDeckId === 'default') {
+              let val = parsed.step;
+              if (val >= 0 && val < stepsLength) {
+                if (STEPS && STEPS[val] && STEPS[val].type === 'video') {
+                  val = (val + 1 < stepsLength) ? (val + 1) : 0;
+                }
+                return val;
               }
-              return val;
             }
           }
         }
       } catch (e) {}
 
-      // 3. Por defecto al abrir el escenario: SIEMPRE arrancar en la diapositiva inicial (Paso 0).
-      // Nunca restaurar un paso intermedio o un vídeo de transición guardado en sesiones previas,
-      // ya que los vídeos pausados en carga inicial dejan la pantalla totalmente negra.
+      // 3. Restaurar último paso guardado en este deck si existe
+      try {
+        const savedDeckStep = localStorage.getItem('dm_current_step_' + targetDeckId);
+        if (savedDeckStep !== null && !isNaN(parseInt(savedDeckStep, 10))) {
+          let sVal = parseInt(savedDeckStep, 10);
+          if (sVal >= 0 && sVal < stepsLength) {
+            if (STEPS && STEPS[sVal] && STEPS[sVal].type === 'video') {
+              sVal = (sVal + 1 < stepsLength) ? (sVal + 1) : 0;
+            }
+            return sVal;
+          }
+        }
+      } catch (e) {}
+
+      // 4. Por defecto al abrir el escenario: arrancar en el primer paso (Paso 0)
       return 0;
     }
 
@@ -2890,6 +2897,18 @@
     let currentStepIndex = getInitialStepIndex(STEPS.length, stageDeckId);
     if (STEPS[currentStepIndex] && STEPS[currentStepIndex].type === 'video') {
       currentStepIndex = 0;
+    }
+
+    // Carga asíncrona segura desde IndexedDB (ahora que STEPS y variables están inicializadas)
+    if (window.DMStorage) {
+      DMStorage.getDeckSlots(stageDeckId).then(stored => {
+        if (stored && Array.isArray(stored) && stored.length > 0) {
+          console.log('[DMStorage] Escenas cargadas desde IndexedDB para deck:', stageDeckId);
+          reloadSlotsFromData(stored);
+        }
+      }).catch(err => {
+        console.warn('[DMStorage] Error al leer IndexedDB en escenario:', err);
+      });
     }
     let currentSlide = 1;
     let hintTimer = null;
@@ -5003,31 +5022,41 @@
 
       // Actualización de plazas desde editor.html o ponentes.html
       if (data.type === 'DECK_SLOTS_UPDATED' && Array.isArray(data.slots)) {
-        reloadSlotsFromData(data.slots);
+        if (!data.deckId || data.deckId === stageDeckId || stageDeckId === 'default') {
+          if (data.deckId && stageDeckId === 'default' && data.deckId !== 'default') {
+            stageDeckId = data.deckId;
+            if (window.DMCloud) DMCloud.setActiveDeckId(data.deckId);
+          }
+          reloadSlotsFromData(data.slots);
+        }
       }
       // Calibración individual en vivo
       else if (data.type === 'SLOT_CALIB_UPDATE' && data.calib) {
-        const slot = data.slotId ? deckSlots.find(s => s.id === data.slotId) : null;
-        if (slot) slot.calib = data.calib;
-        STEPS.forEach(st => {
-          if (st.slotId === data.slotId) st.calib = data.calib;
-        });
-        const currentStep = STEPS[currentStepIndex];
-        const fmt = data.format || (slot && slot.format) || (currentStep && currentStep.format);
-        if (fmt === '3:4') applyPhoneCoords(data.calib);
-        else if (fmt === '9:16') applyFrame916Coords(data.calib);
-        else if (fmt === '16:9') applyFrame2Coords(data.calib);
+        if (!data.deckId || data.deckId === stageDeckId || stageDeckId === 'default') {
+          const slot = data.slotId ? deckSlots.find(s => s.id === data.slotId) : null;
+          if (slot) slot.calib = data.calib;
+          STEPS.forEach(st => {
+            if (st.slotId === data.slotId) st.calib = data.calib;
+          });
+          const currentStep = STEPS[currentStepIndex];
+          const fmt = data.format || (slot && slot.format) || (currentStep && currentStep.format);
+          if (fmt === '3:4') applyPhoneCoords(data.calib);
+          else if (fmt === '9:16') applyFrame916Coords(data.calib);
+          else if (fmt === '16:9') applyFrame2Coords(data.calib);
+        }
       }
       // Actualización de Rótulo / Textos y degradado en tiempo real
       else if (data.type === 'SLOT_TEXT_OVERLAY_UPDATE') {
-        const slot = data.slotId ? deckSlots.find(s => s.id === data.slotId) : null;
-        if (slot) slot.textOverlay = data.textOverlay;
-        STEPS.forEach(st => {
-          if (st.slotId === data.slotId) st.textOverlay = data.textOverlay;
-        });
-        const currentStep = STEPS[currentStepIndex];
-        if (currentStep && currentStep.slotId === data.slotId) {
-          applyStepTextOverlay(currentStep);
+        if (!data.deckId || data.deckId === stageDeckId || stageDeckId === 'default') {
+          const slot = data.slotId ? deckSlots.find(s => s.id === data.slotId) : null;
+          if (slot) slot.textOverlay = data.textOverlay;
+          STEPS.forEach(st => {
+            if (st.slotId === data.slotId) st.textOverlay = data.textOverlay;
+          });
+          const currentStep = STEPS[currentStepIndex];
+          if (currentStep && currentStep.slotId === data.slotId) {
+            applyStepTextOverlay(currentStep);
+          }
         }
       }
       // Calibración global desde el panel Admin (admin.html)

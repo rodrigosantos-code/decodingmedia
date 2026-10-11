@@ -1670,7 +1670,7 @@
         <span id="save-btn-text">Guardar</span>
       </button>
 
-      <a href="presentation.html" id="open-stage-btn" target="_blank" class="btn-stage-pink">
+      <a href="presentation.html" id="open-stage-btn" onclick="openStageFromEditor(event)" target="_blank" class="btn-stage-pink">
         <span>Abrir<br>Escenario &nearr;</span>
       </a>
     </div>
@@ -2913,19 +2913,14 @@
         timeline: currentTimeline,
         time: Date.now()
       };
-      // Enviar al bus (presentación real) solo cuando esté en directo
-      if (liveMode) {
-        bus.postMessage(payload);
-      }
-      // Preview del editor: siempre
+      // Enviar siempre al bus del Escenario (presentación real)
+      bus.postMessage(payload);
       postToStageIframe(payload);
       try {
-        if (liveMode) {
-          if (window.DMStorage) {
-            DMStorage.safeSetItem('dm_deck_slots_sync', payload);
-          } else {
-            localStorage.setItem('dm_deck_slots_sync', JSON.stringify(payload));
-          }
+        if (window.DMStorage) {
+          DMStorage.safeSetItem('dm_deck_slots_sync', payload);
+        } else {
+          localStorage.setItem('dm_deck_slots_sync', JSON.stringify(payload));
         }
       } catch (e) { }
 
@@ -4173,8 +4168,14 @@
         type: 'SLOT_TEXT_OVERLAY_UPDATE',
         slotId: slot.id,
         format: slot.format,
-        textOverlay: slot.textOverlay
+        textOverlay: slot.textOverlay,
+        deckId: activeDeckId,
+        time: Date.now()
       };
+      bus.postMessage(payload);
+      try {
+        localStorage.setItem('dm_slot_text_overlay_sync', JSON.stringify(payload));
+      } catch (e) {}
       renderStaticFramePreview(slot);
       clearTimeout(overlaySaveTimeout);
       overlaySaveTimeout = setTimeout(() => {
@@ -4250,17 +4251,16 @@
         calib: activeSlot.calib
       };
       postToStageIframe(calibPayload);
-      if (liveMode) {
-        bus.postMessage(calibPayload);
-        try {
-          localStorage.setItem('dm_slot_calib_sync', JSON.stringify({
-            slotId: activeSlot.id,
-            format: activeSlot.format,
-            calib: activeSlot.calib,
-            time: Date.now()
-          }));
-        } catch (e) { }
-      }
+      bus.postMessage(calibPayload);
+      try {
+        localStorage.setItem('dm_slot_calib_sync', JSON.stringify({
+          slotId: activeSlot.id,
+          format: activeSlot.format,
+          calib: activeSlot.calib,
+          deckId: activeDeckId,
+          time: Date.now()
+        }));
+      } catch (e) { }
 
       // 3. Persistir y regenerar lista con debounce para fluidez total
       clearTimeout(calibSaveTimeout);
@@ -4273,30 +4273,30 @@
       const activeSlot = slots.find(s => s.id === activeCalibSlotId);
       if (!activeSlot) return;
       activeSlot.calib = getDefaultCoords(activeSlot.format);
-      // Preview del editor: siempre. Escenario real: solo en directo
       const calibPayload = {
         type: 'SLOT_CALIB_UPDATE',
         slotId: activeSlot.id,
         format: activeSlot.format,
-        calib: activeSlot.calib
+        calib: activeSlot.calib,
+        deckId: activeDeckId,
+        time: Date.now()
       };
       postToStageIframe(calibPayload);
-      if (liveMode) {
-        bus.postMessage(calibPayload);
-        try {
-          localStorage.setItem('dm_slot_calib_sync', JSON.stringify({
-            slotId: activeSlot.id,
-            format: activeSlot.format,
-            calib: activeSlot.calib,
-            time: Date.now()
-          }));
-        } catch (e) { }
-      }
+      bus.postMessage(calibPayload);
+      try {
+        localStorage.setItem('dm_slot_calib_sync', JSON.stringify({
+          slotId: activeSlot.id,
+          format: activeSlot.format,
+          calib: activeSlot.calib,
+          deckId: activeDeckId,
+          time: Date.now()
+        }));
+      } catch (e) { }
       saveSlotsAndBroadcast();
       showToast(`Calibración de ${activeSlot.name} restablecida`);
     }
 
-    let liveMode = false;
+    let liveMode = true;
 
     function toggleLiveMode() {}
 
@@ -4308,10 +4308,21 @@
       if (step && step.slotId) {
         selectSlotForCalib(step.slotId);
       }
+      const stepPayload = { type: 'SET_STEP', step: stepIndex, deckId: activeDeckId, time: Date.now() };
+      bus.postMessage(stepPayload);
+      try {
+        localStorage.setItem('dm_stage_set_step', JSON.stringify(stepPayload));
+        localStorage.setItem('dm_current_step_' + activeDeckId, String(stepIndex));
+      } catch (e) {}
     }
 
     function sendCommand(cmd) {
-      // Control remoto desactivado: el editor no interactúa con la emisión a distancia
+      if (!cmd) return;
+      const cmdPayload = { type: 'STAGE_COMMAND', command: cmd, deckId: activeDeckId, time: Date.now() };
+      bus.postMessage(cmdPayload);
+      try {
+        localStorage.setItem('dm_stage_command', JSON.stringify(cmdPayload));
+      } catch (e) {}
     }
 
     function syncPreviewToCurrentStep() {
@@ -4433,12 +4444,12 @@
       if (!data) return;
 
       if (data.type === 'REQUEST_CURRENT_STATE') {
-        const stepPayload = { type: 'SET_STEP', step: currentStep, deckId: activeDeckId };
+        if (Array.isArray(slots) && slots.length > 0) {
+          bus.postMessage({ type: 'DECK_SLOTS_UPDATED', slots: slots, deckId: activeDeckId, timeline: currentTimeline, time: Date.now() });
+        }
+        const stepPayload = { type: 'SET_STEP', step: currentStep, deckId: activeDeckId, time: Date.now() };
         bus.postMessage(stepPayload);
         postToStageIframe(stepPayload);
-        if (Array.isArray(slots) && slots.length > 0) {
-          bus.postMessage({ type: 'DECK_SLOTS_UPDATED', slots: slots, deckId: activeDeckId });
-        }
         return;
       }
 
@@ -4869,11 +4880,58 @@
       }
     }
 
+    function openStageFromEditor(event) {
+      if (event) {
+        event.preventDefault();
+      }
+      const targetDeckId = (typeof activeDeckId !== 'undefined' && activeDeckId) ? activeDeckId : 'default';
+      
+      // 1. Guardar de inmediato todos los datos en IndexedDB y localStorage
+      if (Array.isArray(slots) && slots.length > 0) {
+        if (window.DMStorage) {
+          DMStorage.saveDeckSlots(targetDeckId, slots);
+          DMStorage.safeSetItem('dm_deck_slots', slots);
+          DMStorage.safeSetItem('dm_deck_slots_' + targetDeckId, slots);
+        } else {
+          try {
+            localStorage.setItem('dm_deck_slots', JSON.stringify(slots));
+            localStorage.setItem('dm_deck_slots_' + targetDeckId, JSON.stringify(slots));
+          } catch(e) {}
+        }
+      }
+      
+      // 2. Establecer deck activo en memoria y almacenamiento
+      if (window.DMCloud) {
+        DMCloud.setActiveDeckId(targetDeckId);
+      }
+      try {
+        localStorage.setItem('dm_active_deck_id', targetDeckId);
+        localStorage.setItem('dm_current_step_' + targetDeckId, String(currentStep));
+      } catch(e) {}
+
+      // 3. Notificar a cualquier escenario abierto previamente
+      currentTimeline = buildTimeline(slots);
+      const syncPayload = {
+        type: 'DECK_SLOTS_UPDATED',
+        deckId: targetDeckId,
+        slots: slots,
+        timeline: currentTimeline,
+        time: Date.now()
+      };
+      bus.postMessage(syncPayload);
+      try {
+        if (window.DMStorage) DMStorage.safeSetItem('dm_deck_slots_sync', syncPayload);
+        else localStorage.setItem('dm_deck_slots_sync', JSON.stringify(syncPayload));
+      } catch(e) {}
+
+      // 4. Abrir la URL exacta con ?deck=... y ?step=...
+      const url = getPresentationUrl(targetDeckId);
+      window.open(url, '_blank');
+    }
+
     const openStageBtnEl = document.getElementById('open-stage-btn');
     if (openStageBtnEl) {
-      openStageBtnEl.addEventListener('click', () => {
-        openStageBtnEl.href = getPresentationUrl(activeDeckId);
-      });
+      openStageBtnEl.onclick = openStageFromEditor;
     }
 
     async function copyCurrentPresentationLink() {
