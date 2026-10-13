@@ -1476,6 +1476,12 @@
       border: 1px solid rgba(236, 72, 153, 0.28);
     }
 
+    .slot-format-tag.format-video {
+      background: rgba(168, 85, 247, 0.16);
+      color: #c084fc;
+      border: 1px solid rgba(168, 85, 247, 0.38);
+    }
+
     .slot-name-input {
       background: transparent;
       border: 1px solid transparent;
@@ -1834,6 +1840,17 @@
               <!-- Capa 1: Marco base -->
               <img id="prev-frame-base" class="prev-frame-img" src="presets/preset2/3x4.png" alt="Marco Fijo" />
 
+              <!-- Capa 1b: Preview Escena Vídeo a Pantalla Completa (Sin Marco) -->
+              <div id="prev-video-scene" class="prev-video-scene" style="display: none; position: absolute; inset: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #181028 0%, #08060e 100%); z-index: 10; align-items: center; justify-content: center; flex-direction: column; color: #fff; padding: 20px; box-sizing: border-box; text-align: center;">
+                <div style="width: 54px; height: 54px; border-radius: 50%; background: rgba(168, 85, 247, 0.2); border: 2px solid #c084fc; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; font-size: 24px; box-shadow: 0 0 20px rgba(168, 85, 247, 0.35);">
+                  🎬
+                </div>
+                <div style="font-size: 14px; font-weight: 800; color: #fff; letter-spacing: -0.01em;">ESCENA DE VÍDEO (PANTALLA COMPLETA)</div>
+                <div style="font-size: 10.5px; color: #c084fc; font-weight: 700; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Sin Marco · Llena el 100% de la pantalla</div>
+                <div id="prev-video-scene-desc" style="font-size: 10.5px; color: #94a3b8; max-width: 90%; text-align: center; margin-top: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: ui-monospace, monospace; background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);"></div>
+                <div style="font-size: 9.5px; color: #64748b; margin-top: 8px;">Transición con Zoom In y fundido de opacidad</div>
+              </div>
+
               <!-- Capa 2: Hueco de pantalla calibrado -->
               <div id="prev-screen-slot" class="prev-screen-slot">
                 <img id="prev-slide-img" class="prev-slide-img" src="" alt="Diapositiva" />
@@ -2174,30 +2191,36 @@
           style="display: block; font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;">
           1. Formato de Pantalla
         </label>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px;">
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;">
           <button type="button" id="btn-choice-34" class="btn"
-            style="background: rgba(236, 72, 153, 0.16); border: 1px solid #ec4899; color: #fff; flex-direction: column; padding: 10px 6px; gap: 4px; border-radius: 10px;"
+            style="background: rgba(236, 72, 153, 0.16); border: 1px solid #ec4899; color: #fff; flex-direction: column; padding: 10px 4px; gap: 4px; border-radius: 10px;"
             onclick="chooseFormat('3:4')">
-            <span style="font-weight: 700; font-size: 11.5px;">3:4 Móvil</span>
-            <span style="font-size: 9.5px; color: #94a3b8;">Imagen.png</span>
+            <span style="font-weight: 700; font-size: 11px;">3:4 Móvil</span>
+            <span style="font-size: 9px; color: #94a3b8;">Imagen.png</span>
           </button>
           <button type="button" id="btn-choice-916" class="btn"
-            style="background: #101116; border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; flex-direction: column; padding: 10px 6px; gap: 4px; border-radius: 10px;"
+            style="background: #101116; border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; flex-direction: column; padding: 10px 4px; gap: 4px; border-radius: 10px;"
             onclick="chooseFormat('9:16')">
-            <span style="font-weight: 700; font-size: 11.5px;">9:16 Móvil</span>
-            <span style="font-size: 9.5px; color: #64748b;">Imagen 9x16</span>
+            <span style="font-weight: 700; font-size: 11px;">9:16 Móvil</span>
+            <span style="font-size: 9px; color: #64748b;">Imagen 9x16</span>
           </button>
           <button type="button" id="btn-choice-169" class="btn"
-            style="background: #101116; border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; flex-direction: column; padding: 10px 6px; gap: 4px; border-radius: 10px;"
+            style="background: #101116; border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; flex-direction: column; padding: 10px 4px; gap: 4px; border-radius: 10px;"
             onclick="chooseFormat('16:9')">
-            <span style="font-weight: 700; font-size: 11.5px;">16:9 Escenario</span>
-            <span style="font-size: 9.5px; color: #64748b;">Imagen 2</span>
+            <span style="font-weight: 700; font-size: 11px;">16:9 Escenario</span>
+            <span style="font-size: 9px; color: #64748b;">Imagen 2</span>
           </button>
           <button type="button" id="btn-choice-title" class="btn"
-            style="background: #101116; border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; flex-direction: column; padding: 10px 6px; gap: 4px; border-radius: 10px;"
+            style="background: #101116; border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; flex-direction: column; padding: 10px 4px; gap: 4px; border-radius: 10px;"
             onclick="chooseFormat('title')">
-            <span style="font-weight: 700; font-size: 11.5px;">Title</span>
-            <span style="font-size: 9.5px; color: #64748b;">Portada</span>
+            <span style="font-weight: 700; font-size: 11px;">Title</span>
+            <span style="font-size: 9px; color: #64748b;">Portada</span>
+          </button>
+          <button type="button" id="btn-choice-video" class="btn"
+            style="background: #101116; border: 1px solid rgba(255, 255, 255, 0.08); color: #94a3b8; flex-direction: column; padding: 10px 4px; gap: 4px; border-radius: 10px;"
+            onclick="chooseFormat('video')">
+            <span style="font-weight: 700; font-size: 11px; color: #c084fc;">🎬 Vídeo</span>
+            <span style="font-size: 9px; color: #64748b;">Completo</span>
           </button>
         </div>
       </div>
@@ -2213,11 +2236,11 @@
       </div>
 
       <div class="form-group" style="margin-bottom: 14px;" id="modal-url-group">
-        <label class="form-label"
+        <label class="form-label" id="modal-url-label"
           style="display: block; font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;">
           Presentación de la Escena
         </label>
-        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+        <div id="modal-source-tabs" style="display: flex; gap: 8px; margin-bottom: 8px;">
           <button type="button" id="tab-source-url" class="btn-source-tab" onclick="setNewSlotSourceType('url')" style="flex: 1; padding: 6px 10px; font-size: 11px; font-weight: 700; border-radius: 6px; cursor: pointer; border: 1px solid #ec4899; background: rgba(236,72,153,0.18); color: #fff; transition: all 0.15s;">
             🔗 Enlace Google Slides / PPT
           </button>
@@ -2239,6 +2262,16 @@
             <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">Se convertirán todas las páginas a diapositivas HD automáticamente</div>
           </div>
           <input type="file" id="new-slot-pdf-file" accept=".pdf,application/pdf" style="display: none;" onchange="handleNewSlotPdfPicked(this)" />
+        </div>
+
+        <div id="modal-video-input-wrap" style="display: none;">
+          <input type="text" id="new-slot-video-url" class="form-input text-input"
+            style="width: 100%; font-family: ui-monospace, monospace; font-size: 12px; border-radius: 6px; border: 1px solid rgba(168, 85, 247, 0.4);"
+            placeholder="Enlace YouTube, Vimeo, MP4 o código iframe <iframe>...</iframe>" />
+          <div style="font-size: 10.5px; color: #c084fc; margin-top: 6px; display: flex; align-items: center; gap: 5px;">
+            <span>✨</span>
+            <span>Escena de vídeo a pantalla completa sin marco (Zoom In + Opacidad)</span>
+          </div>
         </div>
       </div>
 
@@ -2503,7 +2536,7 @@
     function getDefaultCoords(format) {
       if (format === '16:9') return { ...DEFAULT_FRAME2_COORDS };
       if (format === '9:16') return { ...DEFAULT_FRAME916_COORDS };
-      if (format === 'title') return { left: 0, width: 100, top: 0, height: 100, radius: 0, rot: 0, zoom: 100 };
+      if (format === 'title' || format === 'video') return { left: 0, width: 100, top: 0, height: 100, radius: 0, rot: 0, zoom: 100 };
       return { ...DEFAULT_COORDS };
     }
 
@@ -2537,6 +2570,7 @@
       if (fmt === '9:16') return 'format-916';
       if (fmt === '16:9') return 'format-169';
       if (fmt === 'title') return 'format-title';
+      if (fmt === 'video') return 'format-video';
       return 'format-34';
     }
 
@@ -2544,6 +2578,7 @@
       if (fmt === '9:16') return '9:16 Móvil';
       if (fmt === '16:9') return '16:9 Escenario';
       if (fmt === 'title') return 'Title';
+      if (fmt === 'video') return '🎬 Vídeo';
       return '3:4 Móvil';
     }
 
@@ -2787,7 +2822,7 @@
         return [{ id: 'empty', type: 'slide', format: '3:4', name: 'Sin escenas', shortName: 'Vacío', slidesCount: 1, calib: { ...DEFAULT_COORDS } }];
       }
       const timeline = [];
-      const formatLabel = (fmt) => (fmt === '3:4' ? 'Móvil' : (fmt === '9:16' ? '9:16' : '16:9'));
+      const formatLabel = (fmt) => (fmt === 'title' ? 'Portada' : (fmt === 'video' ? 'Vídeo' : (fmt === '3:4' ? 'Móvil' : (fmt === '9:16' ? '9:16' : '16:9'))));
 
       if (slotsArr.length === 1) {
         const s = slotsArr[0];
@@ -2797,10 +2832,11 @@
           slotId: s.id,
           type: 'slide',
           format: s.format,
-          name: `1. ${s.name} (${s.format})`,
+          name: `1. ${s.name} (${formatLabel(s.format)})`,
           shortName: `1. ${formatLabel(s.format)}`,
           url: s.url,
-          slidesCount: parseInt(s.slidesCount) || 1,
+          videoUrl: s.videoUrl || s.url || '',
+          slidesCount: (s.format === 'video') ? 1 : (parseInt(s.slidesCount) || 1),
           slideImages: s.slideImages || null,
           interactiveSlides: Array.isArray(s.interactiveSlides) ? s.interactiveSlides : [],
           hue: (typeof s.hue === 'number') ? s.hue : 0,
@@ -2907,10 +2943,11 @@
           slotId: s.id,
           type: 'slide',
           format: s.format,
-          name: `${i + 1}. ${s.name} (${s.format})`,
+          name: `${i + 1}. ${s.name} (${formatLabel(s.format)})`,
           shortName: `${i + 1}. ${formatLabel(s.format)}`,
           url: s.url,
-          slidesCount: parseInt(s.slidesCount) || 1,
+          videoUrl: s.videoUrl || s.url || '',
+          slidesCount: (s.format === 'video') ? 1 : (parseInt(s.slidesCount) || 1),
           slideImages: s.slideImages || null,
           interactiveSlides: Array.isArray(s.interactiveSlides) ? s.interactiveSlides : [],
           hue: (typeof s.hue === 'number') ? s.hue : 0,
@@ -2922,7 +2959,7 @@
         });
 
         const next = slotsArr[(i + 1) % slotsArr.length];
-        if (s.format !== next.format) {
+        if (s.format !== next.format && s.format !== 'video' && next.format !== 'video') {
           const trans = getTransitionForPair(s.format, next.format);
           if (trans) {
             timeline.push({
@@ -3355,12 +3392,12 @@
                        onchange="setSlotPosition('${s.id}', this.value)"
                        title="Escribe la posición (1-${slots.length}) y pulsa Enter" />
               </div>
-              <button type="button" class="slot-format-tag ${formatTagClass}" onclick="event.stopPropagation(); toggleSlotFormat('${s.id}')" title="Clic para alternar formato (3:4 / 9:16 / 16:9 / Title)" style="cursor: pointer; border: none;">
-                ${s.format === 'title' ? 'Title' : s.format}
+              <button type="button" class="slot-format-tag ${formatTagClass}" onclick="event.stopPropagation(); toggleSlotFormat('${s.id}')" title="Clic para alternar formato (3:4 / 9:16 / 16:9 / Title / Vídeo)" style="cursor: pointer; border: none;">
+                ${s.format === 'title' ? 'Title' : (s.format === 'video' ? '🎬 Vídeo' : s.format)}
               </button>
               <input class="slot-name-input" value="${escapeHtml(s.name)}" onchange="updateSlotName('${s.id}', this.value)" title="Clic para editar nombre" />
               
-              <div class="slot-hue-pill" onclick="event.stopPropagation();" title="Cambiar color del marco para esta escena" style="display: inline-flex; align-items: center; background: rgba(0,0,0,0.45); border: 1px solid ${getHueColor(s.hue)}55; border-radius: 6px; padding: 2px 8px; flex-shrink: 0;">
+              <div class="slot-hue-pill" onclick="event.stopPropagation();" title="Cambiar color del marco para esta escena" style="display: ${s.format === 'video' ? 'none' : 'inline-flex'}; align-items: center; background: rgba(0,0,0,0.45); border: 1px solid ${getHueColor(s.hue)}55; border-radius: 6px; padding: 2px 8px; flex-shrink: 0;">
                 <select class="slot-hue-select" onchange="updateSlotHue('${s.id}', this.value)" style="background: transparent; border: none; color: ${getHueColor(s.hue)}; font-size: 11px; font-weight: 700; outline: none; cursor: pointer; padding: 1px 0;">
                   <option value="0" ${(!s.hue || s.hue === 0) ? 'selected' : ''} style="background:#11141f; color:#f472b6;">Rosa</option>
                   <option value="30" ${s.hue === 30 ? 'selected' : ''} style="background:#11141f; color:#dc2626;">Rojo</option>
@@ -3372,7 +3409,7 @@
                   <option value="280" ${s.hue === 280 ? 'selected' : ''} style="background:#11141f; color:#a855f7;">Morado</option>
                 </select>
               </div>
-              ${(s.textOverlay && s.textOverlay.enabled) ? `
+              ${(s.textOverlay && s.textOverlay.enabled && s.format !== 'video') ? `
                 <span class="slot-overlay-badge" onclick="event.stopPropagation(); selectSlotForCalib('${s.id}')" title="Rótulo activo: ${escapeHtml(s.textOverlay.dual && s.textOverlay.title2 ? `${s.textOverlay.title || ''} & ${s.textOverlay.title2}` : (s.textOverlay.title || ''))}">
                   <svg style="width:10px;height:10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
                   ${escapeHtml(s.textOverlay.dual && s.textOverlay.title2 ? `${s.textOverlay.title || ''} & ${s.textOverlay.title2}` : (s.textOverlay.title || 'Rótulo'))}
@@ -3398,6 +3435,14 @@
                 <span class="thumb-format-pill" style="color: #f9a8d4;">TITLE</span>
               </div>
               <span style="font-size: 12px; color: #64748b; font-style: italic;">Sin presentación adjunta (portada estática)</span>
+            ` : (s.format === 'video' ? `
+              <div class="slide-thumb-wrap thumb-empty" style="width:78px; height:44px; background: rgba(168, 85, 247, 0.14); border: 1px solid rgba(168, 85, 247, 0.35);" title="Vídeo Pantalla Completa">
+                <span class="thumb-format-pill" style="color: #c084fc;">VÍDEO</span>
+              </div>
+              <input class="slot-url-input" placeholder="URL Vídeo (YouTube, Vimeo, MP4 o <iframe>)..." value="${escapeHtml(s.videoUrl || s.url || '')}" onchange="updateSlotVideoUrl('${s.id}', this.value)" title="Enlace directo MP4, YouTube, Vimeo o código iframe" />
+              <div class="slot-slides-wrap" style="color: #c084fc; font-weight: 700; white-space: nowrap; font-size: 11px; padding: 4px 8px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 6px;" title="Escena de vídeo a pantalla completa">
+                <span>🎬 Pantalla Completa</span>
+              </div>
             ` : `
               ${getSlideThumbnailHtml(s, false)}
               ${(s.pdfFileName || s.sourceType === 'pdf') ? `
@@ -3433,9 +3478,9 @@
                   : `<span style="font-size: 11px; color: #94a3b8; font-weight: 600; white-space: nowrap;">Slides:</span>`}
                 <input type="number" class="slot-slides-input" min="1" max="200" value="${s.slidesCount || 1}" onchange="updateSlotSlidesCount('${s.id}', this.value)" oninput="updateSlotSlidesCount('${s.id}', this.value)" ${s.slideImages ? 'style="border-color: rgba(16,185,129,0.3);"' : ''} />
               </div>
-            `}
+            `)}
           </div>
-          ${(s.format !== 'title' && (s.slidesCount > 1 || (s.slideImages && s.slideImages.length > 0))) ? `
+          ${(s.format !== 'title' && s.format !== 'video' && (s.slidesCount > 1 || (s.slideImages && s.slideImages.length > 0))) ? `
             <div class="slot-interactive-slides-row" style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
               <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center;" title="Selecciona si alguna diapositiva tiene vídeo incrustado para reproducirlo en directo">
                 Vídeo incrustado:
@@ -3679,6 +3724,16 @@
       showToast(`URL de presentación actualizada`);
     }
 
+    function updateSlotVideoUrl(id, val) {
+      const slot = slots.find(s => s.id === id);
+      if (!slot) return;
+      slot.videoUrl = val.trim();
+      slot.url = slot.videoUrl;
+      saveSlotsAndBroadcast();
+      renderPreview();
+      showToast(`Vídeo de la escena actualizado`);
+    }
+
     let currentSlotUploadingPdf = null;
 
     function triggerSlotPdfUpload(slotId) {
@@ -3831,6 +3886,8 @@
         slot.format = '16:9';
       } else if (slot.format === '16:9') {
         slot.format = 'title';
+      } else if (slot.format === 'title') {
+        slot.format = 'video';
       } else {
         slot.format = '3:4';
       }
@@ -3958,8 +4015,10 @@
 
       const nameInput = document.getElementById('new-slot-name');
       const urlInput = document.getElementById('new-slot-url');
+      const videoInput = document.getElementById('new-slot-video-url');
       if (nameInput) nameInput.value = `Escena ${slots.length + 1}`;
       if (urlInput) urlInput.value = '';
+      if (videoInput) videoInput.value = '';
       const slidesInput = document.getElementById('new-slot-slides');
       if (slidesInput) slidesInput.value = '1';
       const modal = document.getElementById('add-slot-modal');
@@ -3978,7 +4037,8 @@
       const btn916 = document.getElementById('btn-choice-916');
       const btn169 = document.getElementById('btn-choice-169');
       const btnTitle = document.getElementById('btn-choice-title');
-      [btn34, btn916, btn169, btnTitle].forEach(b => {
+      const btnVideo = document.getElementById('btn-choice-video');
+      [btn34, btn916, btn169, btnTitle, btnVideo].forEach(b => {
         if (b) {
           b.style.background = 'rgba(255, 255, 255, 0.04)';
           b.style.borderColor = 'rgba(255, 255, 255, 0.08)';
@@ -4006,25 +4066,68 @@
         btnTitle.style.borderColor = '#ec4899';
         btnTitle.style.color = '#fff';
         btnTitle.style.boxShadow = '0 0 16px rgba(236, 72, 153, 0.25)';
+      } else if (fmt === 'video' && btnVideo) {
+        btnVideo.style.background = 'rgba(168, 85, 247, 0.2)';
+        btnVideo.style.borderColor = '#c084fc';
+        btnVideo.style.color = '#fff';
+        btnVideo.style.boxShadow = '0 0 16px rgba(168, 85, 247, 0.35)';
       }
 
-      // Hide URL and slides fields for title format
+      // Ajustar campos según formato
       const urlGroup = document.getElementById('modal-url-group');
+      const urlLabel = document.getElementById('modal-url-label');
+      const sourceTabs = document.getElementById('modal-source-tabs');
+      const urlWrap = document.getElementById('modal-url-input-wrap');
+      const pdfWrap = document.getElementById('modal-pdf-input-wrap');
+      const videoWrap = document.getElementById('modal-video-input-wrap');
       const slidesGroup = document.getElementById('modal-slides-group');
-      if (urlGroup) urlGroup.style.display = (fmt === 'title') ? 'none' : '';
-      if (slidesGroup) slidesGroup.style.display = (fmt === 'title') ? 'none' : '';
+
+      if (fmt === 'title') {
+        if (urlGroup) urlGroup.style.display = 'none';
+        if (slidesGroup) slidesGroup.style.display = 'none';
+      } else if (fmt === 'video') {
+        if (urlGroup) urlGroup.style.display = '';
+        if (urlLabel) urlLabel.textContent = 'Vídeo de la Escena (Enlace Directo o Embed / YouTube / Vimeo)';
+        if (sourceTabs) sourceTabs.style.display = 'none';
+        if (urlWrap) urlWrap.style.display = 'none';
+        if (pdfWrap) pdfWrap.style.display = 'none';
+        if (videoWrap) videoWrap.style.display = 'block';
+        if (slidesGroup) slidesGroup.style.display = 'none';
+      } else {
+        if (urlGroup) urlGroup.style.display = '';
+        if (urlLabel) urlLabel.textContent = 'Presentación de la Escena';
+        if (sourceTabs) sourceTabs.style.display = 'flex';
+        if (videoWrap) videoWrap.style.display = 'none';
+        if (slidesGroup) slidesGroup.style.display = '';
+        setNewSlotSourceType(newSlotSourceType || 'url');
+      }
     }
 
     function confirmAddSlot() {
       const nameInput = document.getElementById('new-slot-name');
       const urlInput = document.getElementById('new-slot-url');
-      const name = nameInput && nameInput.value.trim() ? nameInput.value.trim() : `Escena ${slots.length + 1}`;
-      const url = (pendingFormat === 'title' || newSlotSourceType === 'pdf') ? '' : (urlInput ? cleanSlidesUrl(urlInput.value.trim()) : '');
+      const videoInput = document.getElementById('new-slot-video-url');
+      const name = nameInput && nameInput.value.trim() ? nameInput.value.trim() : (pendingFormat === 'video' ? `Vídeo ${slots.length + 1}` : `Escena ${slots.length + 1}`);
+      
+      let url = '';
+      let videoUrl = '';
+      let slidesCountVal = 1;
+      let isPdfMode = false;
 
-      const slidesInput = document.getElementById('new-slot-slides');
-      const slidesCountVal = (pendingFormat === 'title') ? 1 : (slidesInput ? (parseInt(slidesInput.value) || 1) : 1);
+      if (pendingFormat === 'video') {
+        videoUrl = videoInput ? videoInput.value.trim() : '';
+        url = videoUrl;
+        slidesCountVal = 1;
+      } else if (pendingFormat === 'title') {
+        url = '';
+        slidesCountVal = 1;
+      } else {
+        isPdfMode = (newSlotSourceType === 'pdf' && newSlotPendingPdfFile);
+        url = isPdfMode ? '' : (urlInput ? cleanSlidesUrl(urlInput.value.trim()) : '');
+        const slidesInput = document.getElementById('new-slot-slides');
+        slidesCountVal = slidesInput ? (parseInt(slidesInput.value) || 1) : 1;
+      }
 
-      const isPdfMode = (pendingFormat !== 'title' && newSlotSourceType === 'pdf' && newSlotPendingPdfFile);
       const pdfFileToUpload = isPdfMode ? newSlotPendingPdfFile : null;
 
       const newSlot = {
@@ -4033,9 +4136,10 @@
         format: pendingFormat,
         speaker: '',
         url: url,
+        videoUrl: videoUrl,
         slidesCount: slidesCountVal,
         calib: getDefaultCoords(pendingFormat),
-        sourceType: isPdfMode ? 'pdf' : 'url',
+        sourceType: (pendingFormat === 'video') ? 'video' : (isPdfMode ? 'pdf' : 'url'),
         textOverlay: {
           enabled: false,
           title: name,
@@ -4102,11 +4206,12 @@
       if (activeSlot.calib.zoom === undefined) activeSlot.calib.zoom = 100;
 
       const isTitle = (activeSlot.format === 'title');
+      const isVideo = (activeSlot.format === 'video');
 
-      // Bloquear/desbloquear sliders si es título
+      // Bloquear/desbloquear sliders si es título o vídeo a pantalla completa
       const slidersContainer = document.getElementById('calibration-sliders');
       if (slidersContainer) {
-        if (isTitle) {
+        if (isTitle || isVideo) {
           slidersContainer.style.opacity = '0.3';
           slidersContainer.style.pointerEvents = 'none';
         } else {
@@ -4115,7 +4220,7 @@
         }
       }
 
-      if (!isTitle) {
+      if (!isTitle && !isVideo) {
         // Sincronizar etiquetas y valores de Sliders
         const tagLeft = document.getElementById('tag-left');
         if (tagLeft) tagLeft.textContent = activeSlot.calib.left + '%';
@@ -4151,13 +4256,15 @@
       }
 
       if (previewPhaseText) {
-        previewPhaseText.textContent = isTitle ? `TITLE: ${activeSlot.name.toUpperCase()}` : `CALIBRANDO: ${activeSlot.name.toUpperCase()} (${activeSlot.format})`;
+        previewPhaseText.textContent = isTitle 
+          ? `TITLE: ${activeSlot.name.toUpperCase()}` 
+          : (isVideo ? `VÍDEO: ${activeSlot.name.toUpperCase()} (Pantalla Completa Sin Marco)` : `CALIBRANDO: ${activeSlot.name.toUpperCase()} (${activeSlot.format})`);
       }
 
       // Sincronizar sección Rótulo / Text Overlay
       const overlaySec = document.getElementById('overlay-section');
       if (overlaySec) {
-        if (isTitle) {
+        if (isTitle || isVideo) {
           overlaySec.style.opacity = '0.3';
           overlaySec.style.pointerEvents = 'none';
         } else {
@@ -4192,20 +4299,44 @@
       const badgeFmt = document.getElementById('prev-slot-badge-fmt');
       const badgeName = document.getElementById('prev-slot-badge-name');
       const previewSlotBadge = document.getElementById('preview-slot-badge');
+      const prevVideoScene = document.getElementById('prev-video-scene');
+      const prevVideoDesc = document.getElementById('prev-video-scene-desc');
 
       const isTitle = (slot.format === 'title');
+      const isVideo = (slot.format === 'video');
       const slotIndex = slots.findIndex(s => s.id === slot.id);
       const slotNumStr = `#${slotIndex >= 0 ? slotIndex + 1 : 1}`;
 
       // Badges informativos
       if (badgeNum) badgeNum.textContent = slotNumStr;
-      if (badgeFmt) badgeFmt.textContent = slot.format ? slot.format.toUpperCase() : '3:4';
+      if (badgeFmt) badgeFmt.textContent = slot.format ? (slot.format === 'video' ? 'VÍDEO' : slot.format.toUpperCase()) : '3:4';
       if (badgeName) badgeName.textContent = slot.name || 'Escena';
-      if (previewSlotBadge) previewSlotBadge.textContent = `${slotNumStr} · ${slot.format ? slot.format.toUpperCase() : '3:4'}`;
+      if (previewSlotBadge) previewSlotBadge.textContent = `${slotNumStr} · ${slot.format ? (slot.format === 'video' ? 'VÍDEO' : slot.format.toUpperCase()) : '3:4'}`;
 
       const boxW = previewBox.clientWidth || 640;
       const scale = boxW / 1920;
       const hueVal = (typeof slot.hue === 'number') ? slot.hue : (parseInt(slot.hue) || 0);
+
+      if (isVideo) {
+        // Escena de vídeo a pantalla completa
+        if (prevVideoScene) {
+          prevVideoScene.style.display = 'flex';
+          if (prevVideoDesc) {
+            const raw = slot.videoUrl || slot.url || '';
+            prevVideoDesc.textContent = raw ? raw : 'Sin enlace de vídeo asignado (pega tu link o iframe arriba)';
+          }
+        }
+        if (frameBase) frameBase.style.display = 'none';
+        if (frameOverlay) frameOverlay.style.display = 'none';
+        if (screenSlot) screenSlot.style.display = 'none';
+        if (gradient) gradient.style.display = 'none';
+        if (textOverlay) textOverlay.style.display = 'none';
+        if (logoLeft) logoLeft.style.display = 'none';
+        if (logoRight) logoRight.style.display = 'none';
+        return;
+      } else {
+        if (prevVideoScene) prevVideoScene.style.display = 'none';
+      }
 
       if (isTitle) {
         // Portada TITLE estática

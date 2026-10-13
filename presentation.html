@@ -125,6 +125,62 @@
       transition: opacity 0.5s ease-in-out !important;
     }
 
+    /* Capa de Escena de Vídeo a Pantalla Completa (Sin Marco) */
+    .stage-layer.video-scene-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 35;
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.85);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                  transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                  visibility 0.8s !important;
+      pointer-events: none;
+    }
+
+    .stage-layer.video-scene-layer.active {
+      opacity: 1 !important;
+      visibility: visible !important;
+      transform: scale(1) !important;
+      pointer-events: auto;
+    }
+
+    .video-scene-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .video-scene-element {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      outline: none;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .badge-fmt-video {
+      background: rgba(56, 189, 248, 0.14) !important;
+      border: 1px solid rgba(56, 189, 248, 0.35) !important;
+      color: #38bdf8 !important;
+    }
+
 
 
     .media-cover {
@@ -2021,6 +2077,14 @@
       </video>
     </div>
 
+    <!-- PASO VÍDEO COMPLETO (Sin marco, llena toda la pantalla con zoom in y opacidad) -->
+    <div id="layer-video-scene" class="stage-layer video-scene-layer">
+      <div id="video-scene-container" class="video-scene-container">
+        <video id="video-scene-player" class="video-scene-element" playsinline controls preload="auto"></video>
+        <iframe id="video-scene-iframe" class="video-scene-element" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    </div>
+
     <!-- Degradado Negro Inferior para textos / rótulos sobre la escena -->
     <div id="stage-text-gradient" class="stage-text-gradient"></div>
 
@@ -2260,6 +2324,7 @@
     function getDefaultCoords(format) {
       if (format === '16:9') return { ...DEFAULT_COORDS_169 };
       if (format === '9:16') return { ...DEFAULT_COORDS_916 };
+      if (format === 'title' || format === 'video') return { left: 0, width: 100, top: 0, height: 100, radius: 0, rot: 0, zoom: 100 };
       return { ...DEFAULT_COORDS_34 };
     }
 
@@ -2639,7 +2704,7 @@
       const timeline = [];
       if (!slotsArr || slotsArr.length === 0) return timeline;
 
-      const formatLabel = (fmt) => (fmt === 'title' ? 'Portada' : (fmt === '3:4' ? 'Móvil' : (fmt === '9:16' ? '9:16' : '16:9')));
+      const formatLabel = (fmt) => (fmt === 'title' ? 'Portada' : (fmt === 'video' ? 'Vídeo' : (fmt === '3:4' ? 'Móvil' : (fmt === '9:16' ? '9:16' : '16:9'))));
 
       if (slotsArr.length === 1) {
         const slot = slotsArr[0];
@@ -2648,14 +2713,15 @@
           id: 'step_slide_' + slot.id,
           slotId: slot.id,
           type: 'slide',
-          name: `1. ${slot.name || (slot.format === 'title' ? 'Portada' : 'Diapositiva 1')} (${formatLabel(slot.format)})`,
+          name: `1. ${slot.name || (slot.format === 'title' ? 'Portada' : (slot.format === 'video' ? 'Vídeo' : 'Diapositiva 1'))} (${formatLabel(slot.format)})`,
           shortName: `1. ${formatLabel(slot.format)}`,
           format: slot.format || '3:4',
           speaker: slot.speaker || '',
           url: slot.url || '',
-          slidesCount: (slot.slideImages && slot.slideImages.length > 0)
+          videoUrl: slot.videoUrl || slot.url || '',
+          slidesCount: (slot.format === 'video') ? 1 : ((slot.slideImages && slot.slideImages.length > 0)
             ? slot.slideImages.length
-            : (slot.format === 'title' ? 1 : (parseInt(slot.slidesCount) || 1)),
+            : (slot.format === 'title' ? 1 : (parseInt(slot.slidesCount) || 1))),
           slideImages: slot.slideImages || null,
           interactiveSlides: Array.isArray(slot.interactiveSlides) ? slot.interactiveSlides : [],
           hue: (typeof slot.hue === 'number') ? slot.hue : 0,
@@ -2728,7 +2794,7 @@
             hue: (typeof slot.hue === 'number') ? slot.hue : 0,
             color: getHueColor(slot.hue)
           });
-        } else {
+        } else if (slot.format === '16:9') {
           timeline.push({
             id: `step_trans_${slot.id}_out`,
             type: 'video',
@@ -2764,9 +2830,10 @@
           format: slot.format || '3:4',
           speaker: slot.speaker || '',
           url: slot.url || '',
-          slidesCount: (slot.slideImages && slot.slideImages.length > 0)
+          videoUrl: slot.videoUrl || slot.url || '',
+          slidesCount: (slot.format === 'video') ? 1 : ((slot.slideImages && slot.slideImages.length > 0)
             ? slot.slideImages.length
-            : (slot.format === 'title' ? 1 : (parseInt(slot.slidesCount) || 1)),
+            : (slot.format === 'title' ? 1 : (parseInt(slot.slidesCount) || 1))),
           slideImages: slot.slideImages || null,
           interactiveSlides: Array.isArray(slot.interactiveSlides) ? slot.interactiveSlides : [],
           hue: (typeof slot.hue === 'number') ? slot.hue : 0,
@@ -2777,7 +2844,7 @@
         });
 
         const nextSlot = slotsArr[(idx + 1) % slotsArr.length];
-        if (slot.format !== nextSlot.format) {
+        if (slot.format !== nextSlot.format && slot.format !== 'video' && nextSlot.format !== 'video') {
           const trans = getTransitionForPair(slot.format, nextSlot.format);
           if (trans) {
             timeline.push({
@@ -2983,7 +3050,8 @@
       step3: document.getElementById('layer-step3'),
       step4: document.getElementById('layer-step4'),
       step916: document.getElementById('layer-format-916'),
-      stepTitle: document.getElementById('layer-title')
+      stepTitle: document.getElementById('layer-title'),
+      videoScene: document.getElementById('layer-video-scene')
     };
 
     const iframe1 = document.getElementById('iframe-slides1');
@@ -2994,6 +3062,8 @@
     const nativeDeck916 = document.getElementById('native-deck-916');
     const videoEl = document.getElementById('video-element');
     const videoReverseEl = document.getElementById('video-reverse-element');
+    const videoScenePlayer = document.getElementById('video-scene-player');
+    const videoSceneIframe = document.getElementById('video-scene-iframe');
     const stepNameEl = document.getElementById('step-name');
     const stepNumEl = document.getElementById('step-num');
     const stepTotEl = document.getElementById('step-tot');
@@ -3002,6 +3072,103 @@
     const phoneScreenSlot = document.getElementById('phone-screen-slot');
     const frame2ScreenSlot = document.getElementById('frame2-screen-slot');
     const frame916ScreenSlot = document.getElementById('frame916-screen-slot');
+
+    // Parseador inteligente de fuentes de vídeo (directo MP4, YouTube, Vimeo, iframe)
+    function parseVideoSource(input) {
+      if (!input || typeof input !== 'string') return { type: 'none', src: '' };
+      let str = input.trim();
+
+      // Extraer atributo src si el usuario pegó el código <iframe> completo
+      const iframeMatch = str.match(/src=["']([^"']+)["']/i);
+      if (iframeMatch) {
+        str = iframeMatch[1];
+      }
+
+      // YouTube: https://www.youtube.com/watch?v=... o https://youtu.be/...
+      const ytMatch = str.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+      if (ytMatch) {
+        const videoId = ytMatch[1];
+        return {
+          type: 'embed',
+          src: `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1`
+        };
+      }
+
+      // Vimeo: https://vimeo.com/123456789 o https://player.vimeo.com/video/...
+      const vimeoMatch = str.match(/(?:vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/[^\/]*\/videos\/|album\/(?:\d+\/)?video\/|video\/|)(\d+))/i);
+      if (vimeoMatch) {
+        const videoId = vimeoMatch[1];
+        return {
+          type: 'embed',
+          src: `https://player.vimeo.com/video/${videoId}?autoplay=1&title=0&byline=0&portrait=0`
+        };
+      }
+
+      // Embed directo (o embed de Google Drive, Canva, etc.)
+      if (str.includes('/embed/') || str.includes('player.vimeo.com') || str.includes('drive.google.com/file/d/')) {
+        return {
+          type: 'embed',
+          src: str
+        };
+      }
+
+      // Vídeo directo (.mp4, .webm, blob, URL directa)
+      return {
+        type: 'video',
+        src: str
+      };
+    }
+
+    function playVideoScene(step) {
+      if (!videoScenePlayer || !videoSceneIframe) return;
+      const rawUrl = step.videoUrl || step.url || '';
+      const parsed = parseVideoSource(rawUrl);
+
+      if (parsed.type === 'embed') {
+        try { videoScenePlayer.pause(); } catch(e) {}
+        videoScenePlayer.style.display = 'none';
+        videoSceneIframe.style.display = 'block';
+        if (videoSceneIframe.getAttribute('data-loaded-src') !== parsed.src) {
+          videoSceneIframe.setAttribute('data-loaded-src', parsed.src);
+          videoSceneIframe.src = parsed.src;
+        }
+      } else if (parsed.type === 'video' && parsed.src) {
+        videoSceneIframe.src = '';
+        videoSceneIframe.removeAttribute('data-loaded-src');
+        videoSceneIframe.style.display = 'none';
+        videoScenePlayer.style.display = 'block';
+        if (videoScenePlayer.getAttribute('data-loaded-src') !== parsed.src) {
+          videoScenePlayer.setAttribute('data-loaded-src', parsed.src);
+          videoScenePlayer.src = parsed.src;
+          videoScenePlayer.load();
+        }
+        videoScenePlayer.currentTime = 0;
+        const playPromise = videoScenePlayer.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            console.log('[VideoScene] Autoplay con audio restringido por navegador, silenciando para iniciar:', err);
+            videoScenePlayer.muted = true;
+            videoScenePlayer.play().catch(e => console.warn('[VideoScene] No se pudo reproducir:', e));
+          });
+        }
+        videoScenePlayer.onended = () => {
+          handleNextAction();
+        };
+      } else {
+        videoScenePlayer.style.display = 'none';
+        videoSceneIframe.style.display = 'none';
+      }
+    }
+
+    function stopVideoScene() {
+      if (videoScenePlayer) {
+        try { videoScenePlayer.pause(); } catch(e) {}
+      }
+      if (videoSceneIframe) {
+        videoSceneIframe.src = '';
+        videoSceneIframe.removeAttribute('data-loaded-src');
+      }
+    }
 
     // =========================================================================
     // AUDIO DE TRANSICIONES (transition.mp3) & SILENCIAMIENTO DE VÍDEOS
@@ -3727,8 +3894,12 @@
       // Aplicar Rótulo / Textos y degradado inferior en tiempo real
       applyStepTextOverlay(step);
 
-      // Logos en esquinas (Making Science y Decoding Media): visibles siempre
-      setCornerLogos(true, false);
+      // Logos en esquinas (Making Science y Decoding Media): visibles excepto en vídeo a pantalla completa
+      if (step.format === 'video') {
+        setCornerLogos(false, true);
+      } else {
+        setCornerLogos(true, false);
+      }
 
       // Actualizar textos superiores del HUD si existen
       if (stepNameEl) stepNameEl.textContent = step.name + (step.speaker ? ` · ${step.speaker}` : '');
@@ -3749,11 +3920,12 @@
           formatBadge.className = 'hud-format-tag badge-fmt-video';
         } else {
           const fmt = (step.format || '3:4').toUpperCase();
-          formatBadge.textContent = fmt === 'TITLE' ? 'PORTADA' : fmt;
+          formatBadge.textContent = fmt === 'TITLE' ? 'PORTADA' : (fmt === 'VIDEO' ? 'VÍDEO' : fmt);
           let cls = 'badge-fmt-34';
           if (fmt === '16:9') cls = 'badge-fmt-169';
           else if (fmt === '9:16') cls = 'badge-fmt-916';
           else if (fmt === 'TITLE') cls = 'badge-fmt-title';
+          else if (fmt === 'VIDEO') cls = 'badge-fmt-video';
           formatBadge.className = `hud-format-tag ${cls}`;
         }
       }
@@ -3789,6 +3961,7 @@
       let targetLayer = null;
       if (step.type === 'slide') {
         if (step.format === 'title') targetLayer = layers.stepTitle;
+        else if (step.format === 'video') targetLayer = layers.videoScene;
         else if (step.format === '3:4') targetLayer = layers.step1;
         else if (step.format === '9:16') targetLayer = layers.step916;
         else targetLayer = layers.step3;
@@ -3839,10 +4012,18 @@
         setTimeout(() => { isTransitionLocked = false; }, 1200);
 
         if (targetLayer) {
-          targetLayer.style.zIndex = '30';
-          targetLayer.style.opacity = '1';
-          targetLayer.classList.add('active');
-          targetLayer.classList.add('incoming-layer');
+          if (targetLayer === layers.videoScene) {
+            targetLayer.style.zIndex = '35';
+            targetLayer.style.opacity = '';
+            targetLayer.classList.remove('incoming-layer');
+            void targetLayer.offsetWidth;
+            targetLayer.classList.add('active');
+          } else {
+            targetLayer.style.zIndex = '30';
+            targetLayer.style.opacity = '1';
+            targetLayer.classList.add('active');
+            targetLayer.classList.add('incoming-layer');
+          }
         }
 
         // Estado inicial de Fase 1 (t=0s a 0.5s):
@@ -3909,28 +4090,38 @@
         const hasExternalUrl = step.url && !step.url.includes('Placeholder') && step.url.trim().length > 10;
 
         if (step.format === 'title') {
+          stopVideoScene();
           ensureWindowFocus();
           showHint(`<b>${step.name}</b> (Portada Title). Pulsa <span class="key-badge">Espacio</span> para avanzar`, 3000);
 
+        } else if (step.format === 'video') {
+          ensureWindowFocus();
+          playVideoScene(step);
+          showHint(`<b>${step.name}</b> (Vídeo Pantalla Completa). Pulsa <span class="key-badge">Espacio</span> para avanzar`, 3000);
+
         } else if (step.format === '3:4') {
+          stopVideoScene();
           applyPhoneCoords(step.calib);
           renderActiveSlotPresentation('3:4', step, currentSlide);
           ensureWindowFocus();
           showHint(`<b>${step.name}</b> (Escena ${currentSlide}/${step.slidesCount}). Pulsa <span class="key-badge">Espacio</span> para avanzar`, 3000);
 
         } else if (step.format === '9:16') {
+          stopVideoScene();
           applyFrame916Coords(step.calib);
           renderActiveSlotPresentation('9:16', step, currentSlide);
           ensureWindowFocus();
           showHint(`<b>${step.name}</b> (Escena ${currentSlide}/${step.slidesCount}). Pulsa <span class="key-badge">Espacio</span> para avanzar`, 3000);
 
         } else {
+          stopVideoScene();
           applyFrame2Coords(step.calib);
           renderActiveSlotPresentation('16:9', step, currentSlide);
           ensureWindowFocus();
           showHint(`<b>${step.name}</b> (Escena ${currentSlide}/${step.slidesCount}). Pulsa <span class="key-badge">Espacio</span> para avanzar`, 3000);
         }
       } else if (step.type === 'video') {
+        stopVideoScene();
         if (IS_PREVIEW) {
           // En el preview del editor no se reproduce el vídeo de animación:
           // saltar limpiamente a la escena entrante (como si se pasara a otra escena y ya)
@@ -4108,7 +4299,7 @@
       }
 
       if (step.type === 'slide') {
-        if (step.format === 'title') {
+        if (step.format === 'title' || step.format === 'video') {
           currentSlide = 1;
           nextStep();
           return;
@@ -4134,6 +4325,11 @@
       }
 
       if (step.type === 'slide') {
+        if (step.format === 'title' || step.format === 'video') {
+          currentSlide = 1;
+          prevStep();
+          return;
+        }
         if (currentSlide > 1) {
           currentSlide--;
           renderActiveSlotPresentation(step.format, step, currentSlide);
