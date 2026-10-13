@@ -164,6 +164,9 @@
       overflow: hidden;
     }
 
+    /* El iframe de YouTube/Vimeo se escala al 114% para que el chrome
+       (barra de controles, watermark, logo de esquina) quede fuera del
+       overflow:hidden del contenedor y sea completamente invisible. */
     .video-scene-element {
       position: absolute;
       inset: 0;
@@ -174,6 +177,34 @@
       object-fit: contain;
       background: #000;
     }
+    #video-scene-iframe {
+      transform: scale(1.14);
+      transform-origin: center center;
+      /* El 14% extra queda clipeado por overflow:hidden del padre */
+    }
+
+    /* Bordes opacos para cubrir cualquier UI residual de YouTube/Vimeo */
+    .video-scene-container::before,
+    .video-scene-container::after {
+      content: '';
+      position: absolute;
+      z-index: 5;
+      pointer-events: none;
+      background: #000;
+    }
+    /* Franja inferior: cubre barra de controles de YouTube */
+    .video-scene-container::after {
+      bottom: 0; left: 0; right: 0;
+      height: 0;  /* activada solo para iframes de embed */
+    }
+    /* Franja superior: cubre título/info de YouTube */
+    .video-scene-container::before {
+      top: 0; left: 0; right: 0;
+      height: 0;
+    }
+    /* Cuando hay un iframe embed activo, mostrar franjas */
+    .video-scene-container.has-embed::after  { height: 3%; }
+    .video-scene-container.has-embed::before { height: 3%; }
 
     .badge-fmt-video {
       background: rgba(56, 189, 248, 0.14) !important;
@@ -2164,9 +2195,17 @@
     <div id="layer-video-scene" class="stage-layer video-scene-layer">
       <div id="video-scene-container" class="video-scene-container">
         <video id="video-scene-player" class="video-scene-element" playsinline preload="auto"></video>
-        <iframe id="video-scene-iframe" class="video-scene-element" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
-        <!-- Overlay transparente: bloquea clics sobre UI de YouTube/Vimeo sin tapar el vídeo -->
-        <div id="video-scene-ui-blocker" style="position:absolute;inset:0;z-index:2;pointer-events:none;background:transparent;"></div>
+        <iframe id="video-scene-iframe" class="video-scene-element"
+          allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+          allowfullscreen
+          referrerpolicy="no-referrer"></iframe>
+        <!-- Bloqueador de UI: evita que el usuario active el overlay de YouTube al hacer hover -->
+        <div id="video-scene-ui-blocker" style="
+          position:absolute;inset:0;z-index:6;
+          pointer-events:auto;
+          background:transparent;
+          cursor:none;
+        "></div>
       </div>
     </div>
 
@@ -3234,10 +3273,13 @@
       const rawUrl = step.videoUrl || step.url || '';
       const parsed = parseVideoSource(rawUrl);
 
+      const videoSceneContainer = document.getElementById('video-scene-container');
+
       if (parsed.type === 'embed') {
         try { videoScenePlayer.pause(); } catch(e) {}
         videoScenePlayer.style.display = 'none';
         videoSceneIframe.style.display = 'block';
+        if (videoSceneContainer) videoSceneContainer.classList.add('has-embed');
         if (videoSceneIframe.getAttribute('data-loaded-src') !== parsed.src) {
           videoSceneIframe.setAttribute('data-loaded-src', parsed.src);
           videoSceneIframe.src = parsed.src;
@@ -3246,6 +3288,7 @@
         videoSceneIframe.src = '';
         videoSceneIframe.removeAttribute('data-loaded-src');
         videoSceneIframe.style.display = 'none';
+        if (videoSceneContainer) videoSceneContainer.classList.remove('has-embed');
         videoScenePlayer.style.display = 'block';
         if (videoScenePlayer.getAttribute('data-loaded-src') !== parsed.src) {
           videoScenePlayer.setAttribute('data-loaded-src', parsed.src);
