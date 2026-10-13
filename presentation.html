@@ -1660,6 +1660,79 @@
       border-color: rgba(255, 255, 255, 0.2);
       color: #fff;
     }
+    .btn-hud-action:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* ── PDF Export Progress Overlay ────────────────────────────────── */
+    #pdf-export-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(12px);
+      align-items: center;
+      justify-content: center;
+    }
+    .pdf-export-box {
+      background: linear-gradient(135deg, rgba(15,20,40,0.98) 0%, rgba(20,14,40,0.98) 100%);
+      border: 1px solid rgba(236,72,153,0.35);
+      border-radius: 18px;
+      padding: 40px 48px;
+      min-width: 380px;
+      max-width: 520px;
+      text-align: center;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(236,72,153,0.08);
+      animation: pdf-box-in 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes pdf-box-in {
+      from { opacity: 0; transform: scale(0.82) translateY(20px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .pdf-export-icon {
+      font-size: 52px;
+      margin-bottom: 14px;
+      animation: pdf-icon-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes pdf-icon-pulse {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.12); }
+    }
+    .pdf-export-title {
+      font: 700 18px/1.2 'Montserrat', sans-serif;
+      color: #fff;
+      letter-spacing: 0.04em;
+      margin-bottom: 10px;
+    }
+    .pdf-export-msg {
+      font: 400 13px/1.5 'Montserrat', sans-serif;
+      color: #a0aec0;
+      margin-bottom: 20px;
+      min-height: 20px;
+    }
+    .pdf-export-bar-wrap {
+      background: rgba(255,255,255,0.07);
+      border-radius: 99px;
+      height: 6px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .pdf-export-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ec4899, #a855f7);
+      border-radius: 99px;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 12px rgba(236,72,153,0.6);
+    }
+    .pdf-export-count {
+      font: 600 11px/1 'Montserrat', monospace;
+      color: rgba(236,72,153,0.8);
+      letter-spacing: 0.08em;
+    }
 
     .hud-key-hint {
       font-family: monospace;
@@ -1902,6 +1975,11 @@
           <button type="button" class="btn-hud-action" onclick="toggleScenesDrawer()" title="Lista de escenas (E)">
             <span>Escenas</span>
             <span class="hud-key-hint">E</span>
+          </button>
+
+          <button type="button" class="btn-hud-action" id="btn-download-pdf" onclick="downloadTourPdf()" title="Descargar presentación completa en PDF (D)">
+            <span>↓ PDF</span>
+            <span class="hud-key-hint">D</span>
           </button>
 
           <a href="editor.html" class="btn-hud-action" title="Abrir Producer Room">
@@ -4987,6 +5065,9 @@
       } else if (e.code === 'KeyH' || e.key === 'h' || e.key === 'H') {
         e.preventDefault();
         toggleHudVisibility();
+      } else if (e.code === 'KeyD' || e.key === 'd' || e.key === 'D') {
+        e.preventDefault();
+        downloadTourPdf();
       } else if (e.code === 'Escape' || e.key === 'Escape') {
         if (isDrawerOpen) {
           e.preventDefault();
@@ -4997,6 +5078,161 @@
         openConfigModal();
       }
     });
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  DESCARGA COMPLETA DEL TOUR EN PDF
+    //  Recorre todos los STEPS en orden, añade cada slide como página en su
+    //  orientación/aspecto nativo y genera un PDF de alta calidad con jsPDF.
+    // ═══════════════════════════════════════════════════════════════════════════
+    async function downloadTourPdf() {
+      const btn = document.getElementById('btn-download-pdf');
+      if (btn && btn.disabled) return;
+      if (btn) btn.disabled = true;
+
+      // ─ Overlay de progreso ─────────────────────────────────────────
+      let overlay = document.getElementById('pdf-export-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'pdf-export-overlay';
+        overlay.innerHTML = `
+          <div class="pdf-export-box">
+            <div class="pdf-export-icon">📄</div>
+            <div class="pdf-export-title">Generando PDF</div>
+            <div id="pdf-export-msg" class="pdf-export-msg">Preparando...</div>
+            <div class="pdf-export-bar-wrap"><div id="pdf-export-bar" class="pdf-export-bar"></div></div>
+            <div id="pdf-export-count" class="pdf-export-count">0 / 0</div>
+          </div>`;
+        document.body.appendChild(overlay);
+      }
+      const msgEl = document.getElementById('pdf-export-msg');
+      const barEl = document.getElementById('pdf-export-bar');
+      const cntEl = document.getElementById('pdf-export-count');
+      overlay.style.display = 'flex';
+
+      const setProgress = (msg, cur, tot) => {
+        if (msgEl) msgEl.textContent = msg;
+        if (barEl) barEl.style.width = tot > 0 ? `${Math.round((cur / tot) * 100)}%` : '0%';
+        if (cntEl) cntEl.textContent = tot > 0 ? `${cur} / ${tot}` : '';
+      };
+
+      const hideOverlay = () => {
+        if (overlay) overlay.style.display = 'none';
+        if (btn) btn.disabled = false;
+      };
+
+      try {
+        // ─ Cargar jsPDF si no está disponible ─────────────────────
+        if (!window.jspdf) {
+          setProgress('Cargando motor PDF...', 0, 1);
+          await new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+          });
+        }
+        const { jsPDF } = window.jspdf;
+
+        // ─ Recopilar todas las diapositivas en orden ───────────────
+        const slides = [];
+        (STEPS || []).forEach(step => {
+          if (!step || step.type !== 'slide') return;
+          if (!Array.isArray(step.slideImages) || step.slideImages.length === 0) return;
+          // Excluir slides interactivas del PDF (son vídeos embed)
+          step.slideImages.forEach((url, idx) => {
+            const slideNum = idx + 1;
+            const isInteractive = Array.isArray(step.interactiveSlides) && step.interactiveSlides.includes(slideNum);
+            if (isInteractive) return;
+            slides.push({ url, format: step.format || '3:4', name: step.name || '' });
+          });
+        });
+
+        if (slides.length === 0) {
+          hideOverlay();
+          showHint('No hay diapositivas PDF disponibles. Asegúrate de que los slots tengan slides procesados.', 5000);
+          return;
+        }
+
+        setProgress('Preparando páginas...', 0, slides.length);
+
+        // ─ Dimensiones de página por formato (en mm) ────────────
+        const PAGE_DIMS = {
+          '16:9':  { w: 297.0, h: 167.1, o: 'landscape' },
+          '9:16':  { w: 105.8, h: 188.0, o: 'portrait'  },
+          '3:4':   { w: 210.0, h: 280.0, o: 'portrait'  },
+          'title': { w: 297.0, h: 167.1, o: 'landscape' },
+        };
+        const dim0 = PAGE_DIMS[slides[0].format] || PAGE_DIMS['3:4'];
+
+        const doc = new jsPDF({
+          orientation: dim0.o,
+          unit: 'mm',
+          format: [dim0.w, dim0.h],
+          compress: true
+        });
+
+        // ─ Añadir cada diapositiva como página ─────────────────
+        for (let i = 0; i < slides.length; i++) {
+          const slide = slides[i];
+          const dim = PAGE_DIMS[slide.format] || PAGE_DIMS['3:4'];
+          setProgress(`Añadiendo ‘${slide.name || 'slide'}’...`, i + 1, slides.length);
+
+          // Obtener datos de imagen (data URL o URL remota)
+          const imgData = await new Promise(resolve => {
+            if (slide.url.startsWith('data:')) {
+              resolve(slide.url);
+              return;
+            }
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+              try {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                const ctx = canvas.getContext('2d', { alpha: false });
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL('image/jpeg', 0.95));
+              } catch { resolve(null); }
+            };
+            img.onerror = () => resolve(null);
+            img.src = slide.url + (slide.url.includes('?') ? '&' : '?') + '_pdf=' + Date.now();
+          });
+
+          if (!imgData) continue;
+
+          if (i === 0) {
+            // Primera página: ya creada por jsPDF constructor; ajustar formato si difiere
+            if (dim.w !== dim0.w || dim.h !== dim0.h) {
+              doc.addPage([dim.w, dim.h], dim.o);
+            }
+          } else {
+            doc.addPage([dim.w, dim.h], dim.o);
+          }
+
+          const imgFmt = imgData.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+          doc.addImage(imgData, imgFmt, 0, 0, dim.w, dim.h, undefined, 'NONE');
+        }
+
+        setProgress('Guardando archivo...', slides.length, slides.length);
+
+        // ─ Guardar con nombre del deck ───────────────────────
+        const deckTitle = (document.getElementById('hud-deck-title') || {}).textContent
+          || 'decoding-media-tour';
+        const filename = deckTitle.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '.pdf';
+        doc.save(filename);
+
+        hideOverlay();
+        showHint(`✓ PDF descargado: ${slides.length} diapositivas`, 4000);
+      } catch (err) {
+        console.error('[PDF Export]', err);
+        hideOverlay();
+        showHint('Error al generar el PDF. Revisa la consola para más detalles.', 6000);
+      }
+    }
 
     // Clic en la pantalla para avanzar slide o pasar video manteniendo foco en window
     function isEventOverIgnoredControls(e) {
