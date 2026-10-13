@@ -2884,7 +2884,13 @@
             }
           }
         }
+        if (!stageDeckId || stageDeckId === 'default') {
+          stageDeckId = 'deck-1790854505487';
+        }
       } catch(e) {}
+    }
+    if ((!stageDeckId || stageDeckId === 'default') && !urlParams.get('deck')) {
+      stageDeckId = 'deck-1790854505487';
     }
     if (urlParams.get('deck') && window.DMCloud) {
       DMCloud.setActiveDeckId(urlParams.get('deck'));
@@ -3559,13 +3565,40 @@
         if (imgEl) {
           imgEl.style.display = 'block';
           const sIdx = Math.max(0, Math.min(targetStep.slideImages.length - 1, slideNum - 1));
-          imgEl.src = targetStep.slideImages[sIdx];
+          const currentSrc = targetStep.slideImages[sIdx];
+          imgEl.onerror = async function() {
+            // Si la ruta relativa falla (ej. 404), descargar diapositivas en base64 de Supabase Cloud
+            if (window.DMCloud && targetStep.slotId) {
+              try {
+                const cloudSlides = await DMCloud.fetchSlotSlides(stageDeckId, targetStep.slotId);
+                if (Array.isArray(cloudSlides) && cloudSlides[sIdx]) {
+                  targetStep.slideImages = cloudSlides;
+                  imgEl.onerror = null;
+                  imgEl.src = cloudSlides[sIdx];
+                }
+              } catch(e) {}
+            }
+          };
+          imgEl.src = currentSrc;
           // Preload next slide image
           if (sIdx + 1 < targetStep.slideImages.length) {
             const pre = new Image();
             pre.src = targetStep.slideImages[sIdx + 1];
           }
         }
+      } else if (!hasSlideImages && targetStep.slotId && (targetStep.slidesCount > 1 || targetStep.hasCloudSlides) && window.DMCloud) {
+        // Diapositivas pendientes de descargar desde la nube
+        DMCloud.fetchSlotSlides(stageDeckId, targetStep.slotId).then(slides => {
+          if (Array.isArray(slides) && slides.length > 0) {
+            targetStep.slideImages = slides;
+            targetStep.slidesCount = slides.length;
+            targetStep.hasCloudSlides = true;
+            const origSlot = deckSlots.find(s => s.id === targetStep.slotId);
+            if (origSlot) { origSlot.slideImages = slides; origSlot.slidesCount = slides.length; }
+            loadSlideContent(fmt, targetStep, slideNum);
+            updateSlideCounters();
+          }
+        });
       } else if (hasExternalUrl) {
         if (imgEl) imgEl.style.display = 'none';
         if (nativeDeck) nativeDeck.style.display = 'none';

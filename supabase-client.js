@@ -540,13 +540,15 @@
         }
 
         if (data && Array.isArray(data.slots)) {
-          // Descargar diapositivas de la nube para cualquier slot que las tenga alojadas
+          // Descargar diapositivas de la nube únicamente para slots que no tengan imágenes o rutas cargadas
           for (const s of data.slots) {
-            if ((!Array.isArray(s.slideImages) || s.slideImages.length === 0) && (s.hasCloudSlides || s.slidesCount > 1)) {
+            if ((!Array.isArray(s.slideImages) || s.slideImages.length === 0) && (s.hasCloudSlides || (s.slidesCount && s.slidesCount > 1))) {
               try {
                 const sRows = await directRestSelect('dm_decks', `id=eq.slides:${encodeURIComponent(targetId)}:${encodeURIComponent(s.id)}&select=slots`);
-                if (Array.isArray(sRows) && sRows.length > 0 && Array.isArray(sRows[0].slots)) {
+                if (Array.isArray(sRows) && sRows.length > 0 && Array.isArray(sRows[0].slots) && sRows[0].slots.length > 0) {
                   s.slideImages = sRows[0].slots;
+                  s.slidesCount = sRows[0].slots.length;
+                  s.hasCloudSlides = true;
                   console.log(`[DMCloud] Diapositivas de '${s.name}' descargadas de la nube (${s.slideImages.length})`);
                 }
               } catch(e) {}

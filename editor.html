@@ -2692,7 +2692,10 @@
     }
 
     const urlDeckParam = new URLSearchParams(window.location.search).get('deck');
-    let activeDeckId = urlDeckParam || (window.DMCloud ? DMCloud.getActiveDeckId() : 'default');
+    let activeDeckId = urlDeckParam || (window.DMCloud ? DMCloud.getActiveDeckId() : 'deck-1790854505487');
+    if (!activeDeckId || activeDeckId === 'default') {
+      activeDeckId = 'deck-1790854505487';
+    }
     if (urlDeckParam && window.DMCloud) {
       DMCloud.setActiveDeckId(urlDeckParam);
     }
@@ -5164,8 +5167,19 @@
 
     // Gestión del enlace de presentación (Obtener Link)
     function getPresentationUrl(deckId) {
-      const targetId = deckId || (typeof activeDeckId !== 'undefined' ? activeDeckId : 'default');
+      const targetId = deckId || (typeof activeDeckId !== 'undefined' ? activeDeckId : 'deck-1790854505487');
       const loc = window.location;
+      const isLocal = loc.hostname === 'localhost' || loc.hostname === '127.0.0.1' || loc.protocol === 'file:';
+
+      // Si estamos en entorno local, el enlace para compartir con otros dispositivos debe ser la URL pública en GitHub Pages
+      if (isLocal) {
+        let res = `https://rodrigosantos-code.github.io/decodingmedia/presentation.html?deck=${encodeURIComponent(targetId)}`;
+        if (typeof currentStep === 'number' && currentStep >= 0 && (!deckId || targetId === activeDeckId)) {
+          res += `&step=${currentStep}`;
+        }
+        return res;
+      }
+
       let path = loc.pathname || '';
       if (path.endsWith('editor.html') || path.endsWith('index.html')) {
         path = path.replace(/\/(editor|index)\.html$/, '/presentation.html');
