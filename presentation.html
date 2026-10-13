@@ -2430,30 +2430,49 @@
         if (m) clean = m[1].trim();
       }
 
-      // Caso 1: Google Slides /edit o /view -> convertir a /embed
-      if (clean.includes('docs.google.com/presentation')) {
-        const mKey = clean.match(/\/d\/([a-zA-Z0-9_-]+)/);
-        if (mKey) {
-          return `https://docs.google.com/presentation/d/${mKey[1]}/embed?start=false&loop=false&delayms=3000&rm=minimal`;
-        }
+      // Caso 1: Google Slides publicado en la web (/d/e/2PACX-.../)
+      const mPub = clean.match(/docs\.google\.com\/presentation\/d\/e\/([a-zA-Z0-9_-]+)/i);
+      if (mPub) {
+        return `https://docs.google.com/presentation/d/e/${mPub[1]}/embed?start=false&loop=false&delayms=3000&rm=minimal`;
       }
 
-      // Caso 2: URLs estándar de Google
-      const mStd = clean.match(/https:\/\/docs\.google\.com\/presentation\/d\/([a-zA-Z0-9_-]+)/);
-      if (mStd) {
+      // Caso 2: Google Slides estándar con ID de presentación (/d/ID/...) donde ID no es 'e'
+      const mStd = clean.match(/docs\.google\.com\/presentation\/d\/([a-zA-Z0-9_-]+)/i);
+      if (mStd && mStd[1] !== 'e') {
         return `https://docs.google.com/presentation/d/${mStd[1]}/embed?start=false&loop=false&delayms=3000&rm=minimal`;
       }
 
-      // Caso 3: OneDrive / Office Online / Otros
-      if (clean.includes('/edit') || clean.includes('/view')) {
-        return clean.replace(/\/edit.*|\/view.*/, '/embed?start=false&loop=false&delayms=3000&rm=minimal');
+      // Caso 3: Google Drive presentación / preview
+      const mDrive = clean.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i);
+      if (mDrive) {
+        return `https://drive.google.com/file/d/${mDrive[1]}/preview`;
       }
+
+      // Caso 4: OneDrive / Office Online
+      if (clean.includes('officeapps.live.com') || clean.includes('onedrive.live.com') || clean.includes('sharepoint.com')) {
+        if (clean.includes('/edit') || clean.includes('/view')) {
+          return clean.replace(/\/edit.*|\/view.*/, '/embed');
+        }
+        return clean;
+      }
+
+      // Caso 5: Canva
+      if (clean.includes('canva.com')) {
+        if (!clean.includes('?embed') && !clean.includes('&embed')) {
+          return clean.includes('?') ? `${clean}&embed` : `${clean}?embed`;
+        }
+        return clean;
+      }
+
       return clean;
     }
 
     function getSlideUrl(url, slideNum = 1) {
       if (!url) return '';
       let clean = cleanSlidesUrl(url);
+      if (slideNum <= 1) {
+        return clean;
+      }
       clean = clean.replace(/#slide=[^&]*/i, '').replace(/[?&]slide=[^&]*/i, '');
 
       if (clean.includes('docs.google.com/presentation')) {
@@ -2726,6 +2745,7 @@
           interactiveSlides: Array.isArray(slot.interactiveSlides) ? slot.interactiveSlides : [],
           hue: (typeof slot.hue === 'number') ? slot.hue : 0,
           color: getHueColor(slot.hue),
+          sourceType: slot.sourceType || (slot.slideImages && slot.slideImages.length > 0 ? 'pdf' : 'url'),
           pdfHash: slot.pdfHash || null,
           calib: slot.calib ? { ...calibDefault, ...slot.calib } : calibDefault,
           textOverlay: slot.textOverlay || null
@@ -2838,6 +2858,7 @@
           interactiveSlides: Array.isArray(slot.interactiveSlides) ? slot.interactiveSlides : [],
           hue: (typeof slot.hue === 'number') ? slot.hue : 0,
           color: getHueColor(slot.hue),
+          sourceType: slot.sourceType || (slot.slideImages && slot.slideImages.length > 0 ? 'pdf' : 'url'),
           pdfHash: slot.pdfHash || null,
           calib: slot.calib ? { ...calibDefault, ...slot.calib } : calibDefault,
           textOverlay: slot.textOverlay || null
@@ -3467,13 +3488,14 @@
       const targetUrl = getSlideUrl(baseUrl, slideNum);
       if (!targetUrl) return;
 
-      // Si ya muestra esa URL, no hacer nada
-      if (iframe.getAttribute('data-loaded-url') === targetUrl) return;
+      const currentLoaded = iframe.getAttribute('data-loaded-url');
+      if (currentLoaded === targetUrl) return;
 
       const bufIframe = document.getElementById(iframe.id + '-buf');
 
-      if (!bufIframe) {
-        // Fallback sin buffer: navegación directa
+      // Si es la primera vez que carga este iframe, navegación inmediata directa sin esperar por buffer
+      const isFirstLoad = !currentLoaded || !iframe.src || iframe.src === '' || iframe.src === 'about:blank';
+      if (!bufIframe || isFirstLoad) {
         iframe.setAttribute('data-loaded-url', targetUrl);
         iframe.src = targetUrl;
         return;
@@ -3712,6 +3734,8 @@
       const hasSlideImages = targetStep.slideImages && Array.isArray(targetStep.slideImages) && targetStep.slideImages.length > 0;
       const hasExternalUrl = targetStep.url && !targetStep.url.includes('Placeholder') && targetStep.url.trim().length > 10;
       const isInteractiveSlide = Array.isArray(targetStep.interactiveSlides) && targetStep.interactiveSlides.includes(slideNum);
+      const isUrlMode = targetStep.sourceType === 'url' || (hasExternalUrl && targetStep.sourceType !== 'pdf' && !hasSlideImages);
+      const isPdfMode = targetStep.sourceType === 'pdf';
 
       if (isInteractiveSlide && hasExternalUrl) {
         // Modo Híbrido: esta diapositiva específica tiene vídeo incrustado o interactividad
@@ -3723,7 +3747,17 @@
           iframeEl.style.pointerEvents = 'auto';
           navigateSlide(iframeEl, targetStep.url, slideNum);
         }
-      } else if (hasSlideImages) {
+      } else if (isUrlMode && hasExternalUrl) {
+        // Modo URL: Google Slides / Canva / Web / PPT
+        if (imgEl) imgEl.style.display = 'none';
+        if (nativeDeck) nativeDeck.style.display = 'none';
+        if (iframeEl) {
+          iframeEl.style.display = 'block';
+          iframeEl.style.opacity = '1';
+          iframeEl.style.pointerEvents = 'auto';
+          navigateSlide(iframeEl, targetStep.url, slideNum);
+        }
+      } else if (hasSlideImages && (isPdfMode || !hasExternalUrl)) {
         if (nativeDeck) nativeDeck.style.display = 'none';
         if (iframeEl) {
           iframeEl.style.display = 'none';
@@ -3753,8 +3787,8 @@
             pre.src = targetStep.slideImages[sIdx + 1];
           }
         }
-      } else if (!hasSlideImages && targetStep.slotId && (targetStep.slidesCount > 1 || targetStep.hasCloudSlides) && window.DMCloud) {
-        // Diapositivas pendientes de descargar desde la nube
+      } else if (isPdfMode && !hasSlideImages && targetStep.slotId && window.DMCloud) {
+        // Diapositivas PDF pendientes de descargar desde la nube
         DMCloud.fetchSlotSlides(stageDeckId, targetStep.slotId).then(slides => {
           if (Array.isArray(slides) && slides.length > 0) {
             targetStep.slideImages = slides;

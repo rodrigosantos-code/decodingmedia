@@ -1854,6 +1854,7 @@
               <!-- Capa 2: Hueco de pantalla calibrado -->
               <div id="prev-screen-slot" class="prev-screen-slot">
                 <img id="prev-slide-img" class="prev-slide-img" src="" alt="Diapositiva" />
+                <iframe id="prev-slide-iframe" class="prev-slide-img" src="" style="display: none; border: none; width: 100%; height: 100%; pointer-events: none; background: #000;" allowfullscreen="true"></iframe>
                 <div id="prev-empty-placeholder" class="prev-empty-placeholder">
                   <span>Sin Diapositiva</span>
                 </div>
@@ -2697,22 +2698,43 @@
         return `https://docs.google.com/presentation/d/e/${mPub[1]}/embed?start=false&loop=false&delayms=3000&rm=minimal`;
       }
 
-      // Caso 2: Google Slides estándar con ID de presentación (/d/ID/...)
+      // Caso 2: Google Slides estándar con ID de presentación (/d/ID/...) donde ID no es 'e'
       const mStd = clean.match(/docs\.google\.com\/presentation\/d\/([a-zA-Z0-9_-]+)/i);
-      if (mStd) {
+      if (mStd && mStd[1] !== 'e') {
         return `https://docs.google.com/presentation/d/${mStd[1]}/embed?start=false&loop=false&delayms=3000&rm=minimal`;
       }
 
-      // Caso 3: OneDrive / Office Online / Otros
-      if (clean.includes('/edit') || clean.includes('/view')) {
-        return clean.replace(/\/edit.*|\/view.*/, '/embed?start=false&loop=false&delayms=3000&rm=minimal');
+      // Caso 3: Google Drive presentación / preview
+      const mDrive = clean.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i);
+      if (mDrive) {
+        return `https://drive.google.com/file/d/${mDrive[1]}/preview`;
       }
+
+      // Caso 4: OneDrive / Office Online
+      if (clean.includes('officeapps.live.com') || clean.includes('onedrive.live.com') || clean.includes('sharepoint.com')) {
+        if (clean.includes('/edit') || clean.includes('/view')) {
+          return clean.replace(/\/edit.*|\/view.*/, '/embed');
+        }
+        return clean;
+      }
+
+      // Caso 5: Canva
+      if (clean.includes('canva.com')) {
+        if (!clean.includes('?embed') && !clean.includes('&embed')) {
+          return clean.includes('?') ? `${clean}&embed` : `${clean}?embed`;
+        }
+        return clean;
+      }
+
       return clean;
     }
 
     function getSlideUrl(url, slideNum = 1) {
       if (!url) return '';
       let clean = cleanSlidesUrl(url);
+      if (slideNum <= 1) {
+        return clean;
+      }
       clean = clean.replace(/#slide=[^&]*/i, '').replace(/[?&]slide=[^&]*/i, '');
 
       if (clean.includes('docs.google.com/presentation')) {
@@ -2841,6 +2863,7 @@
           interactiveSlides: Array.isArray(s.interactiveSlides) ? s.interactiveSlides : [],
           hue: (typeof s.hue === 'number') ? s.hue : 0,
           color: getHueColor(s.hue),
+          sourceType: s.sourceType || (s.slideImages && s.slideImages.length > 0 ? 'pdf' : 'url'),
           calib: s.calib ? { ...calibDefault, ...s.calib } : calibDefault,
           speaker: s.speaker,
           textOverlay: s.textOverlay || null,
@@ -2952,6 +2975,7 @@
           interactiveSlides: Array.isArray(s.interactiveSlides) ? s.interactiveSlides : [],
           hue: (typeof s.hue === 'number') ? s.hue : 0,
           color: getHueColor(s.hue),
+          sourceType: s.sourceType || (s.slideImages && s.slideImages.length > 0 ? 'pdf' : 'url'),
           calib: s.calib ? { ...calibDefault, ...s.calib } : calibDefault,
           speaker: s.speaker,
           textOverlay: s.textOverlay || null,
@@ -3445,7 +3469,7 @@
               </div>
             ` : `
               ${getSlideThumbnailHtml(s, false)}
-              ${(s.pdfFileName || s.sourceType === 'pdf') ? `
+              ${(s.pdfFileName || (s.sourceType === 'pdf' && s.slideImages && s.slideImages.length > 0)) ? `
                 <div class="slot-pdf-badge" title="${escapeHtml(s.pdfFileName || 'PDF subido')}">
                   <svg style="width:16px;height:16px;color:#f472b6;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                   <div style="min-width:0; flex:1;">
@@ -3460,9 +3484,9 @@
                   </button>
                 </div>
               ` : `
-                <input class="slot-url-input" placeholder="URL Google Slides / PPT de esta escena..." value="${escapeHtml(s.url || '')}" onchange="updateSlotUrl('${s.id}', this.value)" title="Enlace de la presentación" />
+                <input class="slot-url-input" placeholder="Pega URL de Google Slides / PPT o código embed..." value="${escapeHtml(s.url || '')}" onchange="updateSlotUrl('${s.id}', this.value)" oninput="updateSlotUrl('${s.id}', this.value)" title="Enlace de la presentación web" />
                 ${(s.url && s.url.includes('/presentation/d/')) ? `
-                  <a href="https://docs.google.com/presentation/d/${(s.url.match(/\/presentation\/d\/([a-zA-Z0-9_-]+)/) || [])[1] || ''}/export/pdf" target="_blank" download class="btn-download-pdf-slot" onclick="event.stopPropagation()" title="Descargar este Google Slides como PDF para procesarlo en HD" style="display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); border-radius:6px; padding:6px 9px; text-decoration:none; cursor:pointer; flex-shrink:0;">
+                  <a href="https://docs.google.com/presentation/d/${(s.url.match(/\/presentation\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/) || [])[1] || ''}/export/pdf" target="_blank" download class="btn-download-pdf-slot" onclick="event.stopPropagation()" title="Descargar este Google Slides como PDF para procesarlo en HD" style="display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); border-radius:6px; padding:6px 9px; text-decoration:none; cursor:pointer; flex-shrink:0;">
                     <svg style="width:12px;height:12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     Bajar PDF
                   </a>
@@ -3720,6 +3744,12 @@
       const slot = slots.find(s => s.id === id);
       if (!slot) return;
       slot.url = cleanSlidesUrl(val);
+      if (slot.url && slot.url.trim().length > 5) {
+        slot.sourceType = 'url';
+        delete slot.pdfFileName;
+        slot.slideImages = null;
+        delete slot.pdfHash;
+      }
       saveSlotsAndBroadcast();
       showToast(`URL de presentación actualizada`);
     }
@@ -3756,6 +3786,8 @@
       const slot = slots.find(s => s.id === slotId);
       if (!slot) return;
       delete slot.pdfFileName;
+      slot.slideImages = null;
+      delete slot.pdfHash;
       slot.sourceType = 'url';
       saveSlotsAndBroadcast();
       showToast('Cambiado a modo URL (Google Slides / PPT)');
@@ -4397,13 +4429,30 @@
       const slideUrl = (slot.slideImages && slot.slideImages.length > 0) ? (slot.slideImages[slideIdx] || slot.slideImages[0]) : null;
       const zoomRatio = (calib.zoom !== undefined ? calib.zoom : 100) / 100;
 
+      const slideIframe = document.getElementById('prev-slide-iframe');
+      const hasUrl = slot.url && !slot.url.includes('Placeholder') && slot.url.trim().length > 10;
+
       if (slideImg && placeholder) {
         if (slideUrl) {
+          if (slideIframe) slideIframe.style.display = 'none';
           slideImg.src = slideUrl;
           slideImg.style.display = 'block';
           slideImg.style.transform = `scale(${zoomRatio})`;
           placeholder.style.display = 'none';
+        } else if (hasUrl) {
+          slideImg.style.display = 'none';
+          placeholder.style.display = 'none';
+          if (slideIframe) {
+            slideIframe.style.display = 'block';
+            slideIframe.style.transform = `scale(${zoomRatio})`;
+            const previewUrl = cleanSlidesUrl(slot.url);
+            if (slideIframe.getAttribute('data-loaded-url') !== previewUrl) {
+              slideIframe.setAttribute('data-loaded-url', previewUrl);
+              slideIframe.src = previewUrl;
+            }
+          }
         } else {
+          if (slideIframe) slideIframe.style.display = 'none';
           slideImg.style.display = 'none';
           placeholder.style.display = 'flex';
           const pSpan = placeholder.querySelector('span');
