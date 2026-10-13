@@ -3924,11 +3924,14 @@
       const hasSlideImages = targetStep.slideImages && Array.isArray(targetStep.slideImages) && targetStep.slideImages.length > 0;
       const hasExternalUrl = targetStep.url && !targetStep.url.includes('Placeholder') && targetStep.url.trim().length > 10;
       const isInteractiveSlide = Array.isArray(targetStep.interactiveSlides) && targetStep.interactiveSlides.includes(slideNum);
-      const isUrlMode = targetStep.sourceType === 'url' || (hasExternalUrl && targetStep.sourceType !== 'pdf' && !hasSlideImages);
-      const isPdfMode = targetStep.sourceType === 'pdf';
 
-      if (isInteractiveSlide && hasExternalUrl) {
-        // Modo Híbrido: esta diapositiva específica tiene vídeo incrustado o interactividad
+      // Cuando hay imágenes PDF disponibles, el iframe de la URL sigue cargado en background
+      // (para que la transición a una diapositiva interactiva sea instantánea) pero permanece
+      // oculto (opacity:0, pointerEvents:none) mientras no sea necesario.
+      const shouldShowIframe = isInteractiveSlide && hasExternalUrl;
+
+      if (shouldShowIframe) {
+        // Diapositiva marcada como interactiva/video: mostrar iframe sobre el PDF
         hideSlotSlideImages(fmt);
         if (nativeDeck) nativeDeck.style.display = 'none';
         if (iframeEl) {
@@ -3937,24 +3940,32 @@
           iframeEl.style.pointerEvents = 'auto';
           navigateSlide(iframeEl, targetStep.url, slideNum);
         }
-      } else if (isUrlMode && hasExternalUrl) {
-        // Modo URL: Google Slides / Canva / Web / PPT
-        hideSlotSlideImages(fmt);
+      } else if (hasSlideImages) {
+        // Diapositivas PDF (o imágenes cloud): preferidas siempre para diapositivas normales.
+        // El iframe URL se precarga en background (oculto) para evitar delay al llegar a interactivas.
         if (nativeDeck) nativeDeck.style.display = 'none';
         if (iframeEl) {
-          iframeEl.style.display = 'block';
-          iframeEl.style.opacity = '1';
-          iframeEl.style.pointerEvents = 'auto';
-          navigateSlide(iframeEl, targetStep.url, slideNum);
-        }
-      } else if (hasSlideImages && (isPdfMode || !hasExternalUrl)) {
-        if (nativeDeck) nativeDeck.style.display = 'none';
-        if (iframeEl) {
-          iframeEl.style.display = 'none';
+          iframeEl.style.opacity = '0';
           iframeEl.style.pointerEvents = 'none';
+          // Pre-navegar el iframe al slide actual en background (sin mostrarlo)
+          if (hasExternalUrl) {
+            navigateSlide(iframeEl, targetStep.url, slideNum);
+          } else {
+            iframeEl.style.display = 'none';
+          }
         }
         renderDoubleBufferedSlide(fmt, targetStep, slideNum);
-      } else if (isPdfMode && !hasSlideImages && targetStep.slotId && window.DMCloud) {
+      } else if (hasExternalUrl) {
+        // Sin imágenes PDF: usar iframe como fallback
+        hideSlotSlideImages(fmt);
+        if (nativeDeck) nativeDeck.style.display = 'none';
+        if (iframeEl) {
+          iframeEl.style.display = 'block';
+          iframeEl.style.opacity = '1';
+          iframeEl.style.pointerEvents = 'auto';
+          navigateSlide(iframeEl, targetStep.url, slideNum);
+        }
+      } else if (targetStep.sourceType === 'pdf' && !hasSlideImages && targetStep.slotId && window.DMCloud) {
         // Diapositivas PDF pendientes de descargar desde la nube
         DMCloud.fetchSlotSlides(stageDeckId, targetStep.slotId).then(slides => {
           if (Array.isArray(slides) && slides.length > 0) {
@@ -3968,15 +3979,6 @@
             updateSlideCounters();
           }
         });
-      } else if (hasExternalUrl) {
-        hideSlotSlideImages(fmt);
-        if (nativeDeck) nativeDeck.style.display = 'none';
-        if (iframeEl) {
-          iframeEl.style.display = 'block';
-          iframeEl.style.opacity = '1';
-          iframeEl.style.pointerEvents = 'auto';
-          navigateSlide(iframeEl, targetStep.url, slideNum);
-        }
       } else {
         hideSlotSlideImages(fmt);
         if (iframeEl) iframeEl.style.display = 'none';
@@ -3985,102 +3987,6 @@
           nativeDeck.style.opacity = '1';
           renderNativeSlide(fmt === '3:4' ? 1 : (fmt === '9:16' ? 3 : 2), targetStep, slideNum);
         }
-      }
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    //  AUTO-CONVERSIÓN DE DIAPOSITIVAS URL (GOOGLE SLIDES) A PDF/IMÁGENES
-    //  Descarga el PDF de exportación vía proxy CORS, convierte página a imagen
-    //  con PDF.js y transforma el slot de tipo 'url' a 'pdf' en memoria + Nube.
-    //  Las diapositivas en interactiveSlides siguen renderizándose como iframe.
-    // ═══════════════════════════════════════════════════════════════════════════
-    function getGoogleSlidesPdfExportUrl(cleanEmbedUrl) {
-      if (!cleanEmbedUrl) return null;
-      // URL publicada: /d/e/PUB_ID/embed
-      const mPub = cleanEmbedUrl.match(/docs\.google\.com\/presentation\/d\/e\/([a-zA-Z0-9_-]+)\//i);
-      if (mPub) return `https://docs.google.com/presentation/d/e/${mPub[1]}/pub?output=pdf`;
-      // URL estándar: /d/ID/embed
-      const mStd = cleanEmbedUrl.match(/docs\.google\.com\/presentation\/d\/([a-zA-Z0-9_-]+)\//i);
-      if (mStd && mStd[1] !== 'e') return `https://docs.google.com/presentation/d/${mStd[1]}/export/pdf`;
-      return null;
-    }
-
-    async function fetchPdfViaProxy(pdfUrl) {
-      const proxies = [
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(pdfUrl)}`,
-        `https://corsproxy.io/?${encodeURIComponent(pdfUrl)}`
-      ];
-      for (const proxyUrl of proxies) {
-        try {
-          const resp = await fetch(proxyUrl, { signal: AbortSignal.timeout(20000) });
-          if (!resp.ok) continue;
-          const blob = await resp.blob();
-          if (blob && blob.size > 1000 && (blob.type.includes('pdf') || pdfUrl.includes('pdf'))) return blob;
-        } catch(e) {
-          console.warn('[AutoConvert] Proxy fallido:', proxyUrl, e.message);
-        }
-      }
-      return null;
-    }
-
-    async function autoConvertUrlSlotToPdf(slot, deckId, indicator) {
-      if (!slot || slot.format === 'video' || slot.format === 'title') return false;
-      if (Array.isArray(slot.slideImages) && slot.slideImages.length > 0) return false;
-      if (!slot.url || slot.url.includes('Placeholder')) return false;
-      if (!window.DMPdfProcessor) return false;
-
-      const cleanUrl = cleanSlidesUrl(slot.url);
-      const pdfExportUrl = getGoogleSlidesPdfExportUrl(cleanUrl);
-      if (!pdfExportUrl) return false; // solo Google Slides por ahora
-
-      try {
-        if (indicator) { indicator.textContent = `⚡ Convirtiendo "${slot.name || slot.id}" a imágenes…`; indicator.style.opacity = '1'; }
-        console.log(`[AutoConvert] Descargando PDF de ${slot.name}: ${pdfExportUrl}`);
-
-        const pdfBlob = await fetchPdfViaProxy(pdfExportUrl);
-        if (!pdfBlob) throw new Error('No se pudo descargar el PDF vía proxy');
-
-        const result = await DMPdfProcessor.processPdf(pdfBlob, {
-          maxDimension: 1920,
-          quality: 0.85,
-          onProgress: (cur, tot, msg) => {
-            if (indicator) indicator.textContent = `⚡ ${slot.name}: ${msg}`;
-          }
-        });
-
-        if (!result || !Array.isArray(result.slideImages) || result.slideImages.length === 0) {
-          throw new Error('PDF vacío o sin páginas');
-        }
-
-        // Actualizar slot en memoria
-        slot.slideImages = result.slideImages;
-        slot.slidesCount = result.slidesCount;
-        slot.sourceType = 'pdf';
-        slot.hasAutoConverted = true;
-
-        // Propagar a STEPS
-        if (Array.isArray(STEPS)) {
-          STEPS.forEach(st => {
-            if (st.slotId === slot.id) {
-              st.slideImages = result.slideImages;
-              st.slidesCount = result.slidesCount;
-              st.sourceType = 'pdf';
-            }
-          });
-        }
-
-        // Persistir en Supabase (en background, sin bloquear la presentación)
-        if (window.DMCloud && result.slideBlobs && result.slideBlobs.length > 0) {
-          DMPdfProcessor.tryUploadToSupabaseStorage(deckId, slot.id, result.slideBlobs, result.slideImages)
-            .then(ok => { if (ok) console.log(`[AutoConvert] ${slot.name} guardado en Supabase`); })
-            .catch(e => console.warn('[AutoConvert] Upload fallido:', e));
-        }
-
-        console.log(`[AutoConvert] ✓ ${slot.name} convertido: ${result.slidesCount} diapositivas`);
-        return true;
-      } catch (err) {
-        console.warn(`[AutoConvert] No se pudo convertir "${slot.name}":`, err.message);
-        return false;
       }
     }
 
@@ -4135,49 +4041,34 @@
           }));
         }
 
-        // 2. AUTO-CONVERSIÓN: Slots tipo URL (Google Slides) a imágenes PDF
-        //    Se hace en serie para no saturar el proxy CORS
-        let indicator = document.getElementById('preload-indicator');
-        if (!indicator) {
-          indicator = document.createElement('div');
-          indicator.id = 'preload-indicator';
-          indicator.style.cssText = `
-            position: fixed; bottom: 14px; left: 14px;
-            background: rgba(0,0,0,0.72); backdrop-filter: blur(8px);
-            color: #ec4899; font: 600 11px/1.4 'Montserrat', sans-serif;
-            padding: 7px 12px; border-radius: 6px;
-            border: 1px solid rgba(236,72,153,0.3);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            z-index: 9998; pointer-events: none;
-            opacity: 0; transition: opacity 0.3s ease;
-          `;
-          document.body.appendChild(indicator);
-        }
+        // 2. Pre-calentar (background) los iframes de slots con interactiveSlides
+        //    El iframe carga la URL en segundo plano desde ya para que la transición
+        //    a una diapositiva interactiva sea instantánea (sin loading visible).
+        deckSlots.forEach(slot => {
+          if (!slot.url || slot.url.includes('Placeholder')) return;
+          if (!Array.isArray(slot.interactiveSlides) || slot.interactiveSlides.length === 0) return;
+          if (slot.format === 'video' || slot.format === 'title') return;
 
-        const urlSlotsToConvert = deckSlots.filter(s => {
-          if (s.format === 'video' || s.format === 'title') return false;
-          const hasImages = Array.isArray(s.slideImages) && s.slideImages.length > 0;
-          if (hasImages) return false;
-          if (s.sourceType === 'pdf') return false; // ya es PDF, lo maneja el paso 1
-          // Solo intentar si hay una URL reconocible como Google Slides
-          if (!s.url || s.url.includes('Placeholder')) return false;
-          return getGoogleSlidesPdfExportUrl(cleanSlidesUrl(s.url)) !== null;
-        });
+          // Seleccionar el iframe correspondiente al formato del slot
+          let bgIframe = null;
+          if (slot.format === '3:4') bgIframe = iframe1;
+          else if (slot.format === '9:16') bgIframe = iframe916;
+          else bgIframe = iframe2;
+          if (!bgIframe) return;
 
-        if (urlSlotsToConvert.length > 0) {
-          console.log(`[AutoConvert] Convirtiendo ${urlSlotsToConvert.length} slots URL a imágenes...`);
-          for (const slot of urlSlotsToConvert) {
-            const converted = await autoConvertUrlSlotToPdf(slot, currentDeckId, indicator);
-            if (converted) {
-              // Re-renderizar la diapositiva activa si es este slot
-              const curStep = STEPS[currentStepIndex];
-              if (curStep && curStep.slotId === slot.id) {
-                renderActiveSlotPresentation(curStep.format, curStep, currentSlide);
-                updateSlideCounters();
-              }
-            }
+          const cleanUrl = cleanSlidesUrl(slot.url);
+          if (!cleanUrl || cleanUrl.includes('Placeholder')) return;
+
+          // Cargar la URL en el iframe en background si aún no lo ha hecho
+          if (!bgIframe.getAttribute('data-loaded-url')) {
+            bgIframe.setAttribute('data-loaded-url', cleanUrl);
+            bgIframe.src = cleanUrl;
+            bgIframe.style.display = 'block';
+            bgIframe.style.opacity = '0';
+            bgIframe.style.pointerEvents = 'none';
+            console.log(`[Preload] Iframe pre-calentado en background: ${slot.name}`);
           }
-        }
+        });
 
         // 3. Extraer todas las imágenes de diapositivas de todas las escenas
         const allSlideUrls = [];
@@ -4194,7 +4085,23 @@
 
         if (allSlideUrls.length === 0) return;
 
-        // 3. Precarga y decodificación forzada en GPU: reutilizar indicator ya creado en paso 2
+        // 3. Precarga y decodificación forzada en GPU
+        let indicator = document.getElementById('preload-indicator');
+        if (!indicator) {
+          indicator = document.createElement('div');
+          indicator.id = 'preload-indicator';
+          indicator.style.cssText = `
+            position: fixed; bottom: 14px; left: 14px;
+            background: rgba(0,0,0,0.72); backdrop-filter: blur(8px);
+            color: #ec4899; font: 600 11px/1.4 'Montserrat', sans-serif;
+            padding: 7px 12px; border-radius: 6px;
+            border: 1px solid rgba(236,72,153,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            z-index: 9998; pointer-events: none;
+            opacity: 0; transition: opacity 0.3s ease;
+          `;
+          document.body.appendChild(indicator);
+        }
         indicator.textContent = `⚡ Precargando ${allSlideUrls.length} diapositivas…`;
         indicator.style.opacity = '1';
 
