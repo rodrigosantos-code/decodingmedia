@@ -138,45 +138,70 @@
   }
 
   /**
-   * Intenta subir las diapositivas a Supabase Storage (dm_assets)
-   * Si tiene éxito devuelve los URLs públicos; si falla o no está configurado devuelve null.
+   * Intenta subir las diapositivas a Supabase Storage (dm_assets) o a la base de datos Supabase (DMCloud.saveSlotSlides)
+   * Si tiene éxito devuelve los URLs o imágenes confirmadas; si falla devuelve null.
    */
-  async function tryUploadToSupabaseStorage(deckId, slotId, slideBlobs, onProgress = () => {}) {
+  async function tryUploadToSupabaseStorage(deckId, slotId, slideBlobs, slideImages = [], onProgress = () => {}) {
     try {
       if (!window.DMCloud) return null;
       const sc = typeof window.DMCloud._getClient === 'function' 
         ? window.DMCloud._getClient() 
         : (window.DMCloud.supabase || (window.supabase && typeof window.supabase.createClient === 'function' ? window.supabase : null));
       
-      if (!sc || !sc.storage) return null;
+      // 1. Intentar con Supabase Storage si está configurado y el bucket dm_assets existe
+      if (sc && sc.storage && Array.isArray(slideBlobs) && slideBlobs.length > 0) {
+        const publicUrls = [];
+        const total = slideBlobs.length;
+        let storageSuccess = true;
 
-      const publicUrls = [];
-      const total = slideBlobs.length;
+        for (let i = 0; i < total; i++) {
+          onProgress(i + 1, total, `Sincronizando diapositiva ${i + 1} de ${total} en Storage...`);
+          const path = `decks/${deckId}/slides/${slotId}/slide_${i + 1}.jpg`;
+          const { error: upErr } = await sc.storage.from('dm_assets').upload(path, slideBlobs[i], {
+            upsert: true,
+            contentType: 'image/jpeg'
+          });
 
-      for (let i = 0; i < total; i++) {
-        onProgress(i + 1, total, `Sincronizando diapositiva ${i + 1} en la nube...`);
-        const path = `decks/${deckId}/slides/${slotId}/slide_${i + 1}.jpg`;
-        const { error: upErr } = await sc.storage.from('dm_assets').upload(path, slideBlobs[i], {
-          upsert: true,
-          contentType: 'image/jpeg'
-        });
+          if (upErr) {
+            console.warn('[PDF Processor] Storage bucket dm_assets no disponible:', upErr.message);
+            storageSuccess = false;
+            break;
+          }
 
-        if (upErr) {
-          console.warn('[PDF Processor] Supabase Storage upload error (usando imágenes locales):', upErr.message);
-          return null; // Fallback a Data URLs
+          const { data: ud } = sc.storage.from('dm_assets').getPublicUrl(path);
+          if (ud && ud.publicUrl) {
+            publicUrls.push(`${ud.publicUrl}?t=${Date.now()}`);
+          } else {
+            storageSuccess = false;
+            break;
+          }
         }
 
-        const { data: ud } = sc.storage.from('dm_assets').getPublicUrl(path);
-        if (ud && ud.publicUrl) {
-          publicUrls.push(`${ud.publicUrl}?t=${Date.now()}`);
-        } else {
-          return null;
+        if (storageSuccess && publicUrls.length === total) {
+          return publicUrls;
         }
       }
 
-      return publicUrls;
+      // 2. Fallback robusto en la Nube: Guardar diapositivas directamente en Supabase dm_decks (fila slides:deckId:slotId)
+      if (window.DMCloud && typeof window.DMCloud.saveSlotSlides === 'function' && Array.isArray(slideImages) && slideImages.length > 0) {
+        onProgress(slideImages.length, slideImages.length, 'Guardando diapositivas en Supabase Cloud...');
+        const ok = await window.DMCloud.saveSlotSlides(deckId, slotId, slideImages);
+        if (ok) {
+          console.log('[PDF Processor] Diapositivas guardadas con éxito en Supabase Cloud (tabla dm_decks)');
+          return slideImages;
+        }
+      }
+
+      return null;
     } catch (err) {
       console.warn('[PDF Processor] Storage fallback warning:', err);
+      // Último intento por DMCloud
+      if (window.DMCloud && typeof window.DMCloud.saveSlotSlides === 'function' && Array.isArray(slideImages) && slideImages.length > 0) {
+        try {
+          const ok = await window.DMCloud.saveSlotSlides(deckId, slotId, slideImages);
+          if (ok) return slideImages;
+        } catch (e2) {}
+      }
       return null;
     }
   }

@@ -196,13 +196,20 @@
   // Helper: Sanear slots para almacenamiento en PostgreSQL dm_decks.
   // IMPORTANTE: Excluye cadenas base64 gigantes (data:) de slideImages para evitar
   // el error 57014 (canceling statement due to statement timeout) en PostgreSQL.
-  // Las imágenes locales completas siguen guardadas en IndexedDB, y las URLs http/https se preservan.
-  function sanitizeSlotsForCloud(rawSlots) {
+  // Las imágenes locales completas siguen guardadas en IndexedDB, y las diapositivas
+  // en la nube se suben y enlazan como filas dedicadas (slides:deckId:slotId).
+  function sanitizeSlotsForCloud(rawSlots, targetDeckId = 'default') {
     if (!Array.isArray(rawSlots)) return [];
     return rawSlots.map(slot => {
       if (!slot || typeof slot !== 'object') return slot;
       const copy = { ...slot };
       if (Array.isArray(copy.slideImages)) {
+        const hasDataUrls = copy.slideImages.some(img => typeof img === 'string' && img.startsWith('data:'));
+        if (hasDataUrls) {
+          copy.hasCloudSlides = true;
+          copy.cloudSlidesId = `slides:${targetDeckId}:${slot.id}`;
+          copy.slidesCount = copy.slideImages.length;
+        }
         copy.slideImages = copy.slideImages.filter(img => typeof img === 'string' && !img.startsWith('data:'));
       }
       return copy;
@@ -533,6 +540,19 @@
         }
 
         if (data && Array.isArray(data.slots)) {
+          // Descargar diapositivas de la nube para cualquier slot que las tenga alojadas
+          for (const s of data.slots) {
+            if ((!Array.isArray(s.slideImages) || s.slideImages.length === 0) && (s.hasCloudSlides || s.slidesCount > 1)) {
+              try {
+                const sRows = await directRestSelect('dm_decks', `id=eq.slides:${encodeURIComponent(targetId)}:${encodeURIComponent(s.id)}&select=slots`);
+                if (Array.isArray(sRows) && sRows.length > 0 && Array.isArray(sRows[0].slots)) {
+                  s.slideImages = sRows[0].slots;
+                  console.log(`[DMCloud] Diapositivas de '${s.name}' descargadas de la nube (${s.slideImages.length})`);
+                }
+              } catch(e) {}
+            }
+          }
+
           const localTime = parseInt(localStorage.getItem('dm_deck_slots_time_' + targetId) || '0', 10);
           const cloudTime = data.updated_at ? new Date(data.updated_at).getTime() : 0;
           if (!localTime || cloudTime >= localTime) {
@@ -577,7 +597,7 @@
 
         // Sanear slots para la nube: excluir cadenas base64 gigantes (data:) de slideImages para evitar
         // el error 57014 (canceling statement due to statement timeout) en PostgreSQL.
-        const cloudSlots = sanitizeSlotsForCloud(slots);
+        const cloudSlots = sanitizeSlotsForCloud(slots, targetId);
 
         const payload = {
           id: targetId,
@@ -622,6 +642,30 @@
         if (!uploadSuccess) {
           notifyStatus('error', lastError || 'Error al subir a la nube');
           return { success: false, error: lastError || 'Error al subir a la nube' };
+        }
+
+        // Subir las diapositivas de cada slot que contenga PDF a Supabase dm_decks (fila dedicada slides:deckId:slotId)
+        if (Array.isArray(slots)) {
+          for (const s of slots) {
+            if (Array.isArray(s.slideImages) && s.slideImages.length > 0) {
+              const hasDataUrls = s.slideImages.some(img => typeof img === 'string' && img.startsWith('data:'));
+              if (hasDataUrls) {
+                const slidePayload = {
+                  id: `slides:${targetId}:${s.id}`,
+                  slots: s.slideImages,
+                  calib_version: 'pdf_slides_v1',
+                  updated_at: new Date().toISOString(),
+                  updated_by: `${sender}:${SESSION_CLIENT_ID}`
+                };
+                try {
+                  await directRestUpsert('dm_decks', slidePayload);
+                  console.log(`[DMCloud] Diapositivas de '${s.name}' sincronizadas en Supabase (${s.slideImages.length})`);
+                } catch(upSlideErr) {
+                  console.warn(`[DMCloud] Error al subir diapositivas de '${s.id}' a Supabase:`, upSlideErr);
+                }
+              }
+            }
+          }
         }
 
         // Actualizar índice local de presentaciones
@@ -737,6 +781,39 @@
     // Suscribirse a comandos de control en vivo
     subscribeToLiveCommands: function(callback) {
       onLiveCommandCallback = callback;
+    },
+
+    // Guardar y recuperar diapositivas PDF dedicadas por slot en la nube
+    saveSlotSlides: async function(deckId, slotId, slideImages) {
+      if (!Array.isArray(slideImages) || slideImages.length === 0) return false;
+      const targetDeck = deckId || getActiveDeckId();
+      const payload = {
+        id: `slides:${targetDeck}:${slotId}`,
+        slots: slideImages,
+        calib_version: 'pdf_slides_v1',
+        updated_at: new Date().toISOString(),
+        updated_by: `pdf_upload:${SESSION_CLIENT_ID}`
+      };
+      try {
+        await directRestUpsert('dm_decks', payload);
+        return true;
+      } catch(e) {
+        console.warn('[DMCloud] Error en saveSlotSlides:', e);
+        return false;
+      }
+    },
+
+    fetchSlotSlides: async function(deckId, slotId) {
+      const targetDeck = deckId || getActiveDeckId();
+      try {
+        const rows = await directRestSelect('dm_decks', `id=eq.slides:${encodeURIComponent(targetDeck)}:${encodeURIComponent(slotId)}&select=slots`);
+        if (Array.isArray(rows) && rows.length > 0 && Array.isArray(rows[0].slots)) {
+          return rows[0].slots;
+        }
+      } catch(e) {
+        console.warn('[DMCloud] Error en fetchSlotSlides:', e);
+      }
+      return null;
     },
 
     // Acceso directo al cliente Supabase (para admin panel y Storage)

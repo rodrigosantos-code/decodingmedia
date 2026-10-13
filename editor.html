@@ -18,7 +18,7 @@
   <!-- PDF Processor en Cliente (Web / Offline / Cloud) -->
   <script src="vendor/pdf.worker.min.js"></script>
   <script src="vendor/pdf.min.js"></script>
-  <script src="pdf-processor.js"></script>
+  <script src="pdf-processor.js?v=20261013_v5"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -3756,13 +3756,14 @@
         // 3. Intentar subir las diapositivas a Supabase Storage para sincronización en tiempo real
         if (window.DMPdfProcessor.tryUploadToSupabaseStorage && result.slideBlobs && result.slideBlobs.length > 0) {
           showToast(`Sincronizando ${result.slidesCount} diapositivas en la nube...`, 4000);
-          const cloudUrls = await DMPdfProcessor.tryUploadToSupabaseStorage(dId, slotId, result.slideBlobs, (cur, tot, msg) => {
+          const cloudUrls = await DMPdfProcessor.tryUploadToSupabaseStorage(dId, slotId, result.slideBlobs, result.slideImages, (cur, tot, msg) => {
             showToast(msg, 1500);
           });
           if (cloudUrls && cloudUrls.length === result.slidesCount) {
             finalImages = cloudUrls;
             uploadedToStorage = true;
-            console.log('[PDF] Diapositivas alojadas en Supabase Storage');
+            slot.hasCloudSlides = true;
+            console.log('[PDF] Diapositivas sincronizadas en Supabase Cloud');
           }
         }
 
