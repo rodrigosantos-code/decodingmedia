@@ -13,8 +13,8 @@
   
   <!-- Supabase Cloud SDK y Cliente -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-  <script src="supabase-client.js"></script>
+  <script src="supabase-config.js?v=20261013_v4"></script>
+  <script src="supabase-client.js?v=20261013_v4"></script>
   <!-- PDF Processor en Cliente (Web / Offline / Cloud) -->
   <script src="vendor/pdf.worker.min.js"></script>
   <script src="vendor/pdf.min.js"></script>
@@ -3179,19 +3179,23 @@
           }
         } catch (e) {}
 
-        // 4. Sincronizar en Supabase Cloud si está configurado
+        // 4. Sincronizar en Supabase Cloud (OBLIGATORIO)
         let cloudState = 'none'; // 'none' | 'ok' | 'err'
         let cloudDetail = '';
-        if (window.DMCloud && DMCloud.isConfigured()) {
+        if (window.DMCloud) {
           try {
             const activeOpt = (typeof deckSelector !== 'undefined' && deckSelector) ? deckSelector.options[deckSelector.selectedIndex] : null;
             const dName = activeOpt ? activeOpt.textContent : '';
-            const cloudRes = await DMCloud.saveDeckConfig(slots, '20260923_def_v2', 'editor_manual', dId, dName);
+            let cloudRes = await DMCloud.saveDeckConfig(slots, '20260923_def_v2', 'editor_manual', dId, dName);
+            if (!cloudRes || !cloudRes.success) {
+              console.warn('[Cloud Sync] Primer intento falló, reintentando de inmediato vía motor REST...', cloudRes);
+              cloudRes = await DMCloud.saveDeckConfig(slots, '20260923_def_v2', 'editor_manual_retry', dId, dName);
+            }
             if (cloudRes === true || (cloudRes && cloudRes.success)) {
               cloudState = 'ok';
             } else {
               cloudState = 'err';
-              cloudDetail = (cloudRes && cloudRes.error) ? cloudRes.error : 'Error desconocido al subir';
+              cloudDetail = (cloudRes && cloudRes.error) ? cloudRes.error : 'Fallo desconocido al subir';
             }
           } catch (cloudErr) {
             cloudState = 'err';
@@ -3206,24 +3210,40 @@
         renderPreview();
         updateStageLink();
 
-        // 6. Feedback visual
-        if (saveBtn) {
-          saveBtn.classList.remove('saving');
-          saveBtn.classList.add('saved');
-          if (saveText) saveText.textContent = '✓ Guardado';
-          setTimeout(() => {
-            saveBtn.classList.remove('saved');
-            if (saveText) saveText.textContent = originalText;
-          }, 2000);
-        }
-
+        // 6. Feedback visual estricto: confirmar siempre el estado en la Nube
         if (cloudState === 'ok') {
-          showToast('✓ Cambios guardados correctamente (Local y Nube)', 'success');
+          if (saveBtn) {
+            saveBtn.classList.remove('saving');
+            saveBtn.classList.add('saved');
+            if (saveText) saveText.textContent = '✓ Guardado en Nube';
+            setTimeout(() => {
+              saveBtn.classList.remove('saved');
+              if (saveText) saveText.textContent = originalText;
+            }, 2500);
+          }
+          showToast('✓ Guardado correctamente en la NUBE (Supabase) y en este equipo', 'success');
         } else if (cloudState === 'err') {
-          console.warn('[Cloud Sync] Guardado local completo, pero la sincronización en la nube falló:', cloudDetail);
-          showToast(`✓ Guardado localmente en este equipo (Aviso nube: ${cloudDetail})`, 'success');
+          if (saveBtn) {
+            saveBtn.classList.remove('saving');
+            saveBtn.classList.add('error');
+            if (saveText) saveText.textContent = '✕ Error en Nube';
+            setTimeout(() => {
+              saveBtn.classList.remove('error');
+              if (saveText) saveText.textContent = originalText;
+            }, 3500);
+          }
+          showToast(`✕ Error al subir a la nube: ${cloudDetail}`, 'error');
         } else {
-          showToast('✓ Cambios guardados correctamente en este equipo', 'success');
+          if (saveBtn) {
+            saveBtn.classList.remove('saving');
+            saveBtn.classList.add('saved');
+            if (saveText) saveText.textContent = '✓ Guardado Local';
+            setTimeout(() => {
+              saveBtn.classList.remove('saved');
+              if (saveText) saveText.textContent = originalText;
+            }, 2000);
+          }
+          showToast('✓ Guardado localmente (configura Supabase para guardar en nube)', 'success');
         }
 
       } catch (err) {
