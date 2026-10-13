@@ -3989,6 +3989,102 @@
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
+    //  AUTO-CONVERSIÓN DE DIAPOSITIVAS URL (GOOGLE SLIDES) A PDF/IMÁGENES
+    //  Descarga el PDF de exportación vía proxy CORS, convierte página a imagen
+    //  con PDF.js y transforma el slot de tipo 'url' a 'pdf' en memoria + Nube.
+    //  Las diapositivas en interactiveSlides siguen renderizándose como iframe.
+    // ═══════════════════════════════════════════════════════════════════════════
+    function getGoogleSlidesPdfExportUrl(cleanEmbedUrl) {
+      if (!cleanEmbedUrl) return null;
+      // URL publicada: /d/e/PUB_ID/embed
+      const mPub = cleanEmbedUrl.match(/docs\.google\.com\/presentation\/d\/e\/([a-zA-Z0-9_-]+)\//i);
+      if (mPub) return `https://docs.google.com/presentation/d/e/${mPub[1]}/pub?output=pdf`;
+      // URL estándar: /d/ID/embed
+      const mStd = cleanEmbedUrl.match(/docs\.google\.com\/presentation\/d\/([a-zA-Z0-9_-]+)\//i);
+      if (mStd && mStd[1] !== 'e') return `https://docs.google.com/presentation/d/${mStd[1]}/export/pdf`;
+      return null;
+    }
+
+    async function fetchPdfViaProxy(pdfUrl) {
+      const proxies = [
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(pdfUrl)}`,
+        `https://corsproxy.io/?${encodeURIComponent(pdfUrl)}`
+      ];
+      for (const proxyUrl of proxies) {
+        try {
+          const resp = await fetch(proxyUrl, { signal: AbortSignal.timeout(20000) });
+          if (!resp.ok) continue;
+          const blob = await resp.blob();
+          if (blob && blob.size > 1000 && (blob.type.includes('pdf') || pdfUrl.includes('pdf'))) return blob;
+        } catch(e) {
+          console.warn('[AutoConvert] Proxy fallido:', proxyUrl, e.message);
+        }
+      }
+      return null;
+    }
+
+    async function autoConvertUrlSlotToPdf(slot, deckId, indicator) {
+      if (!slot || slot.format === 'video' || slot.format === 'title') return false;
+      if (Array.isArray(slot.slideImages) && slot.slideImages.length > 0) return false;
+      if (!slot.url || slot.url.includes('Placeholder')) return false;
+      if (!window.DMPdfProcessor) return false;
+
+      const cleanUrl = cleanSlidesUrl(slot.url);
+      const pdfExportUrl = getGoogleSlidesPdfExportUrl(cleanUrl);
+      if (!pdfExportUrl) return false; // solo Google Slides por ahora
+
+      try {
+        if (indicator) { indicator.textContent = `⚡ Convirtiendo "${slot.name || slot.id}" a imágenes…`; indicator.style.opacity = '1'; }
+        console.log(`[AutoConvert] Descargando PDF de ${slot.name}: ${pdfExportUrl}`);
+
+        const pdfBlob = await fetchPdfViaProxy(pdfExportUrl);
+        if (!pdfBlob) throw new Error('No se pudo descargar el PDF vía proxy');
+
+        const result = await DMPdfProcessor.processPdf(pdfBlob, {
+          maxDimension: 1920,
+          quality: 0.85,
+          onProgress: (cur, tot, msg) => {
+            if (indicator) indicator.textContent = `⚡ ${slot.name}: ${msg}`;
+          }
+        });
+
+        if (!result || !Array.isArray(result.slideImages) || result.slideImages.length === 0) {
+          throw new Error('PDF vacío o sin páginas');
+        }
+
+        // Actualizar slot en memoria
+        slot.slideImages = result.slideImages;
+        slot.slidesCount = result.slidesCount;
+        slot.sourceType = 'pdf';
+        slot.hasAutoConverted = true;
+
+        // Propagar a STEPS
+        if (Array.isArray(STEPS)) {
+          STEPS.forEach(st => {
+            if (st.slotId === slot.id) {
+              st.slideImages = result.slideImages;
+              st.slidesCount = result.slidesCount;
+              st.sourceType = 'pdf';
+            }
+          });
+        }
+
+        // Persistir en Supabase (en background, sin bloquear la presentación)
+        if (window.DMCloud && result.slideBlobs && result.slideBlobs.length > 0) {
+          DMPdfProcessor.tryUploadToSupabaseStorage(deckId, slot.id, result.slideBlobs, result.slideImages)
+            .then(ok => { if (ok) console.log(`[AutoConvert] ${slot.name} guardado en Supabase`); })
+            .catch(e => console.warn('[AutoConvert] Upload fallido:', e));
+        }
+
+        console.log(`[AutoConvert] ✓ ${slot.name} convertido: ${result.slidesCount} diapositivas`);
+        return true;
+      } catch (err) {
+        console.warn(`[AutoConvert] No se pudo convertir "${slot.name}":`, err.message);
+        return false;
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     //  PRECARGA INMEDIATA DE TODAS LAS DIAPOSITIVAS DEL DECK (PDFs Y NUBE)
     //  Al cargar el enlace, descarga y decodifica por adelantado en GPU todas las
     //  imágenes para que al navegar no exista ningún retraso ni parpadeo blanco/negro.
@@ -4039,22 +4135,8 @@
           }));
         }
 
-        // 2. Extraer todas las imágenes de diapositivas de todas las escenas
-        const allSlideUrls = [];
-        deckSlots.forEach(s => {
-          if (s.format === 'video' || s.format === 'title') return;
-          if (Array.isArray(s.slideImages)) {
-            s.slideImages.forEach(imgUrl => {
-              if (imgUrl && typeof imgUrl === 'string' && imgUrl.trim().length > 0) {
-                allSlideUrls.push(imgUrl);
-              }
-            });
-          }
-        });
-
-        if (allSlideUrls.length === 0) return;
-
-        // 3. Indicador de estado de precarga
+        // 2. AUTO-CONVERSIÓN: Slots tipo URL (Google Slides) a imágenes PDF
+        //    Se hace en serie para no saturar el proxy CORS
         let indicator = document.getElementById('preload-indicator');
         if (!indicator) {
           indicator = document.createElement('div');
@@ -4072,6 +4154,47 @@
           document.body.appendChild(indicator);
         }
 
+        const urlSlotsToConvert = deckSlots.filter(s => {
+          if (s.format === 'video' || s.format === 'title') return false;
+          const hasImages = Array.isArray(s.slideImages) && s.slideImages.length > 0;
+          if (hasImages) return false;
+          if (s.sourceType === 'pdf') return false; // ya es PDF, lo maneja el paso 1
+          // Solo intentar si hay una URL reconocible como Google Slides
+          if (!s.url || s.url.includes('Placeholder')) return false;
+          return getGoogleSlidesPdfExportUrl(cleanSlidesUrl(s.url)) !== null;
+        });
+
+        if (urlSlotsToConvert.length > 0) {
+          console.log(`[AutoConvert] Convirtiendo ${urlSlotsToConvert.length} slots URL a imágenes...`);
+          for (const slot of urlSlotsToConvert) {
+            const converted = await autoConvertUrlSlotToPdf(slot, currentDeckId, indicator);
+            if (converted) {
+              // Re-renderizar la diapositiva activa si es este slot
+              const curStep = STEPS[currentStepIndex];
+              if (curStep && curStep.slotId === slot.id) {
+                renderActiveSlotPresentation(curStep.format, curStep, currentSlide);
+                updateSlideCounters();
+              }
+            }
+          }
+        }
+
+        // 3. Extraer todas las imágenes de diapositivas de todas las escenas
+        const allSlideUrls = [];
+        deckSlots.forEach(s => {
+          if (s.format === 'video' || s.format === 'title') return;
+          if (Array.isArray(s.slideImages)) {
+            s.slideImages.forEach(imgUrl => {
+              if (imgUrl && typeof imgUrl === 'string' && imgUrl.trim().length > 0) {
+                allSlideUrls.push(imgUrl);
+              }
+            });
+          }
+        });
+
+        if (allSlideUrls.length === 0) return;
+
+        // 3. Precarga y decodificación forzada en GPU: reutilizar indicator ya creado en paso 2
         indicator.textContent = `⚡ Precargando ${allSlideUrls.length} diapositivas…`;
         indicator.style.opacity = '1';
 
