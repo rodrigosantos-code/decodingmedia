@@ -5089,7 +5089,7 @@
       if (btn && btn.disabled) return;
       if (btn) btn.disabled = true;
 
-      // ─ Overlay de progreso ─────────────────────────────────────────
+      // ─ Overlay de progreso ──────────────────────────────────────────────────
       let overlay = document.getElementById('pdf-export-overlay');
       if (!overlay) {
         overlay = document.createElement('div');
@@ -5097,7 +5097,7 @@
         overlay.innerHTML = `
           <div class="pdf-export-box">
             <div class="pdf-export-icon">📄</div>
-            <div class="pdf-export-title">Generando PDF</div>
+            <div class="pdf-export-title">Generando PDF del Tour</div>
             <div id="pdf-export-msg" class="pdf-export-msg">Preparando...</div>
             <div class="pdf-export-bar-wrap"><div id="pdf-export-bar" class="pdf-export-bar"></div></div>
             <div id="pdf-export-count" class="pdf-export-count">0 / 0</div>
@@ -5114,126 +5114,177 @@
         if (barEl) barEl.style.width = tot > 0 ? `${Math.round((cur / tot) * 100)}%` : '0%';
         if (cntEl) cntEl.textContent = tot > 0 ? `${cur} / ${tot}` : '';
       };
-
+      const sleep = ms => new Promise(r => setTimeout(r, ms));
       const hideOverlay = () => {
         if (overlay) overlay.style.display = 'none';
         if (btn) btn.disabled = false;
       };
 
+      // Guardar estado actual de la presentación
+      const savedStepIndex = currentStepIndex;
+      const savedSlide = currentSlide;
+      let styleNoAnim = null;
+
       try {
-        // ─ Cargar jsPDF si no está disponible ─────────────────────
+        // ─ Cargar librerías si no están disponibles ──────────────────────────
+        setProgress('Cargando motor de captura...', 0, 2);
+        if (!window.html2canvas) {
+          await new Promise((res, rej) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+            s.onload = res; s.onerror = rej;
+            document.head.appendChild(s);
+          });
+        }
+        setProgress('Cargando motor PDF...', 1, 2);
         if (!window.jspdf) {
-          setProgress('Cargando motor PDF...', 0, 1);
-          await new Promise((resolve, reject) => {
+          await new Promise((res, rej) => {
             const s = document.createElement('script');
             s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-            s.onload = resolve;
-            s.onerror = reject;
+            s.onload = res; s.onerror = rej;
             document.head.appendChild(s);
           });
         }
         const { jsPDF } = window.jspdf;
 
-        // ─ Recopilar todas las diapositivas en orden ───────────────
-        const slides = [];
-        (STEPS || []).forEach(step => {
-          if (!step || step.type !== 'slide') return;
-          if (!Array.isArray(step.slideImages) || step.slideImages.length === 0) return;
-          // Excluir slides interactivas del PDF (son vídeos embed)
-          step.slideImages.forEach((url, idx) => {
-            const slideNum = idx + 1;
-            const isInteractive = Array.isArray(step.interactiveSlides) && step.interactiveSlides.includes(slideNum);
-            if (isInteractive) return;
-            slides.push({ url, format: step.format || '3:4', name: step.name || '' });
-          });
+        // ─ Construir lista de frames a capturar ─────────────────────────────
+        const frames = [];
+        (STEPS || []).forEach((step, si) => {
+          if (!step || step.type === 'video') return;
+          const count = Math.max(1,
+            step.type === 'slide' && Array.isArray(step.slideImages) ? step.slideImages.length
+            : (step.slidesCount || 1)
+          );
+          for (let sn = 1; sn <= count; sn++) {
+            const isInteractive = Array.isArray(step.interactiveSlides) && step.interactiveSlides.includes(sn);
+            if (isInteractive) continue; // skip vídeo embed slides
+            frames.push({ stepIdx: si, slideNum: sn, step });
+          }
         });
 
-        if (slides.length === 0) {
+        if (frames.length === 0) {
           hideOverlay();
-          showHint('No hay diapositivas PDF disponibles. Asegúrate de que los slots tengan slides procesados.', 5000);
+          showHint('No hay diapositivas para exportar.', 4000);
           return;
         }
 
-        setProgress('Preparando páginas...', 0, slides.length);
+        setProgress('Iniciando captura del layout...', 0, frames.length);
 
-        // ─ Dimensiones de página por formato (en mm) ────────────
-        const PAGE_DIMS = {
-          '16:9':  { w: 297.0, h: 167.1, o: 'landscape' },
-          '9:16':  { w: 105.8, h: 188.0, o: 'portrait'  },
-          '3:4':   { w: 210.0, h: 280.0, o: 'portrait'  },
-          'title': { w: 297.0, h: 167.1, o: 'landscape' },
-        };
-        const dim0 = PAGE_DIMS[slides[0].format] || PAGE_DIMS['3:4'];
-
-        const doc = new jsPDF({
-          orientation: dim0.o,
-          unit: 'mm',
-          format: [dim0.w, dim0.h],
-          compress: true
+        // ─ Preparar captura: ocultar HUD, desactivar animaciones ────────────
+        const stageEl = document.getElementById('stage-container');
+        const HUD_IDS = ['stage-top-bar', 'stage-bottom-bar', 'drawer-toggle-btn',
+                         'controls-hint', 'pdf-export-overlay', 'preload-indicator'];
+        const hudSaved = {};
+        HUD_IDS.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { hudSaved[id] = el.style.cssText; el.style.setProperty('display', 'none', 'important'); }
         });
 
-        // ─ Añadir cada diapositiva como página ─────────────────
-        for (let i = 0; i < slides.length; i++) {
-          const slide = slides[i];
-          const dim = PAGE_DIMS[slide.format] || PAGE_DIMS['3:4'];
-          setProgress(`Añadiendo ‘${slide.name || 'slide'}’...`, i + 1, slides.length);
+        // Desactivar TODAS las transiciones CSS durante la captura
+        styleNoAnim = document.createElement('style');
+        styleNoAnim.id = 'pdf-no-anim';
+        styleNoAnim.textContent = '* { transition: none !important; animation-duration: 0s !important; animation-delay: 0s !important; }';
+        document.head.appendChild(styleNoAnim);
+        await sleep(80);
 
-          // Obtener datos de imagen (data URL o URL remota)
-          const imgData = await new Promise(resolve => {
-            if (slide.url.startsWith('data:')) {
-              resolve(slide.url);
-              return;
-            }
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            img.onload = () => {
-              try {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.naturalWidth;
-                canvas.height = img.naturalHeight;
-                const ctx = canvas.getContext('2d', { alpha: false });
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0);
-                resolve(canvas.toDataURL('image/jpeg', 0.95));
-              } catch { resolve(null); }
-            };
-            img.onerror = () => resolve(null);
-            img.src = slide.url + (slide.url.includes('?') ? '&' : '?') + '_pdf=' + Date.now();
+        // ─ Inicializar jsPDF con las dimensiones del stage ──────────────────
+        const stageW = stageEl.offsetWidth;
+        const stageH = stageEl.offsetHeight;
+        // 1px = 0.2646mm at 96dpi
+        const PX_TO_MM = 25.4 / 96;
+        const pageW = Math.round(stageW * PX_TO_MM * 10) / 10;
+        const pageH = Math.round(stageH * PX_TO_MM * 10) / 10;
+        const orientation = pageW >= pageH ? 'landscape' : 'portrait';
+
+        const doc = new jsPDF({ orientation, unit: 'mm', format: [pageW, pageH], compress: true });
+        const scale = Math.min(2, window.devicePixelRatio || 1); // 2x para calidad HiDPI
+        let isFirstPage = true;
+
+        // ─ Capturar cada frame ──────────────────────────────────────────────
+        for (let fi = 0; fi < frames.length; fi++) {
+          const { stepIdx, slideNum, step } = frames[fi];
+          setProgress(`Capturando '${step.name || 'escena'}' — slide ${slideNum}`, fi + 1, frames.length);
+
+          // Navegar al paso/slide de forma instantánea (sin animaciones)
+          currentStepIndex = stepIdx;
+          currentSlide = slideNum;
+          updateStepUI(true);  // preserveVisuals=true → activación inmediata sin fade
+          await sleep(900);    // Esperar a que las imágenes se pinten
+
+          // Volver a ocultar el overlay de progreso por si updateStepUI lo reveló
+          HUD_IDS.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.setProperty('display', 'none', 'important');
           });
 
-          if (!imgData) continue;
-
-          if (i === 0) {
-            // Primera página: ya creada por jsPDF constructor; ajustar formato si difiere
-            if (dim.w !== dim0.w || dim.h !== dim0.h) {
-              doc.addPage([dim.w, dim.h], dim.o);
-            }
-          } else {
-            doc.addPage([dim.w, dim.h], dim.o);
+          // Capturar el stage completo con html2canvas
+          let canvas;
+          try {
+            canvas = await window.html2canvas(stageEl, {
+              useCORS: true,
+              allowTaint: false,
+              scale,
+              backgroundColor: '#000',
+              logging: false,
+              imageTimeout: 8000,
+              onclone: (clonedDoc) => {
+                // Ocultar HUD en el documento clonado
+                HUD_IDS.forEach(id => {
+                  const el = clonedDoc.getElementById(id);
+                  if (el) el.style.setProperty('display', 'none', 'important');
+                });
+                // Forzar opacidad completa en el layer activo
+                const layers = clonedDoc.querySelectorAll('.stage-layer.active');
+                layers.forEach(l => { l.style.opacity = '1'; l.style.visibility = 'visible'; });
+              }
+            });
+          } catch (captureErr) {
+            console.warn('[PDF Export] html2canvas falló en frame', fi, captureErr);
+            continue;
           }
 
-          const imgFmt = imgData.startsWith('data:image/png') ? 'PNG' : 'JPEG';
-          doc.addImage(imgData, imgFmt, 0, 0, dim.w, dim.h, undefined, 'NONE');
+          const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+          if (isFirstPage) {
+            isFirstPage = false;
+            // La primera página ya existe en el doc, solo añadir imagen
+            doc.addImage(imgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'NONE');
+          } else {
+            doc.addPage([pageW, pageH], orientation);
+            doc.addImage(imgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'NONE');
+          }
         }
 
-        setProgress('Guardando archivo...', slides.length, slides.length);
+        setProgress('Guardando archivo PDF...', frames.length, frames.length);
 
-        // ─ Guardar con nombre del deck ───────────────────────
-        const deckTitle = (document.getElementById('hud-deck-title') || {}).textContent
-          || 'decoding-media-tour';
-        const filename = deckTitle.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '.pdf';
+        // ─ Guardar PDF ─────────────────────────────────────────────────────
+        const deckTitle = (document.getElementById('hud-deck-title') || {}).textContent || 'decoding-media-tour';
+        const filename = deckTitle.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-tour.pdf';
         doc.save(filename);
 
+        // ─ Restaurar estado ─────────────────────────────────────────────────
+        if (styleNoAnim && styleNoAnim.parentNode) styleNoAnim.parentNode.removeChild(styleNoAnim);
+        HUD_IDS.forEach(id => {
+          const el = document.getElementById(id);
+          if (el && hudSaved[id] !== undefined) el.style.cssText = hudSaved[id];
+        });
+        currentStepIndex = savedStepIndex;
+        currentSlide = savedSlide;
+        updateStepUI();
+
         hideOverlay();
-        showHint(`✓ PDF descargado: ${slides.length} diapositivas`, 4000);
+        showHint(`✓ PDF descargado: ${frames.length} páginas con layout completo`, 5000);
+
       } catch (err) {
         console.error('[PDF Export]', err);
+        if (styleNoAnim && styleNoAnim.parentNode) styleNoAnim.parentNode.removeChild(styleNoAnim);
+        currentStepIndex = savedStepIndex;
+        currentSlide = savedSlide;
+        try { updateStepUI(); } catch(e2) {}
         hideOverlay();
         showHint('Error al generar el PDF. Revisa la consola para más detalles.', 6000);
       }
     }
-
     // Clic en la pantalla para avanzar slide o pasar video manteniendo foco en window
     function isEventOverIgnoredControls(e) {
       if (!e || !e.target) return false;
