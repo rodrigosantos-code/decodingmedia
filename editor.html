@@ -1357,9 +1357,9 @@
       color: #f472b6;
       font-size: 11px;
       font-weight: 800;
-      height: 24px;
-      min-width: 38px;
-      padding: 0 4px;
+      height: 25px;
+      min-width: 44px;
+      padding: 0 5px;
       border-radius: 6px;
       display: inline-flex;
       align-items: center;
@@ -1367,41 +1367,43 @@
       gap: 1px;
       flex-shrink: 0;
       transition: all 0.15s ease;
-      cursor: text;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
     }
 
     .slot-num-badge:hover {
       border-color: rgba(236, 72, 153, 0.7);
-      background: rgba(236, 72, 153, 0.22);
+      background: rgba(236, 72, 153, 0.25);
+      box-shadow: 0 0 6px rgba(236, 72, 153, 0.25);
     }
 
     .slot-num-badge:focus-within {
       border-color: #ec4899;
-      background: rgba(0, 0, 0, 0.65);
-      box-shadow: 0 0 8px rgba(236, 72, 153, 0.45);
+      background: rgba(0, 0, 0, 0.75);
+      box-shadow: 0 0 10px rgba(236, 72, 153, 0.55);
     }
 
     .slot-num-hash {
-      font-size: 10.5px;
+      font-size: 11px;
       font-weight: 800;
       opacity: 0.8;
-      user-select: none;
+      pointer-events: none;
       line-height: 1;
     }
 
     .slot-num-input {
-      width: 22px;
+      width: 26px;
       background: transparent;
       border: none;
       outline: none;
       font-family: inherit;
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 800;
       color: inherit;
       text-align: center;
       padding: 0;
       margin: 0;
-      -moz-appearance: textfield;
       cursor: text;
       line-height: 1;
     }
@@ -3267,17 +3269,29 @@
         slotEl.setAttribute('data-slot-id', s.id);
         slotEl.style.cursor = 'pointer';
         slotEl.addEventListener('click', (e) => {
-          // Don't trigger if clicking on buttons/inputs inside
-          if (e.target.closest('button, input, select, textarea')) return;
+          // Don't trigger if clicking on buttons/inputs inside or badge
+          if (e.target.closest('button, input, select, textarea, .slot-num-badge')) return;
           selectSlotForCalib(s.id);
         });
 
         slotEl.innerHTML = `
           <div class="slot-header">
             <div class="slot-title-area">
-              <div class="slot-num-badge" style="border-color:${getHueColor(s.hue)}66; color:${getHueColor(s.hue)}; background:${getHueColor(s.hue)}18;" title="Posición #${i + 1} (Haz clic y escribe un número para mover la escena)">
-                <span class="slot-num-hash">#</span>
-                <input type="number" class="slot-num-input" value="${i + 1}" min="1" max="${slots.length}" onchange="setSlotPosition('${s.id}', this.value)" onkeydown="if(event.key==='Enter')this.blur();" onclick="event.stopPropagation(); this.select();" onfocus="this.select();" title="Escribe la posición (1-${slots.length}) para mover esta escena" />
+              <div class="slot-num-badge"
+                   onclick="event.stopPropagation(); const inp = this.querySelector('.slot-num-input'); if(inp){ inp.focus(); inp.select(); }"
+                   ondblclick="event.stopPropagation(); const p = prompt('Mover escena a la posición (1-${slots.length}):', '${i + 1}'); if(p !== null) setSlotPosition('${s.id}', p);"
+                   style="border-color:${getHueColor(s.hue)}66; color:${getHueColor(s.hue)}; background:${getHueColor(s.hue)}18;"
+                   title="Haz clic para escribir la posición (1-${slots.length}) o doble clic para diálogo">
+                <span class="slot-num-hash" style="pointer-events: none;">#</span>
+                <input type="text"
+                       inputmode="numeric"
+                       class="slot-num-input"
+                       value="${i + 1}"
+                       onclick="event.stopPropagation(); this.select();"
+                       onfocus="this.select();"
+                       onkeydown="if(event.key==='Enter'){ event.preventDefault(); setSlotPosition('${s.id}', this.value); } else if(event.key==='Escape'){ this.value='${i + 1}'; this.blur(); }"
+                       onchange="setSlotPosition('${s.id}', this.value)"
+                       title="Escribe la posición (1-${slots.length}) y pulsa Enter" />
               </div>
               <button type="button" class="slot-format-tag ${formatTagClass}" onclick="event.stopPropagation(); toggleSlotFormat('${s.id}')" title="Clic para alternar formato (3:4 / 9:16 / 16:9 / Title)" style="cursor: pointer; border: none;">
                 ${s.format === 'title' ? 'Title' : s.format}
@@ -3778,7 +3792,8 @@
     function setSlotPosition(id, newPos) {
       const currentIndex = slots.findIndex(s => s.id === id);
       if (currentIndex < 0) return;
-      let targetIndex = parseInt(newPos, 10) - 1;
+      const cleaned = String(newPos || '').replace(/[^0-9]/g, '');
+      let targetIndex = parseInt(cleaned, 10) - 1;
       if (isNaN(targetIndex)) {
         renderSlotList();
         return;
@@ -3795,7 +3810,7 @@
       slots.splice(targetIndex, 0, movedSlot);
       activeCalibSlotId = id;
       saveSlotsAndBroadcast();
-      showToast(`Escena movida a la posición #${targetIndex + 1}`);
+      showToast(`✓ Escena #${currentIndex + 1} movida a la posición #${targetIndex + 1}`);
     }
 
     function deleteSlot(id) {
