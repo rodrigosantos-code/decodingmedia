@@ -3120,7 +3120,7 @@
         const videoId = ytMatch[1];
         return {
           type: 'embed',
-          src: `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1`
+          src: `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&playsinline=1&enablejsapi=1&loop=1&playlist=${videoId}`
         };
       }
 
@@ -3130,7 +3130,7 @@
         const videoId = vimeoMatch[1];
         return {
           type: 'embed',
-          src: `https://player.vimeo.com/video/${videoId}?autoplay=1&title=0&byline=0&portrait=0`
+          src: `https://player.vimeo.com/video/${videoId}?autoplay=1&controls=0&title=0&byline=0&portrait=0&loop=1&dnt=1&autopause=0`
         };
       }
 
@@ -3491,6 +3491,8 @@
 
     // Timers de fallback para double-buffer (evitar que el buffer se quede colgado)
     const bufFallbackTimers = new Map();
+    // Token de secuencia por iframe para cancelar swaps en vuelo cuando el usuario navega rápido
+    const _navSeq = new Map();
 
     function navigateSlide(iframe, baseUrl, slideNum) {
       if (!iframe || !baseUrl || baseUrl.includes('Placeholder')) return;
@@ -3500,22 +3502,26 @@
       const currentLoaded = iframe.getAttribute('data-loaded-url');
       if (currentLoaded === targetUrl) return;
 
+      // Incrementar secuencia: cualquier doSwap anterior con seq antiguo abortará al comprobarlo
+      const seq = (_navSeq.get(iframe.id) || 0) + 1;
+      _navSeq.set(iframe.id, seq);
+
       const bufIframe = document.getElementById(iframe.id + '-buf');
 
-      // Si es la primera vez que carga este iframe, navegación inmediata directa sin esperar por buffer
+      // Marcar URL destino inmediatamente para evitar dobles cargas
+      iframe.setAttribute('data-loaded-url', targetUrl);
+
+      // Si es la primera vez que carga este iframe, navegación inmediata directa sin buffer
       const isFirstLoad = !currentLoaded || !iframe.src || iframe.src === '' || iframe.src === 'about:blank';
       if (!bufIframe || isFirstLoad) {
-        iframe.setAttribute('data-loaded-url', targetUrl);
         iframe.src = targetUrl;
         return;
       }
 
-      // Marcar URL destino para evitar dobles cargas
-      iframe.setAttribute('data-loaded-url', targetUrl);
-
       // Cancelar fallback anterior si lo hay
       if (bufFallbackTimers.has(iframe.id)) {
         clearTimeout(bufFallbackTimers.get(iframe.id));
+        bufFallbackTimers.delete(iframe.id);
       }
 
       // Preparar buffer: oculto, cargando la nueva URL
@@ -3523,29 +3529,36 @@
       bufIframe.style.opacity = '0';
       bufIframe.src = targetUrl;
 
+      const capturedSeq = seq;
       const doSwap = () => {
+        // Abortar si ya se inició una navegación más reciente (previene el back-and-forth)
+        if (_navSeq.get(iframe.id) !== capturedSeq) return;
+
         // Esperar 350ms a que Google Slides acabe de renderizar antes del crossfade
         setTimeout(() => {
+          if (_navSeq.get(iframe.id) !== capturedSeq) return;
           // Fundido de entrada del buffer (nueva diapositiva)
           bufIframe.style.opacity = '1';
 
           // Tras el crossfade (400ms), el iframe principal toma la URL y el buffer se oculta
           setTimeout(() => {
+            if (_navSeq.get(iframe.id) !== capturedSeq) return;
             iframe.src = targetUrl;
             setTimeout(() => {
+              if (_navSeq.get(iframe.id) !== capturedSeq) return;
               bufIframe.style.opacity = '0';
               setTimeout(() => {
                 bufIframe.style.display = 'none';
                 bufIframe.src = '';
               }, 50);
-            }, 100); // breve delay para que iframe principal cargue sin parpadeo
+            }, 100);
           }, 420);
         }, 350);
       };
 
       bufIframe.addEventListener('load', doSwap, { once: true });
 
-      // Fallback de seguridad: activar swap máximo en 3.5s
+      // Fallback de seguridad: activar swap máximo en 3.5s si el iframe nunca dispara load
       const fallback = setTimeout(() => {
         bufIframe.removeEventListener('load', doSwap);
         doSwap();
