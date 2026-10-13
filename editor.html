@@ -5186,6 +5186,38 @@
               }
             }
           });
+
+          // Descargar por adelantado desde Supabase Cloud cualquier slot que aún no tenga slideImages
+          const pendingSlots = cloudData.slots.filter(cs => {
+            const hasImgs = Array.isArray(cs.slideImages) && cs.slideImages.length > 0;
+            return !hasImgs && (cs.sourceType === 'pdf' || cs.hasCloudSlides || (cs.slidesCount && cs.slidesCount > 1));
+          });
+          if (pendingSlots.length > 0 && window.DMCloud && typeof DMCloud.fetchSlotSlides === 'function') {
+            await Promise.all(pendingSlots.map(async (cs) => {
+              try {
+                const slides = await DMCloud.fetchSlotSlides(activeDeckId, cs.id);
+                if (Array.isArray(slides) && slides.length > 0) {
+                  cs.slideImages = slides;
+                  cs.slidesCount = slides.length;
+                  cs.hasCloudSlides = true;
+                }
+              } catch(e) {}
+            }));
+          }
+
+          // Precargar en caché de memoria del navegador
+          cloudData.slots.forEach(s => {
+            if (Array.isArray(s.slideImages)) {
+              s.slideImages.forEach(u => {
+                if (u && typeof u === 'string') {
+                  const img = new Image();
+                  img.src = u;
+                  if (typeof img.decode === 'function') img.decode().catch(() => {});
+                }
+              });
+            }
+          });
+
           slots = cloudData.slots;
           if (window.DMStorage) {
             await DMStorage.saveDeckSlots(activeDeckId, slots);

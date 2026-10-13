@@ -366,12 +366,14 @@
       width: 100%;
       height: 100%;
       object-fit: contain;
-      background: #000;
+      background: transparent;
       z-index: 6;
       pointer-events: none;
       user-select: none;
       display: none;
-      transition: opacity 0.3s ease;
+      opacity: 0;
+      transition: opacity 0.12s ease-out;
+      will-change: opacity;
     }
 
     /* =========================================================================
@@ -1958,8 +1960,9 @@
           src=""
           allowfullscreen="true"
         ></iframe>
-        <!-- Diapositiva local en alta resolución (extraída de PDF) -->
+        <!-- Diapositiva local en alta resolución (extraída de PDF) con double-buffering -->
         <img id="img-slides1" class="screen-slide-img" src="" alt="Diapositiva Móvil" style="display: none;" />
+        <img id="img-slides1-buf" class="screen-slide-img" src="" alt="Diapositiva Móvil Buffer" style="display: none;" />
       </div>
       <!-- 3x4.png como Marco frontal con dedos y bordes naturales -->
       <img id="frame-img-3x4" class="frame-overlay" src="presets/preset2/3x4.png" alt="Marco Móvil Fijo" />
@@ -2015,8 +2018,9 @@
           src=""
           allowfullscreen="true"
         ></iframe>
-        <!-- Diapositiva local en alta resolución (extraída de PDF) -->
+        <!-- Diapositiva local en alta resolución (extraída de PDF) con double-buffering -->
         <img id="img-slides2" class="screen-slide-img" src="" alt="Diapositiva 16:9" style="display: none;" />
+        <img id="img-slides2-buf" class="screen-slide-img" src="" alt="Diapositiva 16:9 Buffer" style="display: none;" />
       </div>
       <!-- 16x9.png como Marco frontal -->
       <img id="frame-img-16x9" class="frame-overlay" src="presets/preset2/16x9.png" alt="Marco 2 Fijo" />
@@ -2062,8 +2066,9 @@
           src=""
           allowfullscreen="true"
         ></iframe>
-        <!-- Diapositiva local en alta resolución (extraída de PDF) -->
+        <!-- Diapositiva local en alta resolución (extraída de PDF) con double-buffering -->
         <img id="img-slides916" class="screen-slide-img" src="" alt="Diapositiva 9:16" style="display: none;" />
+        <img id="img-slides916-buf" class="screen-slide-img" src="" alt="Diapositiva 9:16 Buffer" style="display: none;" />
       </div>
       <!-- 9x16.png como Marco frontal -->
       <img id="frame-img-9x16" class="frame-overlay" src="presets/preset2/9x16.png" alt="Marco 9x16 Fijo" />
@@ -3049,9 +3054,13 @@
           console.log('[DMStorage] Escenas cargadas desde IndexedDB para deck:', stageDeckId);
           reloadSlotsFromData(stored);
         }
+        setTimeout(() => { if (typeof preloadAllDeckSlides === 'function') preloadAllDeckSlides(); }, 50);
       }).catch(err => {
         console.warn('[DMStorage] Error al leer IndexedDB en escenario:', err);
+        setTimeout(() => { if (typeof preloadAllDeckSlides === 'function') preloadAllDeckSlides(); }, 50);
       });
+    } else {
+      setTimeout(() => { if (typeof preloadAllDeckSlides === 'function') preloadAllDeckSlides(); }, 50);
     }
     let currentSlide = 1;
     let hintTimer = null;
@@ -3717,18 +3726,186 @@
       return { fixedImg: null, sinfondoImg: null, screenSlot: null };
     }
 
+    // ═══ SISTEMA DE PRECARGA Y DOBLE BUFFER PARA DIAPOSITIVAS PDF SIN PARPADEO ═══
+    window.__dmSlideImageCache = window.__dmSlideImageCache || new Map();
+
+    function preloadSingleImage(url) {
+      if (!url || typeof url !== 'string' || window.__dmSlideImageCache.has(url)) return;
+      const img = new Image();
+      if (!url.startsWith('data:')) {
+        img.crossOrigin = 'anonymous';
+      }
+      img.onload = () => {
+        try {
+          if (typeof img.decode === 'function') {
+            img.decode().catch(() => {});
+          }
+        } catch(e) {}
+      };
+      img.src = url;
+      window.__dmSlideImageCache.set(url, img);
+    }
+
+    function hideSlotSlideImages(fmt) {
+      const getPair = (f) => {
+        if (f === '3:4') return [document.getElementById('img-slides1'), document.getElementById('img-slides1-buf')];
+        if (f === '9:16') return [document.getElementById('img-slides916'), document.getElementById('img-slides916-buf')];
+        return [document.getElementById('img-slides2'), document.getElementById('img-slides2-buf')];
+      };
+      const [a, b] = getPair(fmt);
+      if (a) { a.style.display = 'none'; a.style.opacity = '0'; a.removeAttribute('data-active'); }
+      if (b) { b.style.display = 'none'; b.style.opacity = '0'; b.removeAttribute('data-active'); }
+    }
+
+    function renderDoubleBufferedSlide(fmt, targetStep, slideNum) {
+      let elA, elB;
+      if (fmt === '3:4') {
+        elA = document.getElementById('img-slides1');
+        elB = document.getElementById('img-slides1-buf');
+      } else if (fmt === '9:16') {
+        elA = document.getElementById('img-slides916');
+        elB = document.getElementById('img-slides916-buf');
+      } else {
+        elA = document.getElementById('img-slides2');
+        elB = document.getElementById('img-slides2-buf');
+      }
+      if (!elA) return;
+
+      if (!elB && elA.parentNode) {
+        elB = document.createElement('img');
+        elB.id = elA.id + '-buf';
+        elB.className = elA.className;
+        elB.style.display = 'none';
+        elB.style.opacity = '0';
+        elB.style.zIndex = '5';
+        elA.parentNode.appendChild(elB);
+      }
+
+      const sIdx = Math.max(0, Math.min(targetStep.slideImages.length - 1, slideNum - 1));
+      const targetSrc = targetStep.slideImages[sIdx];
+      if (!targetSrc) return;
+
+      // Precargar diapositivas adyacentes para transición instantánea sin latencia
+      if (sIdx + 1 < targetStep.slideImages.length) preloadSingleImage(targetStep.slideImages[sIdx + 1]);
+      if (sIdx + 2 < targetStep.slideImages.length) preloadSingleImage(targetStep.slideImages[sIdx + 2]);
+      if (sIdx - 1 >= 0) preloadSingleImage(targetStep.slideImages[sIdx - 1]);
+
+      const aActive = elA.getAttribute('data-active') === 'true' || (elA.style.opacity === '1' && elA.style.display !== 'none');
+      const bActive = elB && (elB.getAttribute('data-active') === 'true' || (elB.style.opacity === '1' && elB.style.display !== 'none'));
+
+      let activeEl = null;
+      let bufferEl = elA;
+
+      if (aActive && !bActive) {
+        activeEl = elA;
+        bufferEl = elB;
+      } else if (bActive && !aActive) {
+        activeEl = elB;
+        bufferEl = elA;
+      } else if (aActive && bActive) {
+        activeEl = elA;
+        bufferEl = elB;
+        if (elB) { elB.style.opacity = '0'; elB.removeAttribute('data-active'); }
+      } else {
+        activeEl = null;
+        bufferEl = elA;
+      }
+
+      // Si el elemento activo ya está mostrando exactamente esta imagen, evitar cualquier parpadeo
+      if (activeEl && activeEl.getAttribute('data-src') === targetSrc && activeEl.style.display === 'block' && activeEl.style.opacity === '1') {
+        return;
+      }
+
+      // Primer renderizado del slot (sin imagen activa previa)
+      if (!activeEl) {
+        bufferEl.src = targetSrc;
+        bufferEl.setAttribute('data-src', targetSrc);
+        bufferEl.style.display = 'block';
+        bufferEl.style.zIndex = '6';
+        bufferEl.style.opacity = '1';
+        bufferEl.setAttribute('data-active', 'true');
+        if (elB && elB !== bufferEl) {
+          elB.style.display = 'none';
+          elB.style.opacity = '0';
+          elB.removeAttribute('data-active');
+        }
+        return;
+      }
+
+      // Transición double-buffered:
+      // activeEl permanece 100% visible mientras bufferEl decodifica la nueva imagen en GPU
+      const swapToken = Symbol();
+      bufferEl._swapToken = swapToken;
+
+      bufferEl.style.transition = 'none';
+      bufferEl.style.opacity = '0';
+      bufferEl.style.zIndex = '6';
+      bufferEl.style.display = 'block';
+      bufferEl.setAttribute('data-src', targetSrc);
+      bufferEl.src = targetSrc;
+
+      const finishSwap = () => {
+        if (bufferEl._swapToken !== swapToken) return;
+        void bufferEl.offsetWidth; // Reflow
+        bufferEl.style.transition = 'opacity 0.12s ease-out';
+        bufferEl.style.opacity = '1';
+        bufferEl.setAttribute('data-active', 'true');
+
+        if (activeEl) {
+          activeEl.removeAttribute('data-active');
+          activeEl.style.transition = 'opacity 0.12s ease-out';
+          activeEl.style.opacity = '0';
+          activeEl.style.zIndex = '5';
+          setTimeout(() => {
+            if (activeEl.getAttribute('data-active') !== 'true') {
+              activeEl.style.display = 'none';
+            }
+          }, 150);
+        }
+      };
+
+      if (bufferEl.complete && bufferEl.naturalWidth > 0) {
+        if (typeof bufferEl.decode === 'function') {
+          bufferEl.decode().then(finishSwap).catch(finishSwap);
+        } else {
+          finishSwap();
+        }
+      } else {
+        bufferEl.onload = () => {
+          if (typeof bufferEl.decode === 'function') {
+            bufferEl.decode().then(finishSwap).catch(finishSwap);
+          } else {
+            finishSwap();
+          }
+        };
+        bufferEl.onerror = async () => {
+          // Si la ruta relativa falla (ej. 404), descargar diapositivas de Supabase Cloud
+          if (window.DMCloud && targetStep.slotId) {
+            try {
+              const cloudSlides = await DMCloud.fetchSlotSlides(stageDeckId, targetStep.slotId);
+              if (Array.isArray(cloudSlides) && cloudSlides[sIdx]) {
+                targetStep.slideImages = cloudSlides;
+                bufferEl.src = cloudSlides[sIdx];
+                bufferEl.setAttribute('data-src', cloudSlides[sIdx]);
+                finishSwap();
+                return;
+              }
+            } catch(e) {}
+          }
+          finishSwap();
+        };
+      }
+    }
+
     function renderActiveSlotPresentation(fmt, targetStep, slideNum) {
       let nativeDeck = nativeDeck1;
       let iframeEl = iframe1;
-      let imgEl = document.getElementById('img-slides1');
       if (fmt === '16:9') {
         nativeDeck = nativeDeck2;
         iframeEl = iframe2;
-        imgEl = document.getElementById('img-slides2');
       } else if (fmt === '9:16') {
         nativeDeck = nativeDeck916;
         iframeEl = iframe916;
-        imgEl = document.getElementById('img-slides916');
       }
 
       const hasSlideImages = targetStep.slideImages && Array.isArray(targetStep.slideImages) && targetStep.slideImages.length > 0;
@@ -3739,7 +3916,7 @@
 
       if (isInteractiveSlide && hasExternalUrl) {
         // Modo Híbrido: esta diapositiva específica tiene vídeo incrustado o interactividad
-        if (imgEl) imgEl.style.display = 'none';
+        hideSlotSlideImages(fmt);
         if (nativeDeck) nativeDeck.style.display = 'none';
         if (iframeEl) {
           iframeEl.style.display = 'block';
@@ -3749,7 +3926,7 @@
         }
       } else if (isUrlMode && hasExternalUrl) {
         // Modo URL: Google Slides / Canva / Web / PPT
-        if (imgEl) imgEl.style.display = 'none';
+        hideSlotSlideImages(fmt);
         if (nativeDeck) nativeDeck.style.display = 'none';
         if (iframeEl) {
           iframeEl.style.display = 'block';
@@ -3763,30 +3940,7 @@
           iframeEl.style.display = 'none';
           iframeEl.style.pointerEvents = 'none';
         }
-        if (imgEl) {
-          imgEl.style.display = 'block';
-          const sIdx = Math.max(0, Math.min(targetStep.slideImages.length - 1, slideNum - 1));
-          const currentSrc = targetStep.slideImages[sIdx];
-          imgEl.onerror = async function() {
-            // Si la ruta relativa falla (ej. 404), descargar diapositivas en base64 de Supabase Cloud
-            if (window.DMCloud && targetStep.slotId) {
-              try {
-                const cloudSlides = await DMCloud.fetchSlotSlides(stageDeckId, targetStep.slotId);
-                if (Array.isArray(cloudSlides) && cloudSlides[sIdx]) {
-                  targetStep.slideImages = cloudSlides;
-                  imgEl.onerror = null;
-                  imgEl.src = cloudSlides[sIdx];
-                }
-              } catch(e) {}
-            }
-          };
-          imgEl.src = currentSrc;
-          // Preload next slide image
-          if (sIdx + 1 < targetStep.slideImages.length) {
-            const pre = new Image();
-            pre.src = targetStep.slideImages[sIdx + 1];
-          }
-        }
+        renderDoubleBufferedSlide(fmt, targetStep, slideNum);
       } else if (isPdfMode && !hasSlideImages && targetStep.slotId && window.DMCloud) {
         // Diapositivas PDF pendientes de descargar desde la nube
         DMCloud.fetchSlotSlides(stageDeckId, targetStep.slotId).then(slides => {
@@ -3796,12 +3950,13 @@
             targetStep.hasCloudSlides = true;
             const origSlot = deckSlots.find(s => s.id === targetStep.slotId);
             if (origSlot) { origSlot.slideImages = slides; origSlot.slidesCount = slides.length; }
-            loadSlideContent(fmt, targetStep, slideNum);
+            slides.forEach(preloadSingleImage);
+            renderActiveSlotPresentation(fmt, targetStep, slideNum);
             updateSlideCounters();
           }
         });
       } else if (hasExternalUrl) {
-        if (imgEl) imgEl.style.display = 'none';
+        hideSlotSlideImages(fmt);
         if (nativeDeck) nativeDeck.style.display = 'none';
         if (iframeEl) {
           iframeEl.style.display = 'block';
@@ -3810,7 +3965,7 @@
           navigateSlide(iframeEl, targetStep.url, slideNum);
         }
       } else {
-        if (imgEl) imgEl.style.display = 'none';
+        hideSlotSlideImages(fmt);
         if (iframeEl) iframeEl.style.display = 'none';
         if (nativeDeck) {
           nativeDeck.style.display = 'flex';
@@ -3819,6 +3974,158 @@
         }
       }
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  PRECARGA INMEDIATA DE TODAS LAS DIAPOSITIVAS DEL DECK (PDFs Y NUBE)
+    //  Al cargar el enlace, descarga y decodifica por adelantado en GPU todas las
+    //  imágenes para que al navegar no exista ningún retraso ni parpadeo blanco/negro.
+    // ═══════════════════════════════════════════════════════════════════════════
+    let _isPreloadingAllDeckSlides = false;
+    async function preloadAllDeckSlides() {
+      if (!Array.isArray(deckSlots) || deckSlots.length === 0) return;
+      if (_isPreloadingAllDeckSlides) return;
+      _isPreloadingAllDeckSlides = true;
+
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentDeckId = urlParams.get('deck') || (typeof stageDeckId !== 'undefined' ? stageDeckId : (window.DMCloud ? DMCloud.getActiveDeckId() : 'default'));
+
+        // 1. Descargar por adelantado desde Supabase Cloud cualquier slot que aún no tenga slideImages locales
+        const pendingSlots = deckSlots.filter(s => {
+          if (s.format === 'video' || s.format === 'title') return false;
+          const hasImages = Array.isArray(s.slideImages) && s.slideImages.length > 0;
+          return !hasImages && (s.sourceType === 'pdf' || s.hasCloudSlides || s.pdfFileName || s.pdfHash || (s.slidesCount && s.slidesCount > 1));
+        });
+
+        if (pendingSlots.length > 0 && window.DMCloud && typeof DMCloud.fetchSlotSlides === 'function') {
+          console.log(`[Preload] Descargando diapositivas de ${pendingSlots.length} escenas desde Supabase Cloud...`);
+          await Promise.all(pendingSlots.map(async (slot) => {
+            try {
+              const slides = await DMCloud.fetchSlotSlides(currentDeckId, slot.id);
+              if (Array.isArray(slides) && slides.length > 0) {
+                slot.slideImages = slides;
+                slot.slidesCount = slides.length;
+                slot.hasCloudSlides = true;
+                if (Array.isArray(STEPS)) {
+                  STEPS.forEach(st => {
+                    if (st.slotId === slot.id) {
+                      st.slideImages = slides;
+                      st.slidesCount = slides.length;
+                      st.hasCloudSlides = true;
+                    }
+                  });
+                }
+                try {
+                  if (window.DMStorage) DMStorage.setDeckSlots(currentDeckId, deckSlots);
+                  localStorage.setItem('dm_deck_slots_' + currentDeckId, JSON.stringify(deckSlots));
+                } catch(e) {}
+              }
+            } catch(fetchErr) {
+              console.warn('[Preload] Error al obtener slides para slot', slot.id, fetchErr);
+            }
+          }));
+        }
+
+        // 2. Extraer todas las imágenes de diapositivas de todas las escenas
+        const allSlideUrls = [];
+        deckSlots.forEach(s => {
+          if (s.format === 'video' || s.format === 'title') return;
+          if (Array.isArray(s.slideImages)) {
+            s.slideImages.forEach(imgUrl => {
+              if (imgUrl && typeof imgUrl === 'string' && imgUrl.trim().length > 0) {
+                allSlideUrls.push(imgUrl);
+              }
+            });
+          }
+        });
+
+        if (allSlideUrls.length === 0) return;
+
+        // 3. Indicador de estado de precarga
+        let indicator = document.getElementById('preload-indicator');
+        if (!indicator) {
+          indicator = document.createElement('div');
+          indicator.id = 'preload-indicator';
+          indicator.style.cssText = `
+            position: fixed; bottom: 14px; left: 14px;
+            background: rgba(0,0,0,0.72); backdrop-filter: blur(8px);
+            color: #ec4899; font: 600 11px/1.4 'Montserrat', sans-serif;
+            padding: 7px 12px; border-radius: 6px;
+            border: 1px solid rgba(236,72,153,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            z-index: 9998; pointer-events: none;
+            opacity: 0; transition: opacity 0.3s ease;
+          `;
+          document.body.appendChild(indicator);
+        }
+
+        indicator.textContent = `⚡ Precargando ${allSlideUrls.length} diapositivas…`;
+        indicator.style.opacity = '1';
+
+        let loaded = 0;
+        const total = allSlideUrls.length;
+
+        // 4. Precarga y decodificación forzada en GPU (img.decode)
+        await Promise.all(allSlideUrls.map(async (url) => {
+          if (window.__dmSlideImageCache && window.__dmSlideImageCache.has(url)) {
+            loaded++;
+            return;
+          }
+
+          await new Promise((resolve) => {
+            const img = new Image();
+            if (!url.startsWith('data:')) {
+              img.crossOrigin = 'anonymous';
+            }
+            img.onload = async () => {
+              try {
+                if (typeof img.decode === 'function') {
+                  await img.decode().catch(() => {});
+                }
+              } catch(e) {}
+              if (!window.__dmSlideImageCache) window.__dmSlideImageCache = new Map();
+              window.__dmSlideImageCache.set(url, img);
+              loaded++;
+              const pct = Math.round((loaded / total) * 100);
+              indicator.textContent = `⚡ Diapositivas listas en memoria: ${loaded}/${total} (${pct}%)`;
+              resolve();
+            };
+            img.onerror = () => {
+              const fallback = new Image();
+              fallback.onload = () => {
+                if (!window.__dmSlideImageCache) window.__dmSlideImageCache = new Map();
+                window.__dmSlideImageCache.set(url, fallback);
+                loaded++;
+                resolve();
+              };
+              fallback.onerror = () => {
+                loaded++;
+                resolve();
+              };
+              fallback.src = url;
+            };
+            img.src = url;
+          });
+        }));
+
+        console.log(`[Preload] ¡${loaded}/${total} diapositivas de PDF cacheadas y decodificadas en GPU!`);
+        indicator.textContent = `✓ ${total} diapositivas listas sin parpadeo`;
+        setTimeout(() => { indicator.style.opacity = '0'; }, 2200);
+
+        // Si la escena activa actual es de diapositivas PDF, refrescarla sin parpadeo
+        if (Array.isArray(STEPS) && STEPS[currentStepIndex]) {
+          const activeStep = STEPS[currentStepIndex];
+          if (activeStep.type === 'slide' && Array.isArray(activeStep.slideImages) && activeStep.slideImages.length > 0) {
+            renderActiveSlotPresentation(activeStep.format, activeStep, currentSlide);
+          }
+        }
+      } catch (err) {
+        console.warn('[Preload] Error en preloadAllDeckSlides:', err);
+      } finally {
+        _isPreloadingAllDeckSlides = false;
+      }
+    }
+    window.preloadAllDeckSlides = preloadAllDeckSlides;
 
     /* ---- Rótulos y Textos Superpuestos sobre la Escena (Lower Third - 1 o 2 Nombres) ---- */
     let overlayAnimTimer = null;
@@ -4060,62 +4367,72 @@
           }
         }
 
-        // Estado inicial de Fase 1 (t=0s a 0.5s):
-        // El frame fijo entra con fundido de 0 a 100 en 0.5s
-        if (fe.fixedImg) {
-          fe.fixedImg.style.transition = 'none';
-          fe.fixedImg.style.opacity = '0';
-        }
-        if (fe.sinfondoImg) {
-          fe.sinfondoImg.style.transition = 'none';
-          fe.sinfondoImg.style.opacity = '0';
-        }
-        if (fe.screenSlot) {
-          fe.screenSlot.style.transition = 'none';
-          fe.screenSlot.style.opacity = '0';
-        }
+        const isSameActiveLayer = previousLayers.length === 0 && targetLayer && targetLayer.classList.contains('active') && fe.screenSlot && fe.screenSlot.style.opacity === '1';
 
-        if (targetLayer) void targetLayer.offsetWidth; // Reflow forzado
-
-        // Iniciar fundido de 0 a 100 del frame fijo en 0.5s
-        if (fe.fixedImg) {
-          fe.fixedImg.style.transition = 'opacity 0.5s ease-in-out';
-          fe.fixedImg.style.opacity = '1';
-        }
-
-        // Fase 2: Pasados exactamente 0.5s
-        setTimeout(() => {
-          // Desactivar capas anteriores una vez completada la entrada del frame fijo
-          if (previousLayers.length > 0) {
-            previousLayers.forEach(layer => {
-              layer.classList.remove('active', 'incoming-layer', 'fading-out');
-              layer.style.opacity = '';
-              layer.style.zIndex = '';
-            });
+        if (isSameActiveLayer) {
+          // Si ya estamos en el mismo formato/capa y visible, no parpadear ni reiniciar opacidades a 0
+          if (fe.fixedImg) fe.fixedImg.style.opacity = '1';
+          if (fe.sinfondoImg) fe.sinfondoImg.style.opacity = '1';
+          if (fe.screenSlot) fe.screenSlot.style.opacity = '1';
+          isTransitionLocked = false;
+        } else {
+          // Estado inicial de Fase 1 (t=0s a 0.5s):
+          // El frame fijo entra con fundido de 0 a 100 en 0.5s
+          if (fe.fixedImg) {
+            fe.fixedImg.style.transition = 'none';
+            fe.fixedImg.style.opacity = '0';
           }
-
-          // "el mismo frame pero _sinfondo aparece encima de forma instantanea"
           if (fe.sinfondoImg) {
             fe.sinfondoImg.style.transition = 'none';
-            fe.sinfondoImg.style.opacity = '1';
+            fe.sinfondoImg.style.opacity = '0';
           }
-
-          // "en los 0,5 segundos restantes aparece con un fundido de 0 100 de opacidad la presentacion"
           if (fe.screenSlot) {
-            void fe.screenSlot.offsetWidth; // Reflow
-            fe.screenSlot.style.transition = 'opacity 0.5s ease-in-out';
-            fe.screenSlot.style.opacity = '1';
+            fe.screenSlot.style.transition = 'none';
+            fe.screenSlot.style.opacity = '0';
           }
 
-          // Final de los 0.5s restantes (t = 1.0s total):
+          if (targetLayer) void targetLayer.offsetWidth; // Reflow forzado
+
+          // Iniciar fundido de 0 a 100 del frame fijo en 0.5s
+          if (fe.fixedImg) {
+            fe.fixedImg.style.transition = 'opacity 0.5s ease-in-out';
+            fe.fixedImg.style.opacity = '1';
+          }
+
+          // Fase 2: Pasados exactamente 0.5s
           setTimeout(() => {
-            if (targetLayer) {
-              targetLayer.classList.remove('incoming-layer');
-              targetLayer.style.zIndex = '';
+            // Desactivar capas anteriores una vez completada la entrada del frame fijo
+            if (previousLayers.length > 0) {
+              previousLayers.forEach(layer => {
+                layer.classList.remove('active', 'incoming-layer', 'fading-out');
+                layer.style.opacity = '';
+                layer.style.zIndex = '';
+              });
             }
-            isTransitionLocked = false;
+
+            // "el mismo frame pero _sinfondo aparece encima de forma instantanea"
+            if (fe.sinfondoImg) {
+              fe.sinfondoImg.style.transition = 'none';
+              fe.sinfondoImg.style.opacity = '1';
+            }
+
+            // "en los 0,5 segundos restantes aparece con un fundido de 0 100 de opacidad la presentacion"
+            if (fe.screenSlot) {
+              void fe.screenSlot.offsetWidth; // Reflow
+              fe.screenSlot.style.transition = 'opacity 0.5s ease-in-out';
+              fe.screenSlot.style.opacity = '1';
+            }
+
+            // Final de los 0.5s restantes (t = 1.0s total):
+            setTimeout(() => {
+              if (targetLayer) {
+                targetLayer.classList.remove('incoming-layer');
+                targetLayer.style.zIndex = '';
+              }
+              isTransitionLocked = false;
+            }, 500);
           }, 500);
-        }, 500);
+        }
       }
       // Nota: si step.type === 'video', targetLayer (#layer-step2) se activará en beginHoldAndPlay() cuando el fotograma 0 esté listo
 
@@ -4389,22 +4706,27 @@
       }
 
       if (!skipExitAnimation && currentStep && currentStep.type === 'slide' && !IS_STATIC) {
-        const fe = getFrameElements(currentStep.format);
-        if (fe.screenSlot && fe.screenSlot.style.opacity !== '0') {
-          isTransitionLocked = true;
-          setTimeout(() => { isTransitionLocked = false; }, 1200);
+        const nextIdx = (currentStepIndex + 1) % STEPS.length;
+        const nextStepObj = STEPS[nextIdx];
+        const isNextSameFormat = nextStepObj && nextStepObj.type === 'slide' && nextStepObj.format === currentStep.format;
+        if (!isNextSameFormat) {
+          const fe = getFrameElements(currentStep.format);
+          if (fe.screenSlot && fe.screenSlot.style.opacity !== '0') {
+            isTransitionLocked = true;
+            setTimeout(() => { isTransitionLocked = false; }, 1200);
 
-          fe.screenSlot.style.transition = 'opacity 0.5s ease-in-out';
-          fe.screenSlot.style.opacity = '0';
-          setTimeout(() => {
-            if (fe.sinfondoImg) {
-              fe.sinfondoImg.style.transition = 'none';
-              fe.sinfondoImg.style.opacity = '0';
-            }
-            isTransitionLocked = false;
-            advanceToNextStep(true);
-          }, 500);
-          return;
+            fe.screenSlot.style.transition = 'opacity 0.5s ease-in-out';
+            fe.screenSlot.style.opacity = '0';
+            setTimeout(() => {
+              if (fe.sinfondoImg) {
+                fe.sinfondoImg.style.transition = 'none';
+                fe.sinfondoImg.style.opacity = '0';
+              }
+              isTransitionLocked = false;
+              advanceToNextStep(true);
+            }, 500);
+            return;
+          }
         }
       }
 
@@ -4435,22 +4757,30 @@
       }
 
       if (!skipExitAnimation && currentStep && currentStep.type === 'slide' && !IS_STATIC) {
-        const fe = getFrameElements(currentStep.format);
-        if (fe.screenSlot && fe.screenSlot.style.opacity !== '0') {
-          isTransitionLocked = true;
-          setTimeout(() => { isTransitionLocked = false; }, 1200);
+        let prevIdx = (currentStepIndex - 1 + STEPS.length) % STEPS.length;
+        if (STEPS[prevIdx] && STEPS[prevIdx].type === 'video') {
+          prevIdx = (prevIdx - 1 + STEPS.length) % STEPS.length;
+        }
+        const prevStepObj = STEPS[prevIdx];
+        const isPrevSameFormat = prevStepObj && prevStepObj.type === 'slide' && prevStepObj.format === currentStep.format;
+        if (!isPrevSameFormat) {
+          const fe = getFrameElements(currentStep.format);
+          if (fe.screenSlot && fe.screenSlot.style.opacity !== '0') {
+            isTransitionLocked = true;
+            setTimeout(() => { isTransitionLocked = false; }, 1200);
 
-          fe.screenSlot.style.transition = 'opacity 0.5s ease-in-out';
-          fe.screenSlot.style.opacity = '0';
-          setTimeout(() => {
-            if (fe.sinfondoImg) {
-              fe.sinfondoImg.style.transition = 'none';
-              fe.sinfondoImg.style.opacity = '0';
-            }
-            isTransitionLocked = false;
-            prevStep(true);
-          }, 500);
-          return;
+            fe.screenSlot.style.transition = 'opacity 0.5s ease-in-out';
+            fe.screenSlot.style.opacity = '0';
+            setTimeout(() => {
+              if (fe.sinfondoImg) {
+                fe.sinfondoImg.style.transition = 'none';
+                fe.sinfondoImg.style.opacity = '0';
+              }
+              isTransitionLocked = false;
+              prevStep(true);
+            }, 500);
+            return;
+          }
         }
       }
 
@@ -5350,6 +5680,7 @@
 
       updateStepUI(true);
       updateSlideCounters();
+      setTimeout(() => { if (typeof preloadAllDeckSlides === 'function') preloadAllDeckSlides(); }, 50);
     }
 
     function handleIncomingData(data) {
@@ -5683,18 +6014,23 @@
       let done = 0;
 
       // Indicador de progreso pequeño (esquina inferior izquierda)
-      const indicator = document.createElement('div');
-      indicator.id = 'preload-indicator';
-      indicator.style.cssText = `
-        position: fixed; bottom: 14px; left: 14px;
-        background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
-        color: #94a3b8; font: 600 11px/1 'Montserrat', sans-serif;
-        padding: 6px 10px; border-radius: 6px;
-        border: 1px solid rgba(255,255,255,0.08);
-        z-index: 9998; pointer-events: none;
-        opacity: 0; transition: opacity 0.3s ease;
-      `;
-      document.body.appendChild(indicator);
+      let indicator = document.getElementById('preload-indicator');
+      if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'preload-indicator';
+        indicator.style.cssText = `
+          position: fixed; bottom: 14px; left: 14px;
+          background: rgba(0,0,0,0.72); backdrop-filter: blur(8px);
+          color: #ec4899; font: 600 11px/1.4 'Montserrat', sans-serif;
+          padding: 7px 12px; border-radius: 6px;
+          border: 1px solid rgba(236,72,153,0.3);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+          z-index: 9998; pointer-events: none;
+          opacity: 0; transition: opacity 0.3s ease;
+        `;
+        document.body.appendChild(indicator);
+      }
+      if (typeof preloadAllDeckSlides === 'function') preloadAllDeckSlides();
 
       function onDone() {
         done++;
