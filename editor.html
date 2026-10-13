@@ -252,6 +252,31 @@
       transform: translateY(0);
     }
 
+    .btn-header-cloud {
+      background: #141620;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 7px 12px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-header-cloud:hover {
+      background: #1a1e2c;
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+    }
+    .btn-header-cloud:active {
+      transform: translateY(0);
+    }
+
     .btn-header-save {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       color: #ffffff;
@@ -1739,6 +1764,11 @@
         <span id="sync-slides-text" style="font-weight: 700;">Sincronizar Diapositivas</span>
       </button>
 
+      <button type="button" class="btn-header-cloud" id="btn-cloud-status" onclick="openSupabaseModal()" title="Estado de la Nube (Supabase) - Clic para sincronizar o ver opciones">
+        <span class="status-dot" id="supabase-dot" style="background: #10b981; width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span>
+        <span id="supabase-text" style="font-weight: 700; font-size: 11px;">Nube: Conectado</span>
+      </button>
+
       <button type="button" class="btn-header-save" id="btn-manual-save" onclick="manualSaveProject()" title="Guardar todos los cambios (Ctrl+S / Cmd+S)">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -2279,16 +2309,19 @@
       </div>
 
       <!-- Acciones de sincronización manual -->
-      <div style="background: rgba(236, 72, 153, 0.06); border: 1px solid rgba(236, 72, 153, 0.2); border-radius: 4px; padding: 12px 14px; margin-bottom: 20px;">
-        <div style="font-size: 10.5px; font-weight: 800; color: #ec4899; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
-          Sincronización Manual
+      <div style="background: rgba(236, 72, 153, 0.06); border: 1px solid rgba(236, 72, 153, 0.2); border-radius: 8px; padding: 14px 16px; margin-bottom: 20px;">
+        <div style="font-size: 11px; font-weight: 800; color: #ec4899; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">
+          Sincronización Manual Inmediata
         </div>
+        <p style="font-size: 11px; color: #94a3b8; margin-bottom: 12px; line-height: 1.4;">
+          Sube tus escenas, orden, títulos dobles y calibraciones locales a Supabase Cloud para que se vean al instante en cualquier equipo.
+        </p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <button type="button" class="btn btn-secondary" style="font-size: 11px; justify-content: center;" onclick="pushLocalDeckToCloud()">
-            Subir a Nube
+          <button type="button" class="btn btn-primary" style="font-size: 11.5px; justify-content: center; background: #ec4899; border-color: #f472b6; color: #fff;" onclick="pushLocalDeckToCloud()">
+            ↑ Subir Todo a la Nube
           </button>
-          <button type="button" class="btn btn-secondary" style="font-size: 11px; justify-content: center;" onclick="pullCloudDeckToLocal()">
-            Descargar de Nube
+          <button type="button" class="btn btn-secondary" style="font-size: 11.5px; justify-content: center;" onclick="pullCloudDeckToLocal()">
+            ↓ Descargar de la Nube
           </button>
         </div>
       </div>
@@ -3060,7 +3093,13 @@
       if (window.DMCloud && DMCloud.isConfigured()) {
         const activeOpt = (typeof deckSelector !== 'undefined' && deckSelector) ? deckSelector.options[deckSelector.selectedIndex] : null;
         const dName = activeOpt ? activeOpt.textContent : '';
-        DMCloud.saveDeckConfig(slots, '20260923_def_v2', 'editor', dId, dName);
+        DMCloud.saveDeckConfig(slots, '20260923_def_v2', 'editor_auto', dId, dName).then(res => {
+          if (!res || !res.success) {
+            console.warn('[DMCloud] Fallo en sincronización automática:', res ? res.error : 'Desconocido');
+          }
+        }).catch(err => {
+          console.warn('[DMCloud] Excepción en sincronización automática:', err);
+        });
       }
 
       renderSlotList();
@@ -4875,15 +4914,20 @@
 
     async function pushLocalDeckToCloud() {
       if (!window.DMCloud || !DMCloud.isConfigured()) {
-        showToast('Configura Supabase primero');
+        showToast('Configura Supabase primero', 'error');
         return;
       }
-      showToast('Subiendo escenas a Supabase...');
-      const success = await DMCloud.saveDeckConfig(slots, '20260923_def_v2', 'editor_manual_push');
-      if (success) {
-        showToast('Escenas locales subidas a la nube');
+      showToast('Subiendo escenas a Supabase...', 'info');
+      const dId = typeof activeDeckId !== 'undefined' ? activeDeckId : 'default';
+      const activeOpt = (typeof deckSelector !== 'undefined' && deckSelector) ? deckSelector.options[deckSelector.selectedIndex] : null;
+      const dName = activeOpt ? activeOpt.textContent : '';
+
+      const res = await DMCloud.saveDeckConfig(slots, '20260923_def_v2', 'editor_manual_push', dId, dName);
+      if (res && res.success) {
+        showToast('✓ Escenas locales subidas a la nube con éxito', 'success');
       } else {
-        showToast('Error al subir a la nube');
+        const err = (res && res.error) ? res.error : 'Error desconocido al subir';
+        showToast('✕ Error al subir a la nube: ' + err, 'error');
       }
     }
 
@@ -4923,7 +4967,10 @@
         if (cloudData && Array.isArray(cloudData.slots) && cloudData.slots.length > 0) {
           const cloudTime = cloudData.updated_at ? new Date(cloudData.updated_at).getTime() : 0;
           if (localTime && localTime > cloudTime) {
-            console.log('[Editor] Datos locales más recientes que la nube (' + localTime + ' > ' + cloudTime + '). Manteniendo versión local.');
+            console.log('[Editor] Datos locales más recientes que la nube (' + localTime + ' > ' + cloudTime + '). Subiendo versión local a la nube...');
+            const activeOpt = deckSelector ? deckSelector.options[deckSelector.selectedIndex] : null;
+            const dName = activeOpt ? activeOpt.textContent : '';
+            DMCloud.saveDeckConfig(slots, '20260923_def_v2', 'editor_startup_push', activeDeckId, dName);
             return;
           }
           // Preservar imágenes locales de diapositivas si la nube no las tiene

@@ -193,6 +193,71 @@
     } catch (e) {}
   }
 
+  // Helper: Sanear slots para almacenamiento en PostgreSQL dm_decks.
+  // IMPORTANTE: Excluye cadenas base64 gigantes (data:) de slideImages para evitar
+  // el error 57014 (canceling statement due to statement timeout) en PostgreSQL.
+  // Las imágenes locales completas siguen guardadas en IndexedDB, y las URLs http/https se preservan.
+  function sanitizeSlotsForCloud(rawSlots) {
+    if (!Array.isArray(rawSlots)) return [];
+    return rawSlots.map(slot => {
+      if (!slot || typeof slot !== 'object') return slot;
+      const copy = { ...slot };
+      if (Array.isArray(copy.slideImages)) {
+        copy.slideImages = copy.slideImages.filter(img => typeof img === 'string' && !img.startsWith('data:'));
+      }
+      return copy;
+    });
+  }
+
+  // Helper: Petición SELECT directa mediante REST API nativo (sin depender de supabase-js SDK)
+  async function directRestSelect(table, queryParams = '') {
+    const { url, anonKey } = getStoredCredentials();
+    if (!url || !anonKey) throw new Error('Credenciales no configuradas');
+    const endpoint = `${url.replace(/\/+$/, '')}/rest/v1/${table}${queryParams ? '?' + queryParams : ''}`;
+    const res = await fetch(endpoint, {
+      method: 'GET',
+      headers: {
+        'apikey': anonKey,
+        'Authorization': `Bearer ${anonKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(errText || `HTTP ${res.status}`);
+    }
+    return await res.json();
+  }
+
+  // Helper: Petición UPSERT directa mediante REST API nativo (sin depender de supabase-js SDK)
+  async function directRestUpsert(table, payload) {
+    const { url, anonKey } = getStoredCredentials();
+    if (!url || !anonKey) throw new Error('Credenciales no configuradas');
+    const endpoint = `${url.replace(/\/+$/, '')}/rest/v1/${table}`;
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'apikey': anonKey,
+        'Authorization': `Bearer ${anonKey}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      let errMsg = `HTTP ${res.status}`;
+      try {
+        const errJson = JSON.parse(errText);
+        if (errJson.message) errMsg = errJson.message;
+      } catch (e) {
+        if (errText) errMsg = errText;
+      }
+      throw new Error(errMsg);
+    }
+    return true;
+  }
+
   function initClient() {
     const { url, anonKey } = getStoredCredentials();
     if (!url || !anonKey) {
@@ -202,8 +267,8 @@
     }
 
     if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
-      console.warn('[DMCloud] SDK de Supabase no cargado todavía.');
-      notifyStatus('error', 'Librería de Supabase no disponible');
+      console.warn('[DMCloud] SDK supabase-js no presente. Usando motor REST nativo directo.');
+      testConnection();
       return null;
     }
 
@@ -224,28 +289,40 @@
       testConnection();
       return client;
     } catch (err) {
-      console.error('[DMCloud] Error al instanciar Supabase:', err);
-      notifyStatus('error', 'Error en formato de credenciales');
+      console.warn('[DMCloud] Error instanciando cliente JS, usando fallback REST:', err);
+      testConnection();
       return null;
     }
   }
 
   async function testConnection() {
-    if (!client) return false;
-    try {
-      const { data, error } = await client
-        .from('dm_decks')
-        .select('id, updated_at')
-        .limit(1);
+    const { url, anonKey } = getStoredCredentials();
+    if (!url || !anonKey) {
+      notifyStatus('not_configured', 'Credenciales no configuradas');
+      return false;
+    }
 
-      if (error) {
-        console.warn('[DMCloud] Test de conexión fallido:', error.message);
-        notifyStatus('error', error.message);
-        return false;
+    try {
+      if (client && client.from) {
+        const { data, error } = await client
+          .from('dm_decks')
+          .select('id, updated_at')
+          .limit(1);
+
+        if (!error) {
+          notifyStatus('connected', 'Conectado a la nube');
+          return true;
+        }
       }
 
-      notifyStatus('connected', 'Conectado a la nube');
-      return true;
+      // Fallback REST directo
+      const rows = await directRestSelect('dm_decks', 'select=id,updated_at&limit=1');
+      if (Array.isArray(rows)) {
+        notifyStatus('connected', 'Conectado a la nube');
+        return true;
+      }
+      notifyStatus('error', 'Respuesta inesperada');
+      return false;
     } catch (e) {
       console.warn('[DMCloud] Excepción en testConnection:', e);
       notifyStatus('error', e.message || 'Sin conexión');
@@ -356,17 +433,33 @@
       let localList = getLocalDecksIndex().filter(l => l.id && l.id !== '__deleted__' && l.id !== 'deleted');
       if (!client) {
         initClient();
-        if (!client) return localList;
       }
 
       try {
-        const { data, error } = await client
-          .from('dm_decks')
-          .select('id, updated_at, calib_version')
-          .neq('calib_version', '__deleted__')
-          .order('updated_at', { ascending: false });
+        let data = null;
+        if (client && client.from) {
+          const res = await client
+            .from('dm_decks')
+            .select('id, updated_at, calib_version')
+            .neq('calib_version', '__deleted__')
+            .order('updated_at', { ascending: false });
+          if (!res.error && res.data) {
+            data = res.data;
+          }
+        }
 
-        if (error || !data) {
+        if (!data) {
+          try {
+            const rows = await directRestSelect('dm_decks', 'select=id,updated_at,calib_version&calib_version=neq.__deleted__&order=updated_at.desc');
+            if (Array.isArray(rows)) {
+              data = rows;
+            }
+          } catch (restErr) {
+            console.warn('[DMCloud] REST listDecks error:', restErr);
+          }
+        }
+
+        if (!data) {
           return localList;
         }
 
@@ -397,23 +490,41 @@
     // Cargar escenas/slots de un deck específico desde Supabase
     fetchDeckConfig: async function(deckId) {
       const targetId = deckId || getActiveDeckId();
+      const { url, anonKey } = getStoredCredentials();
+      if (!url || !anonKey) return null;
+
       if (!client) {
         initClient();
-        if (!client) return null;
       }
 
       try {
         notifyStatus('syncing', 'Descargando datos...');
-        const { data, error } = await client
-          .from('dm_decks')
-          .select('id, slots, calib_version, updated_at')
-          .eq('id', targetId)
-          .maybeSingle();
+        let data = null;
 
-        if (error) {
-          console.warn('[DMCloud] Error al obtener dm_decks:', error);
-          notifyStatus('error', error.message);
-          return null;
+        if (client && client.from) {
+          try {
+            const res = await client
+              .from('dm_decks')
+              .select('id, slots, calib_version, updated_at')
+              .eq('id', targetId)
+              .maybeSingle();
+            if (!res.error && res.data) {
+              data = res.data;
+            }
+          } catch (sdkErr) {
+            console.warn('[DMCloud] SDK fetchDeckConfig falló, usando REST:', sdkErr);
+          }
+        }
+
+        if (!data) {
+          try {
+            const rows = await directRestSelect('dm_decks', `id=eq.${encodeURIComponent(targetId)}&select=id,slots,calib_version,updated_at`);
+            if (Array.isArray(rows) && rows.length > 0) {
+              data = rows[0];
+            }
+          } catch (restErr) {
+            console.warn('[DMCloud] REST fetchDeckConfig falló:', restErr);
+          }
         }
 
         if (!data || data.calib_version === '__deleted__' || data.calib_version === 'deleted') {
@@ -444,7 +555,7 @@
     saveDeckConfig: async function(slots, calibVersion, sender = 'editor', deckId, deckName) {
       const targetId = deckId || getActiveDeckId();
       
-      // Asegurar persistencia local inmediata en IndexedDB
+      // Asegurar persistencia local inmediata en IndexedDB (con todas las imágenes locales HD intactas)
       if (Array.isArray(slots)) {
         DMStorage.saveDeckSlots(targetId, slots);
         try {
@@ -452,30 +563,65 @@
         } catch(e) {}
       }
 
+      const { url, anonKey } = getStoredCredentials();
+      if (!url || !anonKey) {
+        return { success: false, error: 'Credenciales de Supabase no configuradas' };
+      }
+
       if (!client) {
         initClient();
-        if (!client) return { success: false, error: 'Cliente de Supabase no disponible' };
       }
 
       try {
         notifyStatus('syncing', 'Subiendo a la nube...');
 
+        // Sanear slots para la nube: excluir cadenas base64 gigantes (data:) de slideImages para evitar
+        // el error 57014 (canceling statement due to statement timeout) en PostgreSQL.
+        const cloudSlots = sanitizeSlotsForCloud(slots);
+
         const payload = {
           id: targetId,
-          slots: slots,
+          slots: cloudSlots,
           calib_version: calibVersion || '20260923_def_v2',
           updated_at: new Date().toISOString(),
           updated_by: `${sender}:${SESSION_CLIENT_ID}`
         };
 
-        const { error } = await client
-          .from('dm_decks')
-          .upsert(payload, { onConflict: 'id' });
+        let uploadSuccess = false;
+        let lastError = null;
 
-        if (error) {
-          console.warn('[DMCloud] Error al guardar en Supabase:', error);
-          notifyStatus('error', error.message);
-          return { success: false, error: error.message };
+        // 1. Intentar con SDK supabase-js si está disponible
+        if (client && client.from) {
+          try {
+            const { error } = await client
+              .from('dm_decks')
+              .upsert(payload, { onConflict: 'id' });
+            if (error) {
+              lastError = error.message;
+              console.warn('[DMCloud] supabase-js upsert falló, usando fallback REST:', error);
+            } else {
+              uploadSuccess = true;
+            }
+          } catch (sdkErr) {
+            lastError = sdkErr.message;
+            console.warn('[DMCloud] Excepción en supabase-js upsert, usando fallback REST:', sdkErr);
+          }
+        }
+
+        // 2. Fallback robusto a REST fetch nativo si falló el SDK o no estaba cargado
+        if (!uploadSuccess) {
+          try {
+            await directRestUpsert('dm_decks', payload);
+            uploadSuccess = true;
+          } catch (restErr) {
+            lastError = restErr.message;
+            console.error('[DMCloud] Fallback REST falló también:', restErr);
+          }
+        }
+
+        if (!uploadSuccess) {
+          notifyStatus('error', lastError || 'Error al subir a la nube');
+          return { success: false, error: lastError || 'Error al subir a la nube' };
         }
 
         // Actualizar índice local de presentaciones
