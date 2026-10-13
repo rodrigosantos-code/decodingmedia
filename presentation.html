@@ -3926,40 +3926,61 @@
       const hasSlideImages = targetStep.slideImages && Array.isArray(targetStep.slideImages) && targetStep.slideImages.length > 0;
       const hasExternalUrl = targetStep.url && !targetStep.url.includes('Placeholder') && targetStep.url.trim().length > 10;
       const isInteractiveSlide = Array.isArray(targetStep.interactiveSlides) && targetStep.interactiveSlides.includes(slideNum);
-
-      // ── El iframe URL corre SIEMPRE en background cuando hay URL ────────────
-      // CSS: .screen-iframe  z-index:1  (capa inferior)
-      // CSS: .screen-slide-img z-index:6 (capa superior, tapa el iframe)
-      //
-      // El iframe es visible SOLO cuando:
-      //   a) La diapositiva está marcada como interactiva (video en PPT), O
-      //   b) No hay imágenes PDF (fallback)
       const iframeShouldBeVisible = isInteractiveSlide || (!hasSlideImages && hasExternalUrl);
 
       if (nativeDeck) nativeDeck.style.display = 'none';
 
+      // ── CAPA INFERIOR: iframe URL ──────────────────────────────────────────────────
+      // No recargamos el iframe en cada slide del PDF (cada src-change provoca
+      // una recarga completa de Google Slides y rompe la sincronización).
+      // Estrategia:
+      //  - Slide interactiva      → nav. directa al número correcto
+      //  - Slide PDF normal       → pre-navegar al próximo interactivo (lookahead=3)
+      //  - Sin PDF (solo URL)     → navegar al slide actual
       if (hasExternalUrl && iframeEl) {
-        iframeEl.style.display = 'block';        // Siempre en DOM: el navegador lo carga
+        iframeEl.style.display = 'block';
         iframeEl.style.opacity = iframeShouldBeVisible ? '1' : '0';
         iframeEl.style.pointerEvents = iframeShouldBeVisible ? 'auto' : 'none';
-        navigateSlide(iframeEl, targetStep.url, slideNum);
+
+        if (isInteractiveSlide) {
+          // Diapositiva interactiva/video: navegar directamente al slide correcto
+          const targetUrl = getSlideUrl(targetStep.url, slideNum);
+          if (targetUrl && iframeEl.getAttribute('data-loaded-url') !== targetUrl) {
+            iframeEl.setAttribute('data-loaded-url', targetUrl);
+            iframeEl.src = targetUrl;
+          }
+        } else if (hasSlideImages) {
+          // PDF mode: pre-navegar al próximo slide interactivo si está dentro del lookahead
+          const LOOKAHEAD = 3;
+          const upcoming = (targetStep.interactiveSlides || [])
+            .filter(n => n > slideNum)
+            .sort((a, b) => a - b);
+          const nextInteractive = upcoming[0];
+          const targetSlideNum = (nextInteractive !== undefined && (nextInteractive - slideNum) <= LOOKAHEAD)
+            ? nextInteractive   // Pre-navegar al próximo interactivo
+            : 1;                // Estacionado en slide 1 (sin recargas innecesarias)
+          const targetUrl = getSlideUrl(targetStep.url, targetSlideNum);
+          if (targetUrl && iframeEl.getAttribute('data-loaded-url') !== targetUrl) {
+            iframeEl.setAttribute('data-loaded-url', targetUrl);
+            iframeEl.src = targetUrl;
+          }
+        } else {
+          // Sin PDF (solo URL): navegar al slide actual
+          navigateSlide(iframeEl, targetStep.url, slideNum);
+        }
       } else if (iframeEl) {
         iframeEl.style.display = 'none';
         iframeEl.style.opacity = '0';
       }
 
-      // ── Capa superior PDF / imágenes ─────────────────────────────────────
+      // ── CAPA SUPERIOR: PDF / imágenes ───────────────────────────────────────────────
       if (isInteractiveSlide) {
-        // Slide interactiva: PDF oculto, el iframe (z-index:1) se ve a través
         hideSlotSlideImages(fmt);
       } else if (hasSlideImages) {
-        // Slide normal con PDF: imagen (z-index:6) tapa el iframe corriendo debajo
         renderDoubleBufferedSlide(fmt, targetStep, slideNum);
       } else if (hasExternalUrl) {
-        // Sin PDF: iframe ya se ve (iframeShouldBeVisible=true)
         hideSlotSlideImages(fmt);
       } else if (targetStep.sourceType === 'pdf' && targetStep.slotId && window.DMCloud) {
-        // PDF pendiente de descargar desde Supabase
         DMCloud.fetchSlotSlides(stageDeckId, targetStep.slotId).then(slides => {
           if (Array.isArray(slides) && slides.length > 0) {
             targetStep.slideImages = slides;
@@ -3973,7 +3994,6 @@
           }
         });
       } else {
-        // Fallback: native deck
         hideSlotSlideImages(fmt);
         if (nativeDeck) {
           nativeDeck.style.display = 'flex';
@@ -3982,7 +4002,6 @@
         }
       }
     }
-
     // ═══════════════════════════════════════════════════════════════════════════
     //  PRECARGA INMEDIATA DE TODAS LAS DIAPOSITIVAS DEL DECK (PDFs Y NUBE)
     //  Al cargar el enlace, descarga y decodifica por adelantado en GPU todas las
