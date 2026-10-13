@@ -2085,8 +2085,10 @@
     <!-- PASO VÍDEO COMPLETO (Sin marco, llena toda la pantalla con zoom in y opacidad) -->
     <div id="layer-video-scene" class="stage-layer video-scene-layer">
       <div id="video-scene-container" class="video-scene-container">
-        <video id="video-scene-player" class="video-scene-element" playsinline controls preload="auto"></video>
+        <video id="video-scene-player" class="video-scene-element" playsinline preload="auto"></video>
         <iframe id="video-scene-iframe" class="video-scene-element" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        <!-- Overlay transparente: bloquea clics sobre UI de YouTube/Vimeo sin tapar el vídeo -->
+        <div id="video-scene-ui-blocker" style="position:absolute;inset:0;z-index:2;pointer-events:none;background:transparent;"></div>
       </div>
     </div>
 
@@ -3925,48 +3927,39 @@
       const hasExternalUrl = targetStep.url && !targetStep.url.includes('Placeholder') && targetStep.url.trim().length > 10;
       const isInteractiveSlide = Array.isArray(targetStep.interactiveSlides) && targetStep.interactiveSlides.includes(slideNum);
 
-      // Cuando hay imágenes PDF disponibles, el iframe de la URL sigue cargado en background
-      // (para que la transición a una diapositiva interactiva sea instantánea) pero permanece
-      // oculto (opacity:0, pointerEvents:none) mientras no sea necesario.
-      const shouldShowIframe = isInteractiveSlide && hasExternalUrl;
+      // ── El iframe URL corre SIEMPRE en background cuando hay URL ────────────
+      // CSS: .screen-iframe  z-index:1  (capa inferior)
+      // CSS: .screen-slide-img z-index:6 (capa superior, tapa el iframe)
+      //
+      // El iframe es visible SOLO cuando:
+      //   a) La diapositiva está marcada como interactiva (video en PPT), O
+      //   b) No hay imágenes PDF (fallback)
+      const iframeShouldBeVisible = isInteractiveSlide || (!hasSlideImages && hasExternalUrl);
 
-      if (shouldShowIframe) {
-        // Diapositiva marcada como interactiva/video: mostrar iframe sobre el PDF
+      if (nativeDeck) nativeDeck.style.display = 'none';
+
+      if (hasExternalUrl && iframeEl) {
+        iframeEl.style.display = 'block';        // Siempre en DOM: el navegador lo carga
+        iframeEl.style.opacity = iframeShouldBeVisible ? '1' : '0';
+        iframeEl.style.pointerEvents = iframeShouldBeVisible ? 'auto' : 'none';
+        navigateSlide(iframeEl, targetStep.url, slideNum);
+      } else if (iframeEl) {
+        iframeEl.style.display = 'none';
+        iframeEl.style.opacity = '0';
+      }
+
+      // ── Capa superior PDF / imágenes ─────────────────────────────────────
+      if (isInteractiveSlide) {
+        // Slide interactiva: PDF oculto, el iframe (z-index:1) se ve a través
         hideSlotSlideImages(fmt);
-        if (nativeDeck) nativeDeck.style.display = 'none';
-        if (iframeEl) {
-          iframeEl.style.display = 'block';
-          iframeEl.style.opacity = '1';
-          iframeEl.style.pointerEvents = 'auto';
-          navigateSlide(iframeEl, targetStep.url, slideNum);
-        }
       } else if (hasSlideImages) {
-        // Diapositivas PDF (o imágenes cloud): preferidas siempre para diapositivas normales.
-        // El iframe URL se precarga en background (oculto) para evitar delay al llegar a interactivas.
-        if (nativeDeck) nativeDeck.style.display = 'none';
-        if (iframeEl) {
-          iframeEl.style.opacity = '0';
-          iframeEl.style.pointerEvents = 'none';
-          // Pre-navegar el iframe al slide actual en background (sin mostrarlo)
-          if (hasExternalUrl) {
-            navigateSlide(iframeEl, targetStep.url, slideNum);
-          } else {
-            iframeEl.style.display = 'none';
-          }
-        }
+        // Slide normal con PDF: imagen (z-index:6) tapa el iframe corriendo debajo
         renderDoubleBufferedSlide(fmt, targetStep, slideNum);
       } else if (hasExternalUrl) {
-        // Sin imágenes PDF: usar iframe como fallback
+        // Sin PDF: iframe ya se ve (iframeShouldBeVisible=true)
         hideSlotSlideImages(fmt);
-        if (nativeDeck) nativeDeck.style.display = 'none';
-        if (iframeEl) {
-          iframeEl.style.display = 'block';
-          iframeEl.style.opacity = '1';
-          iframeEl.style.pointerEvents = 'auto';
-          navigateSlide(iframeEl, targetStep.url, slideNum);
-        }
-      } else if (targetStep.sourceType === 'pdf' && !hasSlideImages && targetStep.slotId && window.DMCloud) {
-        // Diapositivas PDF pendientes de descargar desde la nube
+      } else if (targetStep.sourceType === 'pdf' && targetStep.slotId && window.DMCloud) {
+        // PDF pendiente de descargar desde Supabase
         DMCloud.fetchSlotSlides(stageDeckId, targetStep.slotId).then(slides => {
           if (Array.isArray(slides) && slides.length > 0) {
             targetStep.slideImages = slides;
@@ -3980,8 +3973,8 @@
           }
         });
       } else {
+        // Fallback: native deck
         hideSlotSlideImages(fmt);
-        if (iframeEl) iframeEl.style.display = 'none';
         if (nativeDeck) {
           nativeDeck.style.display = 'flex';
           nativeDeck.style.opacity = '1';
