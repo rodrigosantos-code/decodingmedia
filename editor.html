@@ -465,6 +465,36 @@
       gap: 3px;
     }
 
+    .prev-overlay-inner.dual {
+      width: 100%;
+      max-width: 96%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .prev-overlay-col {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .prev-text-overlay.align-left .prev-overlay-col {
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    .prev-text-overlay.align-center .prev-overlay-col {
+      align-items: center;
+      text-align: center;
+    }
+
+    .prev-text-overlay.align-right .prev-overlay-col {
+      align-items: flex-end;
+      text-align: right;
+    }
+
     .prev-overlay-title {
       font-family: 'Playfair Display', Georgia, serif;
       font-weight: 700;
@@ -1739,11 +1769,17 @@
               <!-- Capa 4: Degradado negro inferior -->
               <div id="prev-text-gradient" class="prev-text-gradient"></div>
 
-              <!-- Capa 5: Rótulo de textos (Título y Subtítulo) -->
+              <!-- Capa 5: Rótulo de textos (Título y Subtítulo - 1 o 2 Nombres) -->
               <div id="prev-text-overlay" class="prev-text-overlay">
-                <div class="prev-overlay-inner">
-                  <h2 id="prev-overlay-title" class="prev-overlay-title">Jose Luis Pulpón</h2>
-                  <p id="prev-overlay-subtitle" class="prev-overlay-subtitle">Director general de MS</p>
+                <div class="prev-overlay-inner" id="prev-overlay-inner">
+                  <div class="prev-overlay-col" id="prev-overlay-col-1">
+                    <h2 id="prev-overlay-title" class="prev-overlay-title">Jose Luis Pulpón</h2>
+                    <p id="prev-overlay-subtitle" class="prev-overlay-subtitle">Director general de MS</p>
+                  </div>
+                  <div class="prev-overlay-col prev-overlay-col-2" id="prev-overlay-col-2" style="display: none;">
+                    <h2 id="prev-overlay-title-2" class="prev-overlay-title">Persona 2</h2>
+                    <p id="prev-overlay-subtitle-2" class="prev-overlay-subtitle">Cargo 2</p>
+                  </div>
                 </div>
               </div>
 
@@ -1886,20 +1922,64 @@
           </div>
 
           <div id="overlay-controls-panel" style="display: flex; flex-direction: column; gap: 9px; transition: opacity 0.2s ease;">
-            <!-- Texto Principal (Título / Nombre) -->
-            <div class="slider-group">
-              <div class="slider-label-row">
-                <span class="slider-label">Texto Principal (Título Serif)</span>
+            <!-- Selector de Cantidad de Nombres (1 Nombre vs 2 Nombres Alineados) -->
+            <div class="slider-group" style="padding: 7px 9px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;">
+              <div class="slider-label-row" style="margin-bottom: 6px;">
+                <span class="slider-label" style="font-weight: 700; color: #cbd5e1;">Nombres en Pantalla</span>
+                <span style="font-size: 9px; color: #94a3b8;" id="overlay-mode-hint">Modo individual</span>
               </div>
-              <input type="text" id="overlay-input-title" class="text-input" style="width: 100%; font-family: 'Playfair Display', Georgia, serif; font-size: 13.5px; font-weight: 700; padding: 7px 10px;" placeholder="Ej: Jose Luis Pulpón" oninput="syncOverlayText('title', this.value)" />
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; height: 30px;">
+                <button type="button" class="btn-align-pill active" id="btn-overlay-mode-single" onclick="syncOverlayDualMode(false)">
+                  👤 1 Nombre
+                </button>
+                <button type="button" class="btn-align-pill" id="btn-overlay-mode-dual" onclick="syncOverlayDualMode(true)">
+                  👥 2 Nombres (Alineados)
+                </button>
+              </div>
             </div>
 
-            <!-- Subtítulo -->
-            <div class="slider-group">
-              <div class="slider-label-row">
-                <span class="slider-label">Subtítulo (Cargo / Entidad)</span>
+            <!-- Bloque Persona 1 -->
+            <div id="overlay-person-1-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 9px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 10px; font-weight: 700; color: #ec4899; text-transform: uppercase; letter-spacing: 0.04em; display: none;" id="overlay-p1-header">
+                👤 Persona 1 (Izquierda)
               </div>
-              <input type="text" id="overlay-input-subtitle" class="text-input" style="width: 100%; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 600; padding: 7px 10px;" placeholder="Ej: Director general de MS" oninput="syncOverlayText('subtitle', this.value)" />
+              <!-- Texto Principal (Título / Nombre 1) -->
+              <div class="slider-group" style="padding: 0; background: none; border: none;">
+                <div class="slider-label-row">
+                  <span class="slider-label" id="label-overlay-title1">Texto Principal (Título Serif)</span>
+                </div>
+                <input type="text" id="overlay-input-title" class="text-input" style="width: 100%; font-family: 'Playfair Display', Georgia, serif; font-size: 13.5px; font-weight: 700; padding: 7px 10px;" placeholder="Ej: Jose Luis Pulpón" oninput="syncOverlayText('title', this.value)" />
+              </div>
+
+              <!-- Subtítulo 1 -->
+              <div class="slider-group" style="padding: 0; background: none; border: none;">
+                <div class="slider-label-row">
+                  <span class="slider-label" id="label-overlay-sub1">Subtítulo (Cargo / Entidad)</span>
+                </div>
+                <input type="text" id="overlay-input-subtitle" class="text-input" style="width: 100%; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 600; padding: 7px 10px;" placeholder="Ej: Director general de MS" oninput="syncOverlayText('subtitle', this.value)" />
+              </div>
+            </div>
+
+            <!-- Bloque Persona 2 (Solo si modo 2 nombres alineados) -->
+            <div id="overlay-person-2-card" style="display: none; background: rgba(56,189,248,0.04); border: 1px solid rgba(56,189,248,0.18); border-radius: 8px; padding: 8px 9px; flex-direction: column; gap: 8px;">
+              <div style="font-size: 10px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.04em;">
+                👥 Persona 2 (Derecha - Alineada)
+              </div>
+              <!-- Texto Principal (Título / Nombre 2) -->
+              <div class="slider-group" style="padding: 0; background: none; border: none;">
+                <div class="slider-label-row">
+                  <span class="slider-label">Título 2 (Nombre Serif)</span>
+                </div>
+                <input type="text" id="overlay-input-title2" class="text-input" style="width: 100%; font-family: 'Playfair Display', Georgia, serif; font-size: 13.5px; font-weight: 700; padding: 7px 10px;" placeholder="Ej: Segundo Ponente" oninput="syncOverlayText('title2', this.value)" />
+              </div>
+
+              <!-- Subtítulo 2 -->
+              <div class="slider-group" style="padding: 0; background: none; border: none;">
+                <div class="slider-label-row">
+                  <span class="slider-label">Subtítulo 2 (Cargo / Entidad)</span>
+                </div>
+                <input type="text" id="overlay-input-subtitle2" class="text-input" style="width: 100%; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 600; padding: 7px 10px;" placeholder="Ej: Cargo del segundo ponente" oninput="syncOverlayText('subtitle2', this.value)" />
+              </div>
             </div>
 
             <!-- Posición Vertical (Y desde abajo) -->
@@ -3167,9 +3247,9 @@
                 </select>
               </div>
               ${(s.textOverlay && s.textOverlay.enabled) ? `
-                <span class="slot-overlay-badge" onclick="event.stopPropagation(); selectSlotForCalib('${s.id}')" title="Rótulo activo: ${escapeHtml(s.textOverlay.title || '')}">
+                <span class="slot-overlay-badge" onclick="event.stopPropagation(); selectSlotForCalib('${s.id}')" title="Rótulo activo: ${escapeHtml(s.textOverlay.dual && s.textOverlay.title2 ? `${s.textOverlay.title || ''} & ${s.textOverlay.title2}` : (s.textOverlay.title || ''))}">
                   <svg style="width:10px;height:10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
-                  ${escapeHtml(s.textOverlay.title || 'Rótulo')}
+                  ${escapeHtml(s.textOverlay.dual && s.textOverlay.title2 ? `${s.textOverlay.title || ''} & ${s.textOverlay.title2}` : (s.textOverlay.title || 'Rótulo'))}
                 </span>
               ` : ''}
             </div>
@@ -4067,18 +4147,53 @@
       }
 
       // Rótulo / Text Overlay
+      const titleEl2 = document.getElementById('prev-overlay-title-2');
+      const subEl2 = document.getElementById('prev-overlay-subtitle-2');
+      const innerEl = document.getElementById('prev-overlay-inner');
+      const col2El = document.getElementById('prev-overlay-col-2');
+
       if (textOverlay) {
-        if (ov.enabled && (ov.title || ov.subtitle)) {
+        const isDual = !!ov.dual;
+        const hasContent = Boolean(
+          (ov.title && ov.title.trim()) ||
+          (ov.subtitle && ov.subtitle.trim()) ||
+          (isDual && ((ov.title2 && ov.title2.trim()) || (ov.subtitle2 && ov.subtitle2.trim())))
+        );
+        if (ov.enabled && hasContent) {
           textOverlay.style.display = 'flex';
           textOverlay.style.bottom = (ov.bottomY !== undefined ? ov.bottomY : 7) + '%';
           textOverlay.className = `prev-text-overlay align-${ov.align || 'center'}`;
+
+          const tSizePx = Math.max(12, Math.round((ov.titleSize || 62) * scale)) + 'px';
+          const sSizePx = Math.max(8, Math.round((ov.subSize || 25) * scale)) + 'px';
+
           if (titleEl) {
-            titleEl.textContent = ov.title || '';
-            titleEl.style.fontSize = Math.max(12, Math.round((ov.titleSize || 62) * scale)) + 'px';
+            titleEl.textContent = (ov.title || '').trim();
+            titleEl.style.fontSize = tSizePx;
+            titleEl.style.display = (ov.title && ov.title.trim()) ? 'block' : 'none';
           }
           if (subEl) {
-            subEl.textContent = ov.subtitle || '';
-            subEl.style.fontSize = Math.max(8, Math.round((ov.subSize || 25) * scale)) + 'px';
+            subEl.textContent = (ov.subtitle || '').trim();
+            subEl.style.fontSize = sSizePx;
+            subEl.style.display = (ov.subtitle && ov.subtitle.trim()) ? 'block' : 'none';
+          }
+
+          if (isDual) {
+            if (innerEl) innerEl.classList.add('dual');
+            if (col2El) col2El.style.display = 'flex';
+            if (titleEl2) {
+              titleEl2.textContent = (ov.title2 || '').trim();
+              titleEl2.style.fontSize = tSizePx;
+              titleEl2.style.display = (ov.title2 && ov.title2.trim()) ? 'block' : 'none';
+            }
+            if (subEl2) {
+              subEl2.textContent = (ov.subtitle2 || '').trim();
+              subEl2.style.fontSize = sSizePx;
+              subEl2.style.display = (ov.subtitle2 && ov.subtitle2.trim()) ? 'block' : 'none';
+            }
+          } else {
+            if (innerEl) innerEl.classList.remove('dual');
+            if (col2El) col2El.style.display = 'none';
           }
         } else {
           textOverlay.style.display = 'none';
@@ -4090,8 +4205,11 @@
       const isPulpon = (slot && (slot.id === 'slot-1791537166985' || (slot.name && slot.name.toLowerCase().includes('pulpon'))));
       return {
         enabled: isPulpon ? true : false,
+        dual: false,
         title: isPulpon ? 'Jose Luis Pulpón' : (slot && (slot.speaker || slot.name) ? (slot.speaker || slot.name) : 'Jose Luis Pulpón'),
         subtitle: isPulpon ? 'Director general de MS' : 'Director general de MS',
+        title2: '',
+        subtitle2: '',
         bottomY: 7,
         align: 'center',
         titleSize: 62,
@@ -4113,6 +4231,8 @@
       const panel = document.getElementById('overlay-controls-panel');
       const inputTitle = document.getElementById('overlay-input-title');
       const inputSub = document.getElementById('overlay-input-subtitle');
+      const inputTitle2 = document.getElementById('overlay-input-title2');
+      const inputSub2 = document.getElementById('overlay-input-subtitle2');
       const slideY = document.getElementById('slide-overlay-y');
       const numY = document.getElementById('num-overlay-y');
       const tagY = document.getElementById('tag-overlay-y');
@@ -4126,6 +4246,23 @@
       const slideGradOpacity = document.getElementById('slide-overlay-gradopacity');
       const numGradOpacity = document.getElementById('num-overlay-gradopacity');
 
+      const isDual = !!ov.dual;
+      const btnSingle = document.getElementById('btn-overlay-mode-single');
+      const btnDual = document.getElementById('btn-overlay-mode-dual');
+      const modeHint = document.getElementById('overlay-mode-hint');
+      const p1Header = document.getElementById('overlay-p1-header');
+      const card2 = document.getElementById('overlay-person-2-card');
+      const labelT1 = document.getElementById('label-overlay-title1');
+      const labelS1 = document.getElementById('label-overlay-sub1');
+
+      if (btnSingle) btnSingle.classList.toggle('active', !isDual);
+      if (btnDual) btnDual.classList.toggle('active', isDual);
+      if (modeHint) modeHint.textContent = isDual ? 'Modo 2 nombres alineados' : 'Modo individual';
+      if (p1Header) p1Header.style.display = isDual ? 'block' : 'none';
+      if (card2) card2.style.display = isDual ? 'flex' : 'none';
+      if (labelT1) labelT1.textContent = isDual ? 'Título 1 (Nombre Serif)' : 'Texto Principal (Título Serif)';
+      if (labelS1) labelS1.textContent = isDual ? 'Subtítulo 1 (Cargo / Entidad)' : 'Subtítulo (Cargo / Entidad)';
+
       if (enableCheck) enableCheck.checked = !!ov.enabled;
       if (panel) {
         panel.style.opacity = ov.enabled ? '1' : '0.4';
@@ -4134,6 +4271,8 @@
 
       if (inputTitle && document.activeElement !== inputTitle) inputTitle.value = ov.title || '';
       if (inputSub && document.activeElement !== inputSub) inputSub.value = ov.subtitle || '';
+      if (inputTitle2 && document.activeElement !== inputTitle2) inputTitle2.value = ov.title2 || '';
+      if (inputSub2 && document.activeElement !== inputSub2) inputSub2.value = ov.subtitle2 || '';
 
       const bY = (ov.bottomY !== undefined) ? ov.bottomY : 7;
       if (slideY && parseFloat(slideY.value) !== bY) slideY.value = bY;
@@ -4163,6 +4302,17 @@
       const gOpacity = (ov.gradientOpacity !== undefined) ? ov.gradientOpacity : 92;
       if (slideGradOpacity && parseFloat(slideGradOpacity.value) !== gOpacity) slideGradOpacity.value = gOpacity;
       if (numGradOpacity && parseFloat(numGradOpacity.value) !== gOpacity) numGradOpacity.value = gOpacity;
+    }
+
+    function syncOverlayDualMode(isDual) {
+      const activeSlot = slots.find(s => s.id === activeCalibSlotId);
+      if (!activeSlot) return;
+      if (!activeSlot.textOverlay) activeSlot.textOverlay = getDefaultOverlayModel(activeSlot);
+      activeSlot.textOverlay.dual = !!isDual;
+      renderOverlayControls(activeSlot);
+      renderSlotList();
+      broadcastOverlayUpdate(activeSlot);
+      showToast(isDual ? '✓ Modo 2 nombres alineados activado' : 'Modo 1 nombre activado');
     }
 
     let overlaySaveTimeout = null;

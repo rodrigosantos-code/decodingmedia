@@ -381,6 +381,36 @@
       gap: 10px;
     }
 
+    .stage-overlay-inner.dual {
+      width: 100%;
+      max-width: 94%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 50px;
+    }
+
+    .stage-overlay-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .stage-text-overlay.align-left .stage-overlay-col {
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    .stage-text-overlay.align-center .stage-overlay-col {
+      align-items: center;
+      text-align: center;
+    }
+
+    .stage-text-overlay.align-right .stage-overlay-col {
+      align-items: flex-end;
+      text-align: right;
+    }
+
     /* TÍTULO PRINCIPAL (Serif Display elegante, calcado de la foto del ponente) */
     .stage-overlay-title {
       font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
@@ -428,6 +458,14 @@
       opacity: 1;
       transform: translateY(0);
       transition-delay: 0.32s;
+    }
+
+    .stage-text-overlay.active .stage-overlay-col-2 .stage-overlay-title {
+      transition-delay: 0.22s;
+    }
+
+    .stage-text-overlay.active .stage-overlay-col-2 .stage-overlay-subtitle {
+      transition-delay: 0.38s;
     }
 
     /* Presentación Interactiva Nativa (Fallback / Modo Autónomo) con fundido de 1s */
@@ -1986,11 +2024,17 @@
     <!-- Degradado Negro Inferior para textos / rótulos sobre la escena -->
     <div id="stage-text-gradient" class="stage-text-gradient"></div>
 
-    <!-- Contenedor de Textos Superpuestos (Título Serif + Subtítulo) -->
+    <!-- Contenedor de Textos Superpuestos (Título Serif + Subtítulo - 1 o 2 Nombres) -->
     <div id="stage-text-overlay" class="stage-text-overlay">
-      <div class="stage-overlay-inner">
-        <h1 id="stage-overlay-title" class="stage-overlay-title">Jose Luis Pulpón</h1>
-        <p id="stage-overlay-subtitle" class="stage-overlay-subtitle">Director general de MS</p>
+      <div class="stage-overlay-inner" id="stage-overlay-inner">
+        <div class="stage-overlay-col" id="stage-overlay-col-1">
+          <h1 id="stage-overlay-title" class="stage-overlay-title">Jose Luis Pulpón</h1>
+          <p id="stage-overlay-subtitle" class="stage-overlay-subtitle">Director general de MS</p>
+        </div>
+        <div class="stage-overlay-col stage-overlay-col-2" id="stage-overlay-col-2" style="display: none;">
+          <h1 id="stage-overlay-title-2" class="stage-overlay-title">Persona 2</h1>
+          <p id="stage-overlay-subtitle-2" class="stage-overlay-subtitle">Cargo 2</p>
+        </div>
       </div>
     </div>
 
@@ -3542,13 +3586,17 @@
       }
     }
 
-    /* ---- Rótulos y Textos Superpuestos sobre la Escena (Lower Third) ---- */
+    /* ---- Rótulos y Textos Superpuestos sobre la Escena (Lower Third - 1 o 2 Nombres) ---- */
     let overlayAnimTimer = null;
     function applyStepTextOverlay(step) {
       const gradEl = document.getElementById('stage-text-gradient');
       const overlayEl = document.getElementById('stage-text-overlay');
       const titleEl = document.getElementById('stage-overlay-title');
       const subEl = document.getElementById('stage-overlay-subtitle');
+      const titleEl2 = document.getElementById('stage-overlay-title-2');
+      const subEl2 = document.getElementById('stage-overlay-subtitle-2');
+      const innerEl = document.getElementById('stage-overlay-inner');
+      const col2El = document.getElementById('stage-overlay-col-2');
 
       if (!gradEl || !overlayEl) return;
       if (overlayAnimTimer) { clearTimeout(overlayAnimTimer); overlayAnimTimer = null; }
@@ -3563,11 +3611,16 @@
         }
       }
 
-      const isEnabled = ov && (ov.enabled === true || (ov.enabled === undefined && (ov.title || ov.subtitle)));
-      const hasContent = ov && (Boolean(ov.title && ov.title.trim()) || Boolean(ov.subtitle && ov.subtitle.trim()));
+      const isDual = ov && !!ov.dual;
+      const isEnabled = ov && (ov.enabled === true || (ov.enabled === undefined && (ov.title || ov.subtitle || (isDual && (ov.title2 || ov.subtitle2)))));
+      const hasContent = ov && (
+        Boolean(ov.title && ov.title.trim()) ||
+        Boolean(ov.subtitle && ov.subtitle.trim()) ||
+        (isDual && (Boolean(ov.title2 && ov.title2.trim()) || Boolean(ov.subtitle2 && ov.subtitle2.trim())))
+      );
 
       if (isEnabled && hasContent) {
-        // Configurar contenidos
+        // Configurar contenidos Persona 1
         if (titleEl) {
           titleEl.textContent = (ov.title || '').trim();
           titleEl.style.display = (ov.title && ov.title.trim()) ? 'block' : 'none';
@@ -3575,6 +3628,23 @@
         if (subEl) {
           subEl.textContent = (ov.subtitle || '').trim();
           subEl.style.display = (ov.subtitle && ov.subtitle.trim()) ? 'block' : 'none';
+        }
+
+        // Configurar contenidos Persona 2 (si dual)
+        if (isDual) {
+          if (innerEl) innerEl.classList.add('dual');
+          if (col2El) col2El.style.display = 'flex';
+          if (titleEl2) {
+            titleEl2.textContent = (ov.title2 || '').trim();
+            titleEl2.style.display = (ov.title2 && ov.title2.trim()) ? 'block' : 'none';
+          }
+          if (subEl2) {
+            subEl2.textContent = (ov.subtitle2 || '').trim();
+            subEl2.style.display = (ov.subtitle2 && ov.subtitle2.trim()) ? 'block' : 'none';
+          }
+        } else {
+          if (innerEl) innerEl.classList.remove('dual');
+          if (col2El) col2El.style.display = 'none';
         }
 
         // Configurar variables CSS
